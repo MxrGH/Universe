@@ -7,6 +7,7 @@ A Geometry Dash 2.2091 Geode utility and local-practice mod by MxrMC.
 ### Panel and controls
 - Tabbed Universe panel: Player, Practice, Level, Visuals, Recorder, Keybinds, and Settings.
 - Global mouse/touch click sound.
+- Floating in-game UNIV panel button for touch access during gameplay; can be disabled in Geode settings.
 - Configurable Geode keybinds and RGBA panel background.
 - StartPos Switcher with Previous / Next and Smart selection (nearest StartPos ahead of the player).
 
@@ -25,7 +26,7 @@ A Geometry Dash 2.2091 Geode utility and local-practice mod by MxrMC.
 - Source features are not automatically confirmed working in-game. Noclip, Safe Mode behavior, Smart StartPos, hitboxes, FPS override, and recorder/replay still require gameplay testing across supported platforms.
 - Safe Mode is a local guard, not a guarantee of server-side leaderboard enforcement. Do not submit modified runs as legitimate records.
 - Icon preview is currently a stored local-only setting, not a completed icon renderer. Universe does not spoof online unlocks, verification, coins, achievements, profiles, or leaderboard results.
-- Predictive trajectory simulation, expanded player/icon rendering, FFmpeg video export, and a draggable mobile floating panel are not implemented yet. The current path trail only displays recent player positions.
+- Predictive trajectory simulation, expanded player/icon rendering, FFmpeg video export, and a draggable/repositionable mobile panel are not implemented yet. The current mobile control is a fixed-position touch button. The current path trail only displays recent player positions.
 - Theme presets and replay management are now implemented in source, but still need in-game testing on Windows and Android.
 
 ## Coming soon
@@ -34,7 +35,7 @@ A Geometry Dash 2.2091 Geode utility and local-practice mod by MxrMC.
 **AI Level Maker is coming soon.** The planned tool will turn a written idea into a Geometry Dash level draft, with configurable gameplay style, difficulty, length, and song timing. The generated layout will be editable before export. This is an announcement, not a released feature; the generation engine and editor integration are still in development.
 
 ### Eclipse-inspired panel expansion
-More panel tools are planned, including trajectory display, additional visual controls, expanded recorder/replay management, UI themes, and improved PC/mobile access.
+The current panel includes local practice tools, hitboxes, a recent movement trail, StartPos controls, replay management, theme colors, and a touch-friendly floating in-game opener. Full predictive trajectory, deeper player/icon tools, FFmpeg export, a draggable mobile control, and the complete Eclipse-style feature set remain planned.
 
 ## Build
 
