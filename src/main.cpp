@@ -415,8 +415,10 @@ protected:
                 addAction("+", 114, {205.f, -35.f});
                 addText("FPS Bypass changes the render interval, not physics.", {-245.f, -85.f}, 0.28f);
                 addToggle("Show player path trail", "show-trajectory", 118, -125.f);
-                addAction("CYCLE PANEL THEME", 119, {90.f, -175.f});
-                addText("Trail shows recent movement, not a physics prediction.", {-245.f, -205.f}, 0.27f);
+                addToggle("Show movement projection", "show-projection", 123, -170.f);
+                addAction("CYCLE PANEL THEME", 119, {90.f, -215.f});
+                addText("Projection extends recent movement in a straight line.", {-245.f, -245.f}, 0.27f);
+                addText("It does not simulate gravity, portals, or collisions.", {-245.f, -275.f}, 0.27f);
                 break;
             }
             case Page::Recorder: {
@@ -542,6 +544,7 @@ protected:
             case 111: key = "show-hitboxes"; break;
             case 112: key = "fps-bypass-enabled"; break;
             case 122: key = "floating-button"; break;
+            case 123: key = "show-projection"; break;
             default: return;
         }
         bool current = mod->getSettingValue<bool>(key);
@@ -744,16 +747,37 @@ class $modify(UniversePlayLayer, PlayLayer) {
             }
         }
 
-        if (mod->getSettingValue<bool>("show-trajectory") && m_player1) {
+        bool showTrail = mod->getSettingValue<bool>("show-trajectory");
+        bool showProjection = mod->getSettingValue<bool>("show-projection");
+        if ((showTrail || showProjection) && m_player1) {
             auto& points = m_fields->trajectoryPoints;
             auto current = m_player1->getPosition();
+            if (!points.empty() && ccpDistance(points.back(), current) > 260.f)
+                points.clear();
             if (points.empty() || ccpDistance(points.back(), current) >= 3.f)
                 points.push_back(current);
             while (points.size() > 90)
                 points.erase(points.begin());
-            for (size_t i = 1; i < points.size(); ++i) {
-                node->drawSegment(points[i - 1], points[i], 1.5f,
-                    ccc4f(0.25f, 0.9f, 1.f, 0.8f));
+
+            if (showTrail) {
+                for (size_t i = 1; i < points.size(); ++i) {
+                    node->drawSegment(points[i - 1], points[i], 1.5f,
+                        ccc4f(0.25f, 0.9f, 1.f, 0.8f));
+                }
+            }
+
+            if (showProjection && points.size() >= 2) {
+                auto previous = points[points.size() - 2];
+                auto last = points.back();
+                float distance = ccpDistance(previous, last);
+                if (distance > 0.01f) {
+                    auto direction = ccp(last.x - previous.x, last.y - previous.y);
+                    direction = ccp(direction.x / distance, direction.y / distance);
+                    auto projected = ccp(current.x + direction.x * 120.f,
+                                          current.y + direction.y * 120.f);
+                    node->drawSegment(current, projected, 2.f,
+                        ccc4f(1.f, 0.78f, 0.25f, 0.85f));
+                }
             }
         } else {
             m_fields->trajectoryPoints.clear();
@@ -872,6 +896,12 @@ $on_game(Loaded) {
         if (!down || repeat) return;
         auto mod = Mod::get();
         if (mod) mod->setSettingValue<bool>("show-trajectory", !mod->getSettingValue<bool>("show-trajectory"));
+    });
+
+    listenForKeybindSettingPresses("keybind-projection", [](Keybind const&, bool down, bool repeat, double) {
+        if (!down || repeat) return;
+        auto mod = Mod::get();
+        if (mod) mod->setSettingValue<bool>("show-projection", !mod->getSettingValue<bool>("show-projection"));
     });
 
     listenForKeybindSettingPresses("keybind-hitboxes", [](Keybind const&, bool down, bool repeat, double) {
