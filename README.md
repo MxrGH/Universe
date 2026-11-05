@@ -8,7 +8,7 @@ Universe is a Geode mod for Geometry Dash 2.2091. It adds an in-game panel for l
 - **Visuals:** object hitboxes, a recent movement trail, and a short trajectory estimate based on recent velocity and acceleration.
 - **Player:** a cube icon preview with a local preview ID selector. It does not unlock or equip icons.
 - **Recorder:** local input recording and replay in Practice Mode.
-- **Touch controls:** a floating Universe button that can be dragged to a new position. Its position is saved in Geode settings.
+- **Touch controls:** a floating Universe button that can be dragged and remembers its position. The panel itself can also be moved by dragging its title bar.
 - **Display:** panel color presets and a configurable panel color.
 - **Frame timing:** an optional render-interval setting. It does not change the game's physics rate.
 
