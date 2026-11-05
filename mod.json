@@ -9,6 +9,9 @@
   "developer": "MxrMC",
   "description": "A customizable Geometry Dash utility and practice toolkit.",
   "tags": ["gameplay", "interface", "offline", "cheat"],
+  "dependencies": {
+    "geode.node-ids": ">=v1.23.3"
+  },
   "settings": {
     "click-sound": {
       "name": "Global click sound",
