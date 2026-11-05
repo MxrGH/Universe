@@ -40,7 +40,7 @@ jobs:
 
       - name: Check Python tools
         run: |
-          python -m py_compile scripts/*.py
+          python -c "import pathlib, py_compile; [py_compile.compile(str(p), doraise=True) for p in pathlib.Path('scripts').glob('*.py')]"
           python scripts/level_maker.py --offline --prompt "Build workflow smoke test" --output universe-level-smoke-test.json
 
       - name: Build Geode mod
