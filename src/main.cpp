@@ -256,17 +256,18 @@ protected:
 
         auto objects = layer->m_startPosObjects;
         int index = objects->indexOfObject(layer->m_startPosObject);
+        bool hasCurrent = layer->m_startPosObject && index >= 0;
         CCObject* next = nullptr;
 
         if (direction < 0) {
-            if (!layer->m_startPosObject)
+            if (!hasCurrent)
                 next = objects->lastObject();
-            else if (layer->m_startPosObject != objects->firstObject())
+            else if (index > 0)
                 next = objects->objectAtIndex(index - 1);
         } else {
-            if (!layer->m_startPosObject)
+            if (!hasCurrent)
                 next = objects->firstObject();
-            else if (layer->m_startPosObject != objects->lastObject())
+            else if (static_cast<unsigned int>(index + 1) < objects->count())
                 next = objects->objectAtIndex(index + 1);
         }
 
@@ -348,10 +349,23 @@ protected:
 
         switch (page) {
             case Page::Player:
-                addText("Player utilities", {-245.f, 105.f});
-                addText("Player profiles and appearance tools will live here.", {-245.f, 65.f}, 0.34f);
-                addText("Icon preview is local-only; it does not change online profiles.", {-245.f, 25.f}, 0.32f);
-                addToggle("Local icon preview", "icon-preview", 101, -35.f);
+                addText("Player status", {-245.f, 105.f});
+                if (auto layer = PlayLayer::get(); layer && layer->m_player1) {
+                    auto mode = layer->m_isPracticeMode ? "Practice Mode" : "Normal Mode";
+                    auto modeText = fmt::format("Current mode: {}", mode);
+                    auto position = layer->m_player1->getPosition();
+                    auto positionText = fmt::format("Position: X {:.0f}  Y {:.0f}", position.x, position.y);
+                    auto mod = Mod::get();
+                    float speed = mod && mod->getSettingValue<bool>("speedhack-enabled")
+                        ? mod->getSettingValue<float>("speedhack-speed") : 1.f;
+                    auto speedText = fmt::format("Local speed: {:.2f}x", speed);
+                    addText(modeText.c_str(), {-245.f, 55.f}, 0.38f);
+                    addText(positionText.c_str(), {-245.f, 10.f}, 0.38f);
+                    addText(speedText.c_str(), {-245.f, -35.f}, 0.38f);
+                } else {
+                    addText("Enter a level to see the current player state.", {-245.f, 55.f}, 0.34f);
+                }
+                addText("A full icon appearance editor is not available yet.", {-245.f, -100.f}, 0.31f);
                 break;
             case Page::Practice: {
                 auto mod = Mod::get();
@@ -431,10 +445,11 @@ protected:
                 break;
             case Page::Settings:
                 addText("Universe settings", {-245.f, 105.f});
-                addToggle("Global click sound", "click-sound", 104, 45.f);
-                addToggle("Safe Mode", "safe-mode", 105, -15.f);
-                addText("When ON with Noclip, Universe marks the current run as Practice Mode.", {-245.f, -85.f}, 0.29f);
-                addText("You can switch Safe Mode ON or OFF at any time.", {-245.f, -115.f}, 0.30f);
+                addToggle("Global click sound", "click-sound", 104, 65.f);
+                addToggle("Safe Mode", "safe-mode", 105, 15.f);
+                addText("Safe Mode marks the current attempt as Practice after Noclip or Speedhack is used.", {-245.f, -45.f}, 0.29f);
+                addText("This is a local safeguard, not a server-side guarantee.", {-245.f, -80.f}, 0.29f);
+                addText("The floating touch button can be changed in Geode settings.", {-245.f, -125.f}, 0.29f);
                 break;
         }
     }
@@ -660,6 +675,36 @@ class $modify(UniversePlayLayer, PlayLayer) {
         }
     }
 
+    void updateFloatingButton() {
+        auto mod = Mod::get();
+        bool shouldShow = mod && mod->getSettingValue<bool>("floating-button");
+        if (!shouldShow) {
+            if (m_fields->floatingMenu) {
+                m_fields->floatingMenu->removeFromParentAndCleanup(true);
+                m_fields->floatingMenu = nullptr;
+            }
+            return;
+        }
+        if (m_fields->floatingMenu) return;
+
+        auto win = CCDirector::sharedDirector()->getWinSize();
+        auto label = CCLabelBMFont::create("UNIV", "goldFont.fnt");
+        if (!label) return;
+        label->setScale(0.62f);
+        auto item = CCMenuItemLabel::create(
+            label, this, menu_selector(UniversePlayLayer::toggleUniversePanel)
+        );
+        if (!item) return;
+        auto menu = CCMenu::create();
+        if (!menu) return;
+        menu->addChild(item);
+        menu->setPosition({win.width - 48.f, win.height * 0.52f});
+        item->setPosition({0.f, 0.f});
+        item->setContentSize({76.f, 52.f});
+        this->addChild(menu, 10001);
+        m_fields->floatingMenu = menu;
+    }
+
     void createObjectsFromSetupFinished() {
         PlayLayer::createObjectsFromSetupFinished();
         if (!m_fields->hitboxDrawNode) {
@@ -670,37 +715,12 @@ class $modify(UniversePlayLayer, PlayLayer) {
             }
         }
 
-        auto mod = Mod::get();
-        if (mod && mod->getSettingValue<bool>("floating-button")
-            && !m_fields->floatingMenu) {
-            auto win = CCDirector::sharedDirector()->getWinSize();
-            auto label = CCLabelBMFont::create("UNIV", "goldFont.fnt");
-            if (label) {
-                label->setScale(0.62f);
-                auto item = CCMenuItemLabel::create(
-                    label, this, menu_selector(UniversePlayLayer::toggleUniversePanel)
-                );
-                if (item) {
-                    auto menu = CCMenu::create();
-                    if (menu) {
-                        menu->addChild(item);
-                        menu->setPosition({win.width - 48.f, win.height * 0.52f});
-                        item->setPosition({0.f, 0.f});
-                        item->setContentSize({76.f, 52.f});
-                        this->addChild(menu, 10001);
-                        m_fields->floatingMenu = menu;
-                    }
-                }
-            }
-        } else if ((!mod || !mod->getSettingValue<bool>("floating-button"))
-            && m_fields->floatingMenu) {
-            m_fields->floatingMenu->removeFromParentAndCleanup(true);
-            m_fields->floatingMenu = nullptr;
-        }
+        updateFloatingButton();
     }
 
     void postUpdate(float dt) {
         PlayLayer::postUpdate(dt);
+        updateFloatingButton();
         auto node = m_fields->hitboxDrawNode;
         if (!node) return;
         node->clear();
