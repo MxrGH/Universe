@@ -1,28 +1,14 @@
 {
   "geode": "6.0.0-alpha.1",
-  "gd": {
-    "win": "2.2091",
-    "android": "2.2091"
-  },
+  "gd": { "win": "2.2091", "android": "2.2091" },
   "id": "mxrmc.universe",
   "name": "Universe",
-  "version": "v0.1.1",
+  "version": "v0.2.0",
   "developer": "MxrMC",
-  "description": "A customizable Geometry Dash utility and practice toolkit.",
-  "tags": [
-    "gameplay",
-    "interface",
-    "offline",
-    "cheat"
-  ],
-  "dependencies": {
-    "geode.node-ids": ">=v1.23.3"
-  },
-  "resources": {
-    "files": [
-      "resources/click.mp3"
-    ]
-  },
+  "description": "A customizable Geometry Dash utility and practice toolkit with a tabbed in-game panel.",
+  "tags": ["gameplay", "interface", "offline", "cheat"],
+  "dependencies": { "geode.node-ids": ">=v1.23.3" },
+  "resources": { "files": ["resources/click.mp3"] },
   "settings": {
     "click-sound": {
       "name": "Global click sound",
@@ -38,7 +24,7 @@
     },
     "noclip": {
       "name": "Noclip",
-      "description": "Local practice toggle. Do not submit modified runs as records.",
+      "description": "Local practice toggle. Modified runs must not be submitted as records.",
       "type": "bool",
       "default": false
     },

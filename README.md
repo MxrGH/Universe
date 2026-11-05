@@ -1,27 +1,17 @@
 # Universe
 
-A Geode mod project targeting Geometry Dash **2.2091** on Windows and Android.
+A Geometry Dash 2.2091 Geode utility mod by MxrMC.
 
-Repository: https://github.com/MxrGH/Universe
+## Current build (v0.2.0)
+- In-game tabbed panel: Player, Practice, Level, Visuals, Recorder, Keybinds, Settings.
+- Working settings toggles for local icon preview, practice tools, noclip, global click sound, and Safe Mode.
+- Global touch/click sound using the supplied `resources/click.mp3`.
+- Windows x64, Android ARM64, and Android ARMv7 build targets.
 
-## Build targets
+## Important status
+The tabbed interface is implemented. Some tabs (Level, Visuals, Recorder, Keybinds) are clearly marked as planned and are informational placeholders; their underlying systems are not implemented yet. Noclip is currently a stored setting toggle, not a gameplay hook. Icon preview is currently a stored local-only setting, not yet an icon renderer.
 
-The GitHub Actions workflow builds Windows x64, Android ARM64, and Android ARMv7, then combines them into one universal `.geode` package.
+Safe Mode is a preference flag in this build, not a complete submission-integrity enforcement system. Do not submit modified runs as legitimate records. Universe does not spoof achievements, coins, verification, online profiles, or leaderboard results.
 
-Download the artifact named **Universe-Windows-Android-GD-2.2091** from the repository's Actions run.
-
-## Implemented
-
-- Main-menu Universe entry button.
-- Global, non-blocking touch listener.
-- Bundled click sound: plays on Android screen taps throughout Geometry Dash when **Global click sound** is enabled.
-- Click sound is included as a mod resource.
-
-## In progress / not implemented yet
-
-- Full Eclipse/Mega Hack-style control panel.
-- Noclip gameplay hook and record-safety enforcement.
-- Local icon preview controls.
-- Local practice helper controls.
-
-Safe Mode is intended to keep modified gameplay from being submitted as legitimate records. This project does not spoof server-side icons, fabricate online achievements, or bypass leaderboard validation.
+## Build
+GitHub Actions builds Windows x64 and Android ARM64/ARMv7, then combines the platform outputs into a universal `.geode` artifact.
