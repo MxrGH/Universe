@@ -692,14 +692,28 @@ class $modify(UniversePlayerObject, PlayerObject) {
     }
 };
 
-class UniverseDragButton : public CCMenuItemLabel {
+class UniverseFloatingButton : public CCLayer {
     CCPoint m_touchStart = {0.f, 0.f};
-    bool m_dragged = false;
+    bool m_moved = false;
+
+    void togglePanel() {
+        auto scene = CCDirector::sharedDirector()->getRunningScene();
+        if (!scene) return;
+        if (auto existing = scene->getChildByID("universe-panel"_spr)) {
+            existing->removeFromParentAndCleanup(true);
+            return;
+        }
+        auto panel = UniversePanel::create();
+        if (panel) {
+            panel->setID("universe-panel"_spr);
+            scene->addChild(panel, 10000);
+        }
+    }
 
 public:
-    static UniverseDragButton* create(CCNode* label, CCObject* target, SEL_MenuHandler selector) {
-        auto ret = new UniverseDragButton();
-        if (ret && ret->initWithLabel(label, target, selector)) {
+    static UniverseFloatingButton* create() {
+        auto ret = new UniverseFloatingButton();
+        if (ret && ret->init()) {
             ret->autorelease();
             return ret;
         }
@@ -707,41 +721,56 @@ public:
         return nullptr;
     }
 
-    bool ccTouchBegan(CCTouch* touch, CCEvent* event) override {
-        if (!CCMenuItemLabel::ccTouchBegan(touch, event))
-            return false;
-        m_touchStart = touch->getLocation();
-        m_dragged = false;
+    bool init() override {
+        if (!CCLayer::init()) return false;
+        setContentSize({76.f, 52.f});
+        setTouchEnabled(true);
+        auto background = CCLayerColor::create({28, 32, 58, 220}, 76.f, 52.f);
+        if (background) this->addChild(background);
+        auto label = CCLabelBMFont::create("UNIV", "goldFont.fnt");
+        if (label) {
+            label->setScale(0.62f);
+            label->setPosition({38.f, 26.f});
+            this->addChild(label, 1);
+        }
         return true;
     }
 
-    void ccTouchMoved(CCTouch* touch, CCEvent* event) override {
-        auto current = touch->getLocation();
-        if (!m_dragged && ccpDistance(current, m_touchStart) > 10.f) {
-            m_dragged = true;
-            this->unselected();
-        }
-        if (!m_dragged) {
-            CCMenuItemLabel::ccTouchMoved(touch, event);
-            return;
-        }
+    void registerWithTouchDispatcher() override {
+        CCDirector::sharedDirector()->getTouchDispatcher()
+            ->addTargetedDelegate(this, -127, true);
+    }
 
+    bool ccTouchBegan(CCTouch* touch, CCEvent*) override {
+        auto local = convertToNodeSpace(touch->getLocation());
+        auto bounds = CCRect(0.f, 0.f, getContentSize().width, getContentSize().height);
+        if (!bounds.containsPoint(local)) return false;
+        m_touchStart = touch->getLocation();
+        m_moved = false;
+        return true;
+    }
+
+    void ccTouchMoved(CCTouch* touch, CCEvent*) override {
+        auto current = touch->getLocation();
+        if (!m_moved && ccpDistance(current, m_touchStart) > 8.f)
+            m_moved = true;
+        if (!m_moved) return;
+
+        auto parent = getParent();
+        auto local = parent ? parent->convertToNodeSpace(current) : current;
         auto win = CCDirector::sharedDirector()->getWinSize();
-        auto parent = this->getParent();
-        auto parentPos = parent ? parent->convertToNodeSpace(current) : current;
         setPosition({
-            std::clamp(parentPos.x, 38.f, win.width - 38.f),
-            std::clamp(parentPos.y, 28.f, win.height - 28.f)
+            std::clamp(local.x, 38.f, win.width - 38.f),
+            std::clamp(local.y, 26.f, win.height - 26.f)
         });
     }
 
-    void ccTouchEnded(CCTouch* touch, CCEvent* event) override {
-        if (!m_dragged) {
-            CCMenuItemLabel::ccTouchEnded(touch, event);
+    void ccTouchEnded(CCTouch*, CCEvent*) override {
+        if (!m_moved) {
+            togglePanel();
             return;
         }
-        m_dragged = false;
-        this->unselected();
+        m_moved = false;
         auto mod = Mod::get();
         auto win = CCDirector::sharedDirector()->getWinSize();
         if (mod && win.width > 0.f && win.height > 0.f) {
@@ -750,16 +779,15 @@ public:
         }
     }
 
-    void ccTouchCancelled(CCTouch* touch, CCEvent* event) override {
-        m_dragged = false;
-        CCMenuItemLabel::ccTouchCancelled(touch, event);
+    void ccTouchCancelled(CCTouch*, CCEvent*) override {
+        m_moved = false;
     }
 };
 
 class $modify(UniversePlayLayer, PlayLayer) {
     struct Fields {
         CCDrawNode* hitboxDrawNode = nullptr;
-        CCMenu* floatingMenu = nullptr;
+        UniverseFloatingButton* floatingButton = nullptr;
         std::vector<CCPoint> trajectoryPoints;
         std::vector<float> trajectoryTimes;
         float trajectoryClock = 0.f;
@@ -783,33 +811,23 @@ class $modify(UniversePlayLayer, PlayLayer) {
         auto mod = Mod::get();
         bool shouldShow = mod && mod->getSettingValue<bool>("floating-button");
         if (!shouldShow) {
-            if (m_fields->floatingMenu) {
-                m_fields->floatingMenu->removeFromParentAndCleanup(true);
-                m_fields->floatingMenu = nullptr;
+            if (m_fields->floatingButton) {
+                m_fields->floatingButton->removeFromParentAndCleanup(true);
+                m_fields->floatingButton = nullptr;
             }
             return;
         }
-        if (m_fields->floatingMenu) return;
+        if (m_fields->floatingButton) return;
 
         auto win = CCDirector::sharedDirector()->getWinSize();
-        auto label = CCLabelBMFont::create("UNIV", "goldFont.fnt");
-        if (!label) return;
-        label->setScale(0.62f);
-        auto item = UniverseDragButton::create(
-            label, this, menu_selector(UniversePlayLayer::toggleUniversePanel)
-        );
-        if (!item) return;
-        auto menu = CCMenu::create();
-        if (!menu) return;
-        menu->addChild(item);
-        menu->setPosition({0.f, 0.f});
+        auto button = UniverseFloatingButton::create();
+        if (!button) return;
         float x = mod->getSettingValue<float>("floating-button-x");
         float y = mod->getSettingValue<float>("floating-button-y");
-        item->setPosition({std::clamp(x, 0.05f, 0.95f) * win.width,
-                           std::clamp(y, 0.05f, 0.95f) * win.height});
-        item->setContentSize({76.f, 52.f});
-        this->addChild(menu, 10001);
-        m_fields->floatingMenu = menu;
+        button->setPosition({std::clamp(x, 0.05f, 0.95f) * win.width,
+                             std::clamp(y, 0.05f, 0.95f) * win.height});
+        this->addChild(button, 10001);
+        m_fields->floatingButton = button;
     }
 
     void createObjectsFromSetupFinished() {
