@@ -6,7 +6,7 @@
   },
   "id": "mxrmc.universe",
   "name": "Universe",
-  "version": "v0.7.0",
+  "version": "v0.8.0",
   "developer": "MxrMC",
   "description": "Local practice, visual, StartPos, and replay tools for Geometry Dash.",
   "tags": [
@@ -194,9 +194,33 @@
     },
     "show-projection": {
       "name": "Show movement projection",
-      "description": "Draw a short straight-line estimate from recent movement. This does not simulate gravity, portals, or collisions.",
+      "description": "Estimate a short path from recent player velocity and acceleration. It does not model portals, collisions, or future gameplay events.",
       "type": "bool",
       "default": false
+    },
+    "preview-icon-id": {
+      "name": "Preview cube icon ID",
+      "description": "Select a cube icon for the local Universe preview. This does not unlock or equip the icon.",
+      "type": "int",
+      "default": 1,
+      "min": 1,
+      "max": 500
+    },
+    "floating-button-x": {
+      "name": "Floating button horizontal position",
+      "description": "Saved horizontal position of the draggable touch button.",
+      "type": "float",
+      "default": 0.95,
+      "min": 0.05,
+      "max": 0.95
+    },
+    "floating-button-y": {
+      "name": "Floating button vertical position",
+      "description": "Saved vertical position of the draggable touch button.",
+      "type": "float",
+      "default": 0.52,
+      "min": 0.05,
+      "max": 0.95
     }
   }
 }
