@@ -224,9 +224,9 @@
     },
     "ai-tab-enabled": {
       "name": "Show AI tab (experimental)",
-      "description": "Show the experimental AI level-design information tab. Disabled by default.",
+      "description": "Show the in-game AI level-draft prompt interface.",
       "type": "bool",
-      "default": false
+      "default": true
     }
   }
 }
