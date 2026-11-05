@@ -30,6 +30,7 @@ namespace {
     float g_macroTime = 0.f;
     float g_macroPlaybackTime = 0.f;
     size_t g_macroPlaybackIndex = 0;
+    std::vector<PlayerButton> g_macroHeldButtons;
 
     std::string macroFilePath() {
         auto mod = Mod::get();
@@ -90,11 +91,23 @@ namespace {
         g_macroEvents = std::move(loaded);
         g_macroPlaybackIndex = 0;
         g_macroPlaybackTime = 0.f;
+        g_macroHeldButtons.clear();
         g_macroPlaybackLayer = layer;
         g_macroPlayingBack = true;
         // Macro playback is always a local practice action.
         layer->m_isPracticeMode = true;
         return true;
+    }
+
+    void stopMacroPlayback(PlayLayer* layer) {
+        if (g_macroPlayingBack && layer && layer == g_macroPlaybackLayer && layer->m_player1) {
+            for (auto button : g_macroHeldButtons)
+                layer->m_player1->releaseButton(button);
+        }
+        g_macroHeldButtons.clear();
+        g_macroPlayingBack = false;
+        g_macroPlaybackIndex = 0;
+        g_macroPlaybackLayer = nullptr;
     }
 
     void updateMacroPlayback(PlayLayer* layer, float dt) {
@@ -105,8 +118,14 @@ namespace {
                 g_macroTime += dt;
         }
         if (!g_macroPlayingBack || !layer || layer != g_macroPlaybackLayer || !layer->m_player1) {
-            if (g_macroPlayingBack && layer != g_macroPlaybackLayer)
+            if (g_macroPlayingBack && layer != g_macroPlaybackLayer) {
+                // The old PlayLayer is no longer active. Do not dereference it;
+                // just discard the held-button bookkeeping for that scene.
+                g_macroHeldButtons.clear();
                 g_macroPlayingBack = false;
+                g_macroPlaybackIndex = 0;
+                g_macroPlaybackLayer = nullptr;
+            }
             return;
         }
 
@@ -117,15 +136,22 @@ namespace {
             auto player = layer->m_player1;
             g_macroPlayingBack = true;
             auto button = static_cast<PlayerButton>(event.button);
-            if (event.down)
+            if (event.down) {
                 player->pushButton(button);
-            else
+                if (std::find(g_macroHeldButtons.begin(), g_macroHeldButtons.end(), button)
+                    == g_macroHeldButtons.end()) {
+                    g_macroHeldButtons.push_back(button);
+                }
+            } else {
                 player->releaseButton(button);
-            g_macroPlayingBack = true;
+                auto held = std::find(g_macroHeldButtons.begin(), g_macroHeldButtons.end(), button);
+                if (held != g_macroHeldButtons.end())
+                    g_macroHeldButtons.erase(held);
+            }
         }
 
         if (g_macroPlaybackIndex >= g_macroEvents.size())
-            g_macroPlayingBack = false;
+            stopMacroPlayback(layer);
     }
 
     void applyFpsBypass() {
@@ -472,13 +498,12 @@ protected:
             return;
         }
         if (tag == 120) {
-            g_macroPlayingBack = false;
-            g_macroPlaybackIndex = 0;
+            stopMacroPlayback(PlayLayer::get());
             showPage(m_page);
             return;
         }
         if (tag == 121) {
-            g_macroPlayingBack = false;
+            stopMacroPlayback(PlayLayer::get());
             g_macroRecording = false;
             g_macroEvents.clear();
             auto path = macroFilePath();
