@@ -215,7 +215,8 @@ public:
         dim->setPosition({0.f, 0.f});
         this->addChild(dim, 0);
 
-        auto panel = CCLayerColor::create({24, 28, 48, 255});
+        auto themeColor = Mod::get()->getSettingValue<ccColor4B>("panel-color");
+        auto panel = CCLayerColor::create(themeColor);
         panel->setContentSize({win.width * 0.82f, win.height * 0.78f});
         panel->setPosition({win.width * 0.09f, win.height * 0.11f});
         this->addChild(panel, 1);
