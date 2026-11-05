@@ -6,7 +6,7 @@
   },
   "id": "mxrmc.universe",
   "name": "Universe",
-  "version": "v0.4.0",
+  "version": "v0.5.0",
   "developer": "MxrMC",
   "description": "A Geometry Dash utility and practice toolkit with all-mode Noclip and switchable Safe Mode.",
   "tags": [
@@ -41,6 +41,20 @@
       "description": "Bypass object and slope collisions in both Normal and Practice Mode. Use Safe Mode to mark the run as Practice Mode.",
       "type": "bool",
       "default": false
+    },
+    "speedhack-enabled": {
+      "name": "Speedhack",
+      "description": "Change local gameplay speed. This modifies the PlayLayer update delta and may affect physics or timing.",
+      "type": "bool",
+      "default": false
+    },
+    "speedhack-speed": {
+      "name": "Speedhack multiplier",
+      "description": "Gameplay speed multiplier, adjustable from 0.25x to 3.00x in the Universe panel.",
+      "type": "float",
+      "default": 1.0,
+      "min": 0.25,
+      "max": 3.0
     },
     "icon-preview": {
       "name": "Icon preview",
