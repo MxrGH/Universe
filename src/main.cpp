@@ -206,8 +206,9 @@ protected:
                 auto target = Mod::get()->getSettingValue<int64_t>("fps-target");
                 auto fpsText = fmt::format("FPS target: {}", target);
                 addText(fpsText.c_str(), {-245.f, -35.f}, 0.34f);
-                addText("Adjust FPS target in Geode > Universe settings.", {-245.f, -75.f}, 0.29f);
-                addText("FPS Bypass changes the render interval, not physics.", {-245.f, -115.f}, 0.28f);
+                addAction("-", 113, {125.f, -35.f});
+                addAction("+", 114, {205.f, -35.f});
+                addText("FPS Bypass changes the render interval, not physics.", {-245.f, -85.f}, 0.28f);
                 break;
             case Page::Recorder:
                 addText("Recorder", {-245.f, 105.f});
@@ -250,6 +251,15 @@ protected:
         }
         if (tag == 109 || tag == 110) {
             switchStartPos(tag == 109 ? -1 : 1);
+            showPage(m_page);
+            return;
+        }
+        if (tag == 113 || tag == 114) {
+            auto target = mod->getSettingValue<int64_t>("fps-target");
+            target += tag == 114 ? 30 : -30;
+            target = std::clamp<int64_t>(target, 60, 360);
+            mod->setSettingValue<int64_t>("fps-target", target);
+            applyFpsBypass();
             showPage(m_page);
             return;
         }
