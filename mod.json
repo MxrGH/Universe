@@ -52,6 +52,30 @@
       "category": "gameplay",
       "default": "Ctrl+Shift+S"
     },
+    "keybind-fps-bypass": {
+      "name": "Toggle FPS Bypass",
+      "description": "Toggle the game's render frame interval override.",
+      "type": "keybind",
+      "category": "universal",
+      "default": "F8"
+    },
+    "fps-bypass-enabled": {
+      "name": "FPS Bypass",
+      "description": "Override the render frame interval using the configured FPS target.",
+      "type": "bool",
+      "default": false
+    },
+    "fps-target": {
+      "name": "FPS target",
+      "description": "Target render frequency while FPS Bypass is enabled.",
+      "type": "int",
+      "default": 240,
+      "min": 60,
+      "max": 360,
+      "control": {
+        "slider": true
+      }
+    },
     "keybind-hitboxes": {
       "name": "Toggle hitboxes",
       "description": "Show or hide object collision rectangles.",
