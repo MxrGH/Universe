@@ -1,0 +1,44 @@
+{
+  "geode": "v6.0.0-alpha.1",
+  "gd": {
+    "win": "2.2091"
+  },
+  "id": "mxrmc.universe",
+  "name": "Universe",
+  "version": "v0.1.0",
+  "developer": "MxrMC",
+  "description": "A customizable Geometry Dash utility and practice toolkit.",
+  "tags": ["gameplay", "interface", "offline", "cheat"],
+  "settings": {
+    "click-sound": {
+      "name": "Global click sound",
+      "description": "Play the supplied sound for mouse clicks and touch taps.",
+      "type": "bool",
+      "default": true
+    },
+    "safe-mode": {
+      "name": "Safe Mode",
+      "description": "Keep modified gameplay from being treated as a legitimate online record.",
+      "type": "bool",
+      "default": true
+    },
+    "noclip": {
+      "name": "Noclip",
+      "description": "Local practice toggle. Do not submit modified runs as records.",
+      "type": "bool",
+      "default": false
+    },
+    "icon-preview": {
+      "name": "Icon preview",
+      "description": "Local-only icon appearance preview.",
+      "type": "bool",
+      "default": false
+    },
+    "practice-tools": {
+      "name": "Practice tools",
+      "description": "Enable local practice and testing helpers.",
+      "type": "bool",
+      "default": true
+    }
+  }
+}
