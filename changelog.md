@@ -7,6 +7,9 @@
 
 ## v0.6.1
 - Release held inputs when a practice replay ends or is stopped.
+- Show live player mode, position, and local speed in the Player tab.
+- Let the floating touch button be enabled or disabled from the in-game Settings tab.
+- Handle missing or stale active StartPos references without using an invalid array index.
 - Reworked project documentation to describe current behavior and limitations in plain language.
 - Clarified Safe Mode and icon preview settings.
 
