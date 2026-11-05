@@ -221,6 +221,12 @@
       "default": 0.52,
       "min": 0.05,
       "max": 0.95
+    },
+    "ai-tab-enabled": {
+      "name": "Show AI tab (experimental)",
+      "description": "Show the experimental AI level-design information tab. Disabled by default.",
+      "type": "bool",
+      "default": false
     }
   }
 }
