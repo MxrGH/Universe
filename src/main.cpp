@@ -232,6 +232,9 @@ protected:
     CCMenu* m_menu = nullptr;
     CCLabelBMFont* m_pageTitle = nullptr;
     CCLayer* m_content = nullptr;
+    bool m_isDragging = false;
+    CCPoint m_dragTouchStart = {0.f, 0.f};
+    CCPoint m_dragPanelStart = {0.f, 0.f};
 
     void addText(const char* text, CCPoint pos, float scale = 0.42f) {
         auto label = CCLabelBMFont::create(text, "bigFont.fnt");
@@ -591,6 +594,42 @@ protected:
     }
 
 public:
+    void registerWithTouchDispatcher() override {
+        CCDirector::sharedDirector()->getTouchDispatcher()
+            ->addTargetedDelegate(this, -126, true);
+    }
+
+    bool ccTouchBegan(CCTouch* touch, CCEvent*) override {
+        auto win = CCDirector::sharedDirector()->getWinSize();
+        auto local = convertToNodeSpace(touch->getLocation());
+        if (local.x < win.width * 0.15f || local.x > win.width * 0.82f
+            || local.y < win.height * 0.76f || local.y > win.height * 0.88f)
+            return false;
+        m_isDragging = true;
+        m_dragTouchStart = touch->getLocation();
+        m_dragPanelStart = getPosition();
+        return true;
+    }
+
+    void ccTouchMoved(CCTouch* touch, CCEvent*) override {
+        if (!m_isDragging) return;
+        auto win = CCDirector::sharedDirector()->getWinSize();
+        auto delta = ccpSub(touch->getLocation(), m_dragTouchStart);
+        auto next = ccpAdd(m_dragPanelStart, delta);
+        setPosition({
+            std::clamp(next.x, -win.width * 0.08f, win.width * 0.08f),
+            std::clamp(next.y, -win.height * 0.10f, win.height * 0.10f)
+        });
+    }
+
+    void ccTouchEnded(CCTouch*, CCEvent*) override {
+        m_isDragging = false;
+    }
+
+    void ccTouchCancelled(CCTouch*, CCEvent*) override {
+        m_isDragging = false;
+    }
+
     static UniversePanel* create() {
         auto ret = new UniversePanel();
         if (ret && ret->init()) {
@@ -605,6 +644,8 @@ public:
         if (!CCLayer::init()) return false;
 
         auto win = CCDirector::sharedDirector()->getWinSize();
+        setContentSize(win);
+        setTouchEnabled(true);
         auto dim = CCLayerColor::create({8, 10, 22, 225});
         dim->setContentSize(win);
         dim->setPosition({0.f, 0.f});
