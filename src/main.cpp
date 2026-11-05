@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <limits>
 #include <sstream>
@@ -365,7 +366,24 @@ protected:
                 } else {
                     addText("Enter a level to see the current player state.", {-245.f, 55.f}, 0.34f);
                 }
-                addText("A full icon appearance editor is not available yet.", {-245.f, -100.f}, 0.31f);
+                addText("Cube icon preview", {-245.f, -90.f}, 0.34f);
+                if (auto gm = GameManager::get()) {
+                    auto previewID = static_cast<int>(Mod::get()->getSettingValue<int64_t>("preview-icon-id"));
+                    auto icon = SimplePlayer::create(0);
+                    if (icon) {
+                        icon->updatePlayerFrame(previewID, IconType::Cube);
+                        icon->setColor(gm->colorForIdx(gm->getPlayerColor()));
+                        icon->setSecondColor(gm->colorForIdx(gm->getPlayerColor2()));
+                        icon->setPosition({0.f, -155.f});
+                        icon->setScale(1.35f);
+                        m_content->addChild(icon);
+                    }
+                    auto iconText = fmt::format("Preview ID: {}", previewID);
+                    addText(iconText.c_str(), {-245.f, -220.f}, 0.32f);
+                    addAction("-", 124, {125.f, -220.f});
+                    addAction("+", 125, {205.f, -220.f});
+                }
+                addText("Preview only. Your equipped icon is not changed.", {-245.f, -270.f}, 0.28f);
                 break;
             case Page::Practice: {
                 auto mod = Mod::get();
@@ -463,6 +481,14 @@ protected:
         auto mod = Mod::get();
         if (!mod) return;
 
+        if (tag == 124 || tag == 125) {
+            auto iconID = mod->getSettingValue<int64_t>("preview-icon-id");
+            iconID += tag == 125 ? 1 : -1;
+            iconID = std::clamp<int64_t>(iconID, 1, 500);
+            mod->setSettingValue<int64_t>("preview-icon-id", iconID);
+            showPage(m_page);
+            return;
+        }
         if (tag == 107 || tag == 108) {
             float speed = mod->getSettingValue<float>("speedhack-speed");
             speed += tag == 108 ? 0.25f : -0.25f;
@@ -661,11 +687,77 @@ class $modify(UniversePlayerObject, PlayerObject) {
     }
 };
 
+class UniverseDragButton : public CCMenuItemLabel {
+    CCPoint m_touchStart = {0.f, 0.f};
+    bool m_dragged = false;
+
+public:
+    static UniverseDragButton* create(CCNode* label, CCObject* target, SEL_MenuHandler selector) {
+        auto ret = new UniverseDragButton();
+        if (ret && ret->initWithLabel(label, target, selector)) {
+            ret->autorelease();
+            return ret;
+        }
+        CC_SAFE_DELETE(ret);
+        return nullptr;
+    }
+
+    bool ccTouchBegan(CCTouch* touch, CCEvent* event) override {
+        if (!CCMenuItemLabel::ccTouchBegan(touch, event))
+            return false;
+        m_touchStart = touch->getLocation();
+        m_dragged = false;
+        return true;
+    }
+
+    void ccTouchMoved(CCTouch* touch, CCEvent* event) override {
+        auto current = touch->getLocation();
+        if (!m_dragged && ccpDistance(current, m_touchStart) > 10.f) {
+            m_dragged = true;
+            this->unselected();
+        }
+        if (!m_dragged) {
+            CCMenuItemLabel::ccTouchMoved(touch, event);
+            return;
+        }
+
+        auto win = CCDirector::sharedDirector()->getWinSize();
+        auto parent = this->getParent();
+        auto parentPos = parent ? parent->convertToNodeSpace(current) : current;
+        setPosition({
+            std::clamp(parentPos.x, 38.f, win.width - 38.f),
+            std::clamp(parentPos.y, 28.f, win.height - 28.f)
+        });
+    }
+
+    void ccTouchEnded(CCTouch* touch, CCEvent* event) override {
+        if (!m_dragged) {
+            CCMenuItemLabel::ccTouchEnded(touch, event);
+            return;
+        }
+        m_dragged = false;
+        this->unselected();
+        auto mod = Mod::get();
+        auto win = CCDirector::sharedDirector()->getWinSize();
+        if (mod && win.width > 0.f && win.height > 0.f) {
+            mod->setSettingValue<float>("floating-button-x", getPositionX() / win.width);
+            mod->setSettingValue<float>("floating-button-y", getPositionY() / win.height);
+        }
+    }
+
+    void ccTouchCancelled(CCTouch* touch, CCEvent* event) override {
+        m_dragged = false;
+        CCMenuItemLabel::ccTouchCancelled(touch, event);
+    }
+};
+
 class $modify(UniversePlayLayer, PlayLayer) {
     struct Fields {
         CCDrawNode* hitboxDrawNode = nullptr;
         CCMenu* floatingMenu = nullptr;
         std::vector<CCPoint> trajectoryPoints;
+        std::vector<float> trajectoryTimes;
+        float trajectoryClock = 0.f;
     };
 
     void toggleUniversePanel(CCObject*) {
@@ -698,15 +790,18 @@ class $modify(UniversePlayLayer, PlayLayer) {
         auto label = CCLabelBMFont::create("UNIV", "goldFont.fnt");
         if (!label) return;
         label->setScale(0.62f);
-        auto item = CCMenuItemLabel::create(
+        auto item = UniverseDragButton::create(
             label, this, menu_selector(UniversePlayLayer::toggleUniversePanel)
         );
         if (!item) return;
         auto menu = CCMenu::create();
         if (!menu) return;
         menu->addChild(item);
-        menu->setPosition({win.width - 48.f, win.height * 0.52f});
-        item->setPosition({0.f, 0.f});
+        menu->setPosition({0.f, 0.f});
+        float x = mod->getSettingValue<float>("floating-button-x");
+        float y = mod->getSettingValue<float>("floating-button-y");
+        item->setPosition({std::clamp(x, 0.05f, 0.95f) * win.width,
+                           std::clamp(y, 0.05f, 0.95f) * win.height});
         item->setContentSize({76.f, 52.f});
         this->addChild(menu, 10001);
         m_fields->floatingMenu = menu;
@@ -753,13 +848,22 @@ class $modify(UniversePlayLayer, PlayLayer) {
         bool showProjection = mod->getSettingValue<bool>("show-projection");
         if ((showTrail || showProjection) && m_player1) {
             auto& points = m_fields->trajectoryPoints;
+            auto& times = m_fields->trajectoryTimes;
             auto current = m_player1->getPosition();
-            if (!points.empty() && ccpDistance(points.back(), current) > 260.f)
+            m_fields->trajectoryClock += std::max(0.f, dt);
+
+            if (!points.empty() && ccpDistance(points.back(), current) > 260.f) {
                 points.clear();
-            if (points.empty() || ccpDistance(points.back(), current) >= 3.f)
+                times.clear();
+            }
+            if (points.empty() || ccpDistance(points.back(), current) >= 1.5f) {
                 points.push_back(current);
-            while (points.size() > 90)
+                times.push_back(m_fields->trajectoryClock);
+            }
+            while (points.size() > 12) {
                 points.erase(points.begin());
+                times.erase(times.begin());
+            }
 
             if (showTrail) {
                 for (size_t i = 1; i < points.size(); ++i) {
@@ -768,21 +872,46 @@ class $modify(UniversePlayLayer, PlayLayer) {
                 }
             }
 
-            if (showProjection && points.size() >= 2) {
-                auto previous = points[points.size() - 2];
-                auto last = points.back();
-                float distance = ccpDistance(previous, last);
-                if (distance > 0.01f) {
-                    auto direction = ccp(last.x - previous.x, last.y - previous.y);
-                    direction = ccp(direction.x / distance, direction.y / distance);
-                    auto projected = ccp(current.x + direction.x * 120.f,
-                                          current.y + direction.y * 120.f);
-                    node->drawSegment(current, projected, 2.f,
-                        ccc4f(1.f, 0.78f, 0.25f, 0.85f));
+            // Estimate current velocity and acceleration from recent positions.
+            // This is a short kinematic projection, not a complete GD physics engine.
+            if (showProjection && points.size() >= 3) {
+                size_t n = points.size();
+                float dt1 = times[n - 2] - times[n - 3];
+                float dt2 = times[n - 1] - times[n - 2];
+                if (dt1 > 0.001f && dt2 > 0.001f && dt1 < 0.2f && dt2 < 0.2f) {
+                    auto p0 = points[n - 3];
+                    auto p1 = points[n - 2];
+                    auto p2 = points[n - 1];
+                    auto v1 = ccp((p1.x - p0.x) / dt1, (p1.y - p0.y) / dt1);
+                    auto v2 = ccp((p2.x - p1.x) / dt2, (p2.y - p1.y) / dt2);
+                    float averageDt = (dt1 + dt2) * 0.5f;
+                    auto acceleration = ccp(
+                        2.f * (v2.x - v1.x) / (dt1 + dt2),
+                        2.f * (v2.y - v1.y) / (dt1 + dt2)
+                    );
+                    float accelLength = ccpLength(acceleration);
+                    if (accelLength > 3000.f) {
+                        float scale = 3000.f / accelLength;
+                        acceleration = ccpMult(acceleration, scale);
+                    }
+
+                    CCPoint previous = current;
+                    for (int step = 1; step <= 12; ++step) {
+                        float t = step * 0.05f;
+                        auto projected = ccp(
+                            current.x + v2.x * t + 0.5f * acceleration.x * t * t,
+                            current.y + v2.y * t + 0.5f * acceleration.y * t * t
+                        );
+                        node->drawSegment(previous, projected, 2.f,
+                            ccc4f(1.f, 0.78f, 0.25f, 0.9f));
+                        previous = projected;
+                    }
                 }
             }
         } else {
             m_fields->trajectoryPoints.clear();
+            m_fields->trajectoryTimes.clear();
+            m_fields->trajectoryClock = 0.f;
         }
     }
 
