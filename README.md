@@ -22,6 +22,7 @@ Universe is a Geode mod for Geometry Dash 2.2091. It adds a small in-game panel 
 | Toggle Safe Mode | Ctrl + Shift + S |
 | Toggle hitboxes | H |
 | Toggle player trail | J |
+| Toggle movement projection | K |
 | Toggle FPS Bypass | F8 |
 | Start / stop recording | F6 |
 | Play saved replay | F7 |
