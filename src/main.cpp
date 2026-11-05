@@ -46,7 +46,7 @@ namespace {
             return;
         }
         for (auto const& event : g_macroEvents)
-            file << event.time << ',' << event.button << ',' << (event.down ? 1 : 0) << '\\n';
+            file << event.time << ',' << event.button << ',' << (event.down ? 1 : 0) << '\n';
         log::info("Universe saved {} practice replay events.", g_macroEvents.size());
     }
 
