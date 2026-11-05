@@ -8,7 +8,7 @@
   "name": "Universe",
   "version": "v0.8.0",
   "developer": "MxrMC",
-  "description": "Local practice, visual, StartPos, and replay tools for Geometry Dash.",
+  "description": "Local practice, visual, icon preview, StartPos, and replay tools for Geometry Dash.",
   "tags": [
     "gameplay",
     "interface",
