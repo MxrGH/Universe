@@ -35,9 +35,11 @@ This is not a native Geometry Dash level file and cannot be imported directly in
 
 ## In-game AI tab
 
-Universe includes an experimental AI information tab. It is hidden by default; enable **Show AI tab (experimental)** in Geode's Universe mod settings to display it. The tab links to the external draft workflow and explains its current output limitations.
+The Universe panel includes an AI tab (enabled by default; configurable in Geode > Universe settings). Enter a level idea and choose **GENERATE DRAFT**. The mod sends the prompt directly to Anthropic's Messages API and saves the returned text to `universe-ai-draft.txt` in the mod's save directory.
 
-The in-game tab is currently informational only: it does not yet contain a prompt editor or send API requests from Geometry Dash. Use the command-line workflow above for actual AI-assisted prompts. API credentials remain in your local environment and must not be committed to the repository.
+The in-game feature reads `ANTHROPIC_API_KEY` from the environment of the Geometry Dash process. Set the variable before launching the game, then restart Geometry Dash so the process can read it. The key is not stored in mod settings or written to the repository. The generated text is a design blueprint, not a playable or importable Geometry Dash level.
+
+The in-game prompt is limited to 1,000 characters. Requests use the `claude-sonnet-4-6` model and can incur API charges. Use an account and billing method only with a parent or guardian's permission.
 
 
 ## Anthropic (default provider)
