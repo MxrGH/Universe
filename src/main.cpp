@@ -617,8 +617,23 @@ class $modify(UniversePlayerObject, PlayerObject) {
 class $modify(UniversePlayLayer, PlayLayer) {
     struct Fields {
         CCDrawNode* hitboxDrawNode = nullptr;
+        CCMenu* floatingMenu = nullptr;
         std::vector<CCPoint> trajectoryPoints;
     };
+
+    void toggleUniversePanel(CCObject*) {
+        auto scene = CCDirector::sharedDirector()->getRunningScene();
+        if (!scene) return;
+        if (auto existing = scene->getChildByID("universe-panel"_spr)) {
+            existing->removeFromParentAndCleanup(true);
+            return;
+        }
+        auto panel = UniversePanel::create();
+        if (panel) {
+            panel->setID("universe-panel"_spr);
+            scene->addChild(panel, 10000);
+        }
+    }
 
     void createObjectsFromSetupFinished() {
         PlayLayer::createObjectsFromSetupFinished();
@@ -628,6 +643,34 @@ class $modify(UniversePlayLayer, PlayLayer) {
                 m_fields->hitboxDrawNode->setID("universe-hitboxes"_spr);
                 this->addChild(m_fields->hitboxDrawNode, 10000);
             }
+        }
+
+        auto mod = Mod::get();
+        if (mod && mod->getSettingValue<bool>("floating-button")
+            && !m_fields->floatingMenu) {
+            auto win = CCDirector::sharedDirector()->getWinSize();
+            auto label = CCLabelBMFont::create("UNIV", "goldFont.fnt");
+            if (label) {
+                label->setScale(0.62f);
+                auto item = CCMenuItemLabel::create(
+                    label, this, menu_selector(UniversePlayLayer::toggleUniversePanel)
+                );
+                if (item) {
+                    auto menu = CCMenu::create();
+                    if (menu) {
+                        menu->addChild(item);
+                        menu->setPosition({win.width - 48.f, win.height * 0.52f});
+                        item->setPosition({0.f, 0.f});
+                        item->setContentSize({76.f, 52.f});
+                        this->addChild(menu, 10001);
+                        m_fields->floatingMenu = menu;
+                    }
+                }
+            }
+        } else if ((!mod || !mod->getSettingValue<bool>("floating-button"))
+            && m_fields->floatingMenu) {
+            m_fields->floatingMenu->removeFromParentAndCleanup(true);
+            m_fields->floatingMenu = nullptr;
         }
     }
 
