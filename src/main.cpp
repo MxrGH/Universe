@@ -282,18 +282,35 @@ class $modify(UniversePlayerObject, PlayerObject) {
 class $modify(UniversePlayLayer, PlayLayer) {
     void update(float dt) {
         auto mod = Mod::get();
-        if (mod
-            && mod->getSettingValue<bool>("safe-mode")
-            && mod->getSettingValue<bool>("noclip")
-            && !this->m_isPracticeMode) {
-            // Local safeguard: prevent this modified attempt from being treated
-            // as a normal completion by the game's practice-mode state.
-            this->m_isPracticeMode = true;
+        static PlayLayer* trackedLayer = nullptr;
+        static bool attemptUsedCheat = false;
+
+        // Keep a per-level-attempt flag. Turning a cheat off later does not
+        // erase the fact that it was used during this run.
+        if (trackedLayer != this) {
+            trackedLayer = this;
+            attemptUsedCheat = false;
         }
 
-        if (mod && mod->getSettingValue<bool>("speedhack-enabled")) {
-            float speed = mod->getSettingValue<float>("speedhack-speed");
-            dt *= std::clamp(speed, 0.25f, 3.0f);
+        if (mod) {
+            bool noclipActive = mod->getSettingValue<bool>("practice-tools")
+                && mod->getSettingValue<bool>("noclip");
+            bool speedhackActive = mod->getSettingValue<bool>("speedhack-enabled");
+            if (noclipActive || speedhackActive)
+                attemptUsedCheat = true;
+
+            // Safe Mode can be toggled at any time. If a cheat was used at any
+            // point in this PlayLayer, enabling Safe Mode marks it as Practice.
+            if (mod->getSettingValue<bool>("safe-mode")
+                && attemptUsedCheat
+                && !this->m_isPracticeMode) {
+                this->m_isPracticeMode = true;
+            }
+
+            if (speedhackActive) {
+                float speed = mod->getSettingValue<float>("speedhack-speed");
+                dt *= std::clamp(speed, 0.25f, 3.0f);
+            }
         }
         PlayLayer::update(dt);
     }
