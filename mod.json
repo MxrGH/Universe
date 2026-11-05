@@ -24,6 +24,40 @@
     ]
   },
   "settings": {
+    "keybind-open-menu": {
+      "name": "Open / close Universe",
+      "description": "Toggle the Universe overlay.",
+      "type": "keybind",
+      "category": "universal",
+      "default": "Ctrl+U"
+    },
+    "keybind-noclip": {
+      "name": "Toggle Noclip",
+      "description": "Toggle Noclip during gameplay.",
+      "type": "keybind",
+      "category": "gameplay",
+      "default": "N"
+    },
+    "keybind-speedhack": {
+      "name": "Toggle Speedhack",
+      "description": "Toggle the gameplay speed multiplier.",
+      "type": "keybind",
+      "category": "gameplay",
+      "default": "M"
+    },
+    "keybind-safe-mode": {
+      "name": "Toggle Safe Mode",
+      "description": "Toggle Universe Safe Mode.",
+      "type": "keybind",
+      "category": "gameplay",
+      "default": "Ctrl+Shift+S"
+    },
+    "panel-color": {
+      "name": "Universe panel color",
+      "description": "Customize the panel background color.",
+      "type": "rgba",
+      "default": [24, 28, 48, 255]
+    },
     "click-sound": {
       "name": "Global click sound",
       "description": "Play the supplied sound for mouse clicks and Android screen taps throughout Geometry Dash.",
