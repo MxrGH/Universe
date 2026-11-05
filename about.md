@@ -2,21 +2,12 @@
 
 Universe is a Geode mod for Geometry Dash 2.2091, developed by MxrMC.
 
-The current source includes an in-game panel, local practice controls, StartPos tools, visual helpers, and a basic input recorder/replay system. Some features still need testing in the game, especially on Android.
+The current source includes local practice controls, StartPos tools, object hitboxes, a short movement projection, an icon preview, a draggable touch button, and a local input recorder.
 
-## Current limitations
+The repository also includes two standalone tools:
+- A level-design draft generator with offline templates and an optional OpenAI-compatible API.
+- An FFmpeg helper for converting existing gameplay recordings to MP4.
 
-- Safe Mode changes local game state only. It cannot guarantee server-side leaderboard enforcement.
-- The player trail displays recent positions. The optional movement projection is a straight-line estimate, not a full physics simulation.
-- The icon preview setting does not currently render an icon.
-- AI Level Maker and video export are not implemented.
-- The floating touch button is fixed in place and cannot be dragged.
+The level generator currently produces JSON design blueprints rather than native Geometry Dash level files. Video conversion requires FFmpeg and a recording captured separately. The icon preview does not unlock or equip icons.
 
-Universe does not modify server-side unlocks, achievements, verification, coins, profiles, or leaderboard records.
-
-## Build targets
-
-- Geometry Dash 2.2091
-- Windows x64
-- Android ARM64 and ARMv7
-- Geode SDK 6.0.0-alpha.1
+Safe Mode only changes local game state. It cannot enforce server-side leaderboard rules. Features still need in-game testing on Windows and Android.
