@@ -87,6 +87,36 @@ protected:
         m_menu->addChild(item);
     }
 
+    void switchStartPos(int direction) {
+        auto layer = PlayLayer::get();
+        if (!layer || !layer->m_startPosObjects || layer->m_startPosObjects->count() == 0)
+            return;
+
+        auto objects = layer->m_startPosObjects;
+        int index = objects->indexOfObject(layer->m_startPosObject);
+        CCObject* next = nullptr;
+
+        if (direction < 0) {
+            if (!layer->m_startPosObject)
+                next = objects->lastObject();
+            else if (layer->m_startPosObject != objects->firstObject())
+                next = objects->objectAtIndex(index - 1);
+        } else {
+            if (!layer->m_startPosObject)
+                next = objects->firstObject();
+            else if (layer->m_startPosObject != objects->lastObject())
+                next = objects->objectAtIndex(index + 1);
+        }
+
+        layer->setActiveStartPosObject(static_cast<StartPosObject*>(next));
+        if (layer->isRunning()) {
+            if (layer->m_isPracticeMode)
+                layer->resetLevelFromStart();
+            layer->resetLevel();
+            layer->startMusic();
+        }
+    }
+
     void addToggle(const char* title, const char* setting, int tag, float y) {
         auto mod = Mod::get();
         bool enabled = mod && mod->getSettingValue<bool>(setting);
@@ -130,11 +160,25 @@ protected:
                 addText("Safe Mode ON marks modified runs as Practice Mode.", {-245.f, -175.f}, 0.28f);
                 break;
             }
-            case Page::Level:
+            case Page::Level: {
                 addText("Level tools", {-245.f, 105.f});
-                addText("Level information and start-position helpers are planned.", {-245.f, 65.f}, 0.34f);
-                addText("No verification, coin, or leaderboard spoofing is provided.", {-245.f, 25.f}, 0.32f);
+                auto layer = PlayLayer::get();
+                if (layer && layer->m_startPosObjects) {
+                    auto count = layer->m_startPosObjects->count();
+                    auto index = layer->m_startPosObject
+                        ? layer->m_startPosObjects->indexOfObject(layer->m_startPosObject) + 1
+                        : 0;
+                    auto positionText = fmt::format("StartPos: {} / {}", index, count);
+                    addText(positionText.c_str(), {-245.f, 55.f}, 0.38f);
+                    addAction("PREVIOUS", 109, {-120.f, 0.f});
+                    addAction("NEXT", 110, {100.f, 0.f});
+                } else {
+                    addText("Enter a level with StartPos objects to use the switcher.", {-245.f, 55.f}, 0.31f);
+                }
+                addText("StartPos switching resets the current attempt.", {-245.f, -65.f}, 0.30f);
+                addText("No verification, coin, or leaderboard spoofing is provided.", {-245.f, -105.f}, 0.29f);
                 break;
+            }
             case Page::Visuals:
                 addText("Visual tools", {-245.f, 105.f});
                 addText("Visual customization controls are planned for a later update.", {-245.f, 65.f}, 0.34f);
@@ -174,6 +218,11 @@ protected:
             speed += tag == 108 ? 0.25f : -0.25f;
             speed = std::clamp(speed, 0.25f, 3.0f);
             mod->setSettingValue<float>("speedhack-speed", speed);
+            showPage(m_page);
+            return;
+        }
+        if (tag == 109 || tag == 110) {
+            switchStartPos(tag == 109 ? -1 : 1);
             showPage(m_page);
             return;
         }
