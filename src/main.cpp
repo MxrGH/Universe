@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <Geode/Geode.hpp>
+#include <Geode/loader/GameEvent.hpp>
+#include <Geode/loader/SettingV3.hpp>
 #include <Geode/modify/MenuLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/modify/PlayLayer.hpp>
@@ -143,8 +145,11 @@ protected:
                 break;
             case Page::Keybinds:
                 addText("Keybinds", {-245.f, 105.f});
-                addText("Custom keybind editing is planned.", {-245.f, 65.f}, 0.34f);
-                addText("The main menu button opens Universe for now.", {-245.f, 25.f}, 0.32f);
+                addText("Configure these bindings in Geode > Universe > Settings.", {-245.f, 65.f}, 0.32f);
+                addText("Ctrl+U  Open / close Universe", {-245.f, 20.f}, 0.34f);
+                addText("N  Toggle Noclip", {-245.f, -20.f}, 0.34f);
+                addText("M  Toggle Speedhack", {-245.f, -60.f}, 0.34f);
+                addText("Ctrl+Shift+S  Toggle Safe Mode", {-245.f, -100.f}, 0.34f);
                 break;
             case Page::Settings:
                 addText("Universe settings", {-245.f, 105.f});
@@ -314,10 +319,55 @@ class $modify(UniverseMenuLayer, MenuLayer) {
     void openUniverse(CCObject*) {
         auto scene = CCDirector::sharedDirector()->getRunningScene();
         if (!scene) return;
+        if (auto existing = scene->getChildByID("universe-panel"_spr)) {
+            existing->removeFromParentAndCleanup(true);
+            return;
+        }
         auto panel = UniversePanel::create();
-        if (panel) scene->addChild(panel, 10000);
+        if (panel) {
+            panel->setID("universe-panel"_spr);
+            scene->addChild(panel, 10000);
+        }
     }
 };
+
+$on_game(Loaded) {
+    listenForKeybindSettingPresses("keybind-open-menu", [](Keybind const&, bool down, bool repeat, double) {
+        if (!down || repeat) return;
+        auto scene = CCDirector::sharedDirector()->getRunningScene();
+        if (!scene) return;
+        if (auto existing = scene->getChildByID("universe-panel"_spr)) {
+            existing->removeFromParentAndCleanup(true);
+            return;
+        }
+        auto panel = UniversePanel::create();
+        if (panel) {
+            panel->setID("universe-panel"_spr);
+            scene->addChild(panel, 10000);
+        }
+    });
+
+    listenForKeybindSettingPresses("keybind-noclip", [](Keybind const&, bool down, bool repeat, double) {
+        if (!down || repeat) return;
+        auto mod = Mod::get();
+        if (!mod) return;
+        bool enabled = !mod->getSettingValue<bool>("noclip");
+        mod->setSettingValue<bool>("noclip", enabled);
+        if (enabled) mod->setSettingValue<bool>("practice-tools", true);
+    });
+
+    listenForKeybindSettingPresses("keybind-speedhack", [](Keybind const&, bool down, bool repeat, double) {
+        if (!down || repeat) return;
+        auto mod = Mod::get();
+        if (mod) mod->setSettingValue<bool>("speedhack-enabled", !mod->getSettingValue<bool>("speedhack-enabled"));
+    });
+
+    listenForKeybindSettingPresses("keybind-safe-mode", [](Keybind const&, bool down, bool repeat, double) {
+        if (!down || repeat) return;
+        auto mod = Mod::get();
+        if (mod) mod->setSettingValue<bool>("safe-mode", !mod->getSettingValue<bool>("safe-mode"));
+    });
+}
 
 $on_mod(Loaded) {
     auto delegate = UniverseTouchDelegate::create();
