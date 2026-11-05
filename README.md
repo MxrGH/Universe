@@ -1,17 +1,20 @@
 # Universe
 
-A Geometry Dash 2.2091 Geode utility mod by MxrMC.
+A Geometry Dash 2.2091 Geode utility and local-practice mod by MxrMC.
 
-## Current build (v0.2.0)
+## Current build (v0.3.0)
 - In-game tabbed panel: Player, Practice, Level, Visuals, Recorder, Keybinds, Settings.
-- Working settings toggles for local icon preview, practice tools, noclip, global click sound, and Safe Mode.
-- Global touch/click sound using the supplied `resources/click.mp3`.
+- Functional object and slope collision bypass (Noclip), restricted to Practice Mode.
+- Safe Mode is required for Noclip and cannot be disabled while Noclip is enabled.
+- Noclip is automatically inactive in normal mode, including normal online runs.
+- Settings toggles for local icon preview, practice tools, noclip, global click sound, and Safe Mode.
+- Global touch/click sound using resources/click.mp3.
 - Windows x64, Android ARM64, and Android ARMv7 build targets.
 
-## Important status
-The tabbed interface is implemented. Some tabs (Level, Visuals, Recorder, Keybinds) are clearly marked as planned and are informational placeholders; their underlying systems are not implemented yet. Noclip is currently a stored setting toggle, not a gameplay hook. Icon preview is currently a stored local-only setting, not yet an icon renderer.
+## Integrity and status
+Noclip is intended for local Practice Mode testing only. It does not bypass normal-mode collisions, submit records, or spoof verification, coins, achievements, profiles, or leaderboard results. Safe Mode and the practice-mode check are enforced by the collision hooks.
 
-Safe Mode is a preference flag in this build, not a complete submission-integrity enforcement system. Do not submit modified runs as legitimate records. Universe does not spoof achievements, coins, verification, online profiles, or leaderboard results.
+The Player, Level, Visuals, Recorder, and Keybinds tabs still contain informational placeholders for features not yet implemented. Icon preview is currently a stored local-only setting, not yet an icon renderer.
 
 ## Build
-GitHub Actions builds Windows x64 and Android ARM64/ARMv7, then combines the platform outputs into a universal `.geode` artifact.
+GitHub Actions builds Windows x64 and Android ARM64/ARMv7, then combines the platform outputs into a universal .geode artifact.

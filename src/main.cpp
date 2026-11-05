@@ -1,5 +1,6 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/MenuLayer.hpp>
+#include <Geode/modify/PlayerObject.hpp>
 
 using namespace geode::prelude;
 
@@ -13,6 +14,17 @@ namespace {
         if (!mod || !mod->getSettingValue<bool>("click-sound")) return;
         auto audioPath = mod->getResourcesDir() / "click.mp3";
         FMODAudioEngine::sharedEngine()->playEffect(audioPath.string());
+    }
+
+    bool isUniverseNoclipActive() {
+        auto mod = Mod::get();
+        auto layer = PlayLayer::get();
+        return mod
+            && layer
+            && mod->getSettingValue<bool>("safe-mode")
+            && mod->getSettingValue<bool>("practice-tools")
+            && mod->getSettingValue<bool>("noclip")
+            && layer->m_isPracticeMode;
     }
 
     const char* pageName(Page page) {
@@ -105,7 +117,8 @@ protected:
                 addText("Use these options for local practice sessions.", {-245.f, 65.f}, 0.34f);
                 addToggle("Practice tools", "practice-tools", 102, 15.f);
                 addToggle("Noclip (practice only)", "noclip", 103, -45.f);
-                addText("Modified runs must not be submitted as legitimate records.", {-245.f, -110.f}, 0.30f);
+                addText("Noclip activates only in Practice Mode with Safe Mode enabled.", {-245.f, -110.f}, 0.30f);
+                addText("It is disabled automatically in normal mode.", {-245.f, -140.f}, 0.30f);
                 break;
             case Page::Level:
                 addText("Level tools", {-245.f, 105.f});
@@ -131,7 +144,8 @@ protected:
                 addText("Universe settings", {-245.f, 105.f});
                 addToggle("Global click sound", "click-sound", 104, 45.f);
                 addToggle("Safe Mode", "safe-mode", 105, -15.f);
-                addText("Keep Safe Mode enabled when using practice modifications.", {-245.f, -85.f}, 0.31f);
+                addText("Required for Noclip. It confines collision bypass to Practice Mode.", {-245.f, -85.f}, 0.30f);
+                addText("Safe Mode cannot be disabled while Noclip is enabled.", {-245.f, -115.f}, 0.30f);
                 break;
         }
     }
@@ -151,6 +165,25 @@ protected:
         auto mod = Mod::get();
         if (!mod) return;
         bool current = mod->getSettingValue<bool>(key);
+
+        if (tag == 103 && !current && !mod->getSettingValue<bool>("safe-mode")) {
+            FLAlertLayer::create(
+                "Universe",
+                "Enable Safe Mode before enabling Noclip. Noclip is restricted to Practice Mode.",
+                "OK"
+            )->show();
+            return;
+        }
+
+        if (tag == 105 && current && mod->getSettingValue<bool>("noclip")) {
+            FLAlertLayer::create(
+                "Universe",
+                "Turn Noclip off before disabling Safe Mode.",
+                "OK"
+            )->show();
+            return;
+        }
+
         mod->setSettingValue<bool>(key, !current);
         showPage(m_page);
     }
@@ -225,6 +258,20 @@ public:
         int index = static_cast<CCNode*>(sender)->getTag() - 200;
         if (index < 0 || index > 6) return;
         showPage(static_cast<Page>(index));
+    }
+};
+
+// Noclip is deliberately limited to local Practice Mode. Both object and slope
+// collision handlers are bypassed only while all safety gates are satisfied.
+class $modify(UniversePlayerObject, PlayerObject) {
+    bool collidedWithObjectInternal(float dt, GameObject* object, CCRect rect, bool skipCheck) {
+        if (isUniverseNoclipActive()) return false;
+        return PlayerObject::collidedWithObjectInternal(dt, object, rect, skipCheck);
+    }
+
+    void collidedWithSlopeInternal(float dt, GameObject* object, bool forced) {
+        if (isUniverseNoclipActive()) return;
+        PlayerObject::collidedWithSlopeInternal(dt, object, forced);
     }
 };
 

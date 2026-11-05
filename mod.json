@@ -1,14 +1,28 @@
 {
   "geode": "6.0.0-alpha.1",
-  "gd": { "win": "2.2091", "android": "2.2091" },
+  "gd": {
+    "win": "2.2091",
+    "android": "2.2091"
+  },
   "id": "mxrmc.universe",
   "name": "Universe",
-  "version": "v0.2.0",
+  "version": "v0.3.0",
   "developer": "MxrMC",
-  "description": "A customizable Geometry Dash utility and practice toolkit with a tabbed in-game panel.",
-  "tags": ["gameplay", "interface", "offline", "cheat"],
-  "dependencies": { "geode.node-ids": ">=v1.23.3" },
-  "resources": { "files": ["resources/click.mp3"] },
+  "description": "A Geometry Dash utility and local-practice toolkit. Noclip is restricted to Practice Mode by Safe Mode.",
+  "tags": [
+    "gameplay",
+    "interface",
+    "offline",
+    "cheat"
+  ],
+  "dependencies": {
+    "geode.node-ids": ">=v1.23.3"
+  },
+  "resources": {
+    "files": [
+      "resources/click.mp3"
+    ]
+  },
   "settings": {
     "click-sound": {
       "name": "Global click sound",
@@ -18,13 +32,13 @@
     },
     "safe-mode": {
       "name": "Safe Mode",
-      "description": "Keep modified gameplay from being treated as a legitimate online record.",
+      "description": "Required for Noclip. Restricts collision bypass to Practice Mode and cannot be disabled while Noclip is enabled.",
       "type": "bool",
       "default": true
     },
     "noclip": {
       "name": "Noclip",
-      "description": "Local practice toggle. Modified runs must not be submitted as records.",
+      "description": "Bypass object and slope collisions only in Practice Mode while Safe Mode is enabled.",
       "type": "bool",
       "default": false
     },
