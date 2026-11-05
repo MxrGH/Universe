@@ -92,63 +92,57 @@ def validate_draft(data: object) -> dict:
 
 
 def request_ai_draft(args: argparse.Namespace) -> dict:
-    api_key = os.environ.get(args.api_key_env)
+    key_env = args.api_key_env or ("ANTHROPIC_API_KEY" if args.provider == "anthropic" else "UNIVERSE_AI_API_KEY")
+    api_key = os.environ.get(key_env)
     if not api_key:
-        raise RuntimeError(
-            f"{args.api_key_env} is not set. Set it in your local environment, "
-            "or use --offline for a deterministic template draft."
-        )
+        raise RuntimeError(f"{key_env} is not set. Add it to your local environment; never commit it. Use --offline for a template.")
 
     schema = {
         "title": "string",
         "difficulty": "easy|normal|hard|insane|demon",
         "style": "string",
-        "sections": [{
-            "name": "string",
-            "gameplay": "cube|ship|ball|ufo|wave|robot|spider|swing",
-            "events": [{
-                "x": "number",
-                "y": "number",
-                "type": "block|spike|saw|orb|pad|deco",
-                "note": "short string",
-            }],
-        }],
+        "sections": [{"name": "string", "gameplay": "cube|ship|ball|ufo|wave|robot|spider|swing",
+                      "events": [{"x": "number", "y": "number", "type": "block|spike|saw|orb|pad|deco", "note": "short string"}]}],
     }
     prompt = (
-        "Create a coherent Geometry Dash level design blueprint. "
-        "Return only JSON matching this shape: " + json.dumps(schema) +
-        f". User concept: {args.prompt}. Difficulty: {args.difficulty}. "
-        f"Length target: {args.length} units. Gameplay style: {args.style}. "
-        "Use increasing x coordinates, varied but playable spacing, and clear "
-        "section transitions. Keep the event count below 5000."
+        "Create a coherent Geometry Dash level design blueprint. Return only a JSON object matching this shape: "
+        + json.dumps(schema) + f". User concept: {args.prompt}. Difficulty: {args.difficulty}. "
+        + f"Length target: {args.length} units. Gameplay style: {args.style}. "
+        + "Use increasing x coordinates, playable spacing, and clear section transitions. Keep events below 5000. "
+        + "For song or Newgrounds ideas, provide mood/search suggestions only; do not claim to download or license music."
     )
-    base = args.base_url.rstrip("/")
-    payload = {
-        "model": args.model,
-        "temperature": 0.7,
-        "messages": [
-            {"role": "system", "content": "You design Geometry Dash levels. Output valid JSON only."},
-            {"role": "user", "content": prompt},
-        ],
-        "response_format": {"type": "json_object"},
-    }
-    request = urllib.request.Request(
-        base + "/chat/completions",
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Authorization": "Bearer " + api_key,
-            "Content-Type": "application/json",
-        },
-        method="POST",
-    )
+    model = args.model or ("claude-sonnet-4-6" if args.provider == "anthropic" else "gpt-4o-mini")
+    if args.provider == "anthropic":
+        base = (args.base_url or "https://api.anthropic.com").rstrip("/")
+        endpoint = base + "/v1/messages"
+        payload = {"model": model, "max_tokens": 8192,
+                   "system": "You design Geometry Dash levels. Output valid JSON only, without markdown fences.",
+                   "messages": [{"role": "user", "content": prompt}]}
+        headers = {"x-api-key": api_key, "anthropic-version": "2026-10-21", "Content-Type": "application/json"}
+    else:
+        base = (args.base_url or "https://api.openai.com/v1").rstrip("/")
+        endpoint = base + "/chat/completions"
+        payload = {"model": model, "temperature": 0.7,
+                   "messages": [{"role": "system", "content": "You design Geometry Dash levels. Output valid JSON only."},
+                                {"role": "user", "content": prompt}],
+                   "response_format": {"type": "json_object"}}
+        headers = {"Authorization": "Bearer " + api_key, "Content-Type": "application/json"}
+
+    request = urllib.request.Request(endpoint, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
     try:
         with urllib.request.urlopen(request, timeout=args.timeout) as response:
             result = json.loads(response.read().decode("utf-8"))
     except (urllib.error.URLError, TimeoutError) as error:
         raise RuntimeError(f"AI request failed: {error}") from error
 
-    content = result["choices"][0]["message"]["content"]
-    return validate_draft(json.loads(content))
+    try:
+        if args.provider == "anthropic":
+            content = "".join(block.get("text", "") for block in result["content"] if block.get("type") == "text")
+        else:
+            content = result["choices"][0]["message"]["content"]
+        return validate_draft(json.loads(content))
+    except (KeyError, IndexError, TypeError, json.JSONDecodeError) as error:
+        raise RuntimeError(f"Could not parse the AI response: {error}") from error
 
 
 def main() -> int:
@@ -159,9 +153,10 @@ def main() -> int:
     parser.add_argument("--style", default="mixed", help="Preferred gameplay style.")
     parser.add_argument("--seed", type=int, default=2026, help="Offline generator seed.")
     parser.add_argument("--offline", action="store_true", help="Use the built-in deterministic template generator.")
-    parser.add_argument("--base-url", default="https://api.openai.com/v1", help="OpenAI-compatible API base URL.")
-    parser.add_argument("--model", default="gpt-4o-mini", help="Model name accepted by the API endpoint.")
-    parser.add_argument("--api-key-env", default="UNIVERSE_AI_API_KEY", help="Environment variable containing the API key.")
+    parser.add_argument("--provider", choices=["anthropic", "openai-compatible"], default="anthropic", help="AI API provider.")
+    parser.add_argument("--base-url", default=None, help="Optional API base URL override.")
+    parser.add_argument("--model", default=None, help="Model name. Defaults to Claude Sonnet for Anthropic.")
+    parser.add_argument("--api-key-env", default=None, help="Environment variable containing the API key.")
     parser.add_argument("--timeout", type=int, default=60)
     parser.add_argument("--output", type=Path, default=Path("Universe-Level-Draft.json"))
     args = parser.parse_args()
