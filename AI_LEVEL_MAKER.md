@@ -1,23 +1,17 @@
-# AI Level Maker — Coming Soon
+# AI Level Maker
 
-AI Level Maker is a planned Universe feature, not yet available in the current build.
+AI Level Maker is a planned feature. It is not available in the current build.
 
-## Intended workflow
+## Proposed workflow
 
-1. Describe a level idea, including theme, gameplay style, difficulty, and approximate length.
-2. Generate an editable level layout.
-3. Preview and adjust the generated sections.
-4. Configure song timing and gameplay pacing.
-5. Export a normal editable Geometry Dash level draft.
+1. Enter a level concept and choose a gameplay style, difficulty, and approximate length.
+2. Generate a rough layout.
+3. Review and edit the sections.
+4. Adjust pacing and song timing.
+5. Export an editable level draft.
 
-## Design goals
+## Requirements
 
-- Keep generated levels editable in the Geometry Dash editor.
-- Offer style and difficulty controls rather than generating an opaque finished level.
-- Make generation repeatable with a seed.
-- Keep generation and export local to the user's game/editor session where possible.
-- Never fabricate online verification, creator rewards, coins, achievements, or leaderboard results.
+The feature needs a generation engine, an editor for reviewing the result, song-timing support, and a reliable way to create a valid Geometry Dash level. None of those parts are implemented yet.
 
-## Implementation status
-
-The actual AI generation engine, prompt interface, song synchronization, in-game preview, and native level export are not implemented yet. The mod now has an implementation plan, but an AI service or local model must be selected and integrated before this can generate levels from natural-language prompts. API credentials must never be embedded in the public mod source.
+The project has not selected an external AI provider or a local model. No API keys should be included in the public mod source. Any generated result should remain an editable draft; it should not claim verification, creator rewards, coins, achievements, or leaderboard placement.
