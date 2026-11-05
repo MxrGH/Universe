@@ -10,6 +10,25 @@
 using namespace geode::prelude;
 
 namespace {
+    double g_originalFrameInterval = 0.0;
+
+    void applyFpsBypass() {
+        auto mod = Mod::get();
+        auto director = CCDirector::sharedDirector();
+        if (!mod || !director) return;
+
+        if (g_originalFrameInterval <= 0.0)
+            g_originalFrameInterval = director->getAnimationInterval();
+
+        if (mod->getSettingValue<bool>("fps-bypass-enabled")) {
+            auto target = mod->getSettingValue<int64_t>("fps-target");
+            target = std::clamp<int64_t>(target, 60, 360);
+            director->setAnimationInterval(1.0 / static_cast<double>(target));
+        } else if (g_originalFrameInterval > 0.0) {
+            director->setAnimationInterval(g_originalFrameInterval);
+        }
+    }
+
     enum class Page {
         Player, Practice, Level, Visuals, Recorder, Keybinds, Settings
     };
@@ -182,9 +201,13 @@ protected:
             }
             case Page::Visuals:
                 addText("Visual tools", {-245.f, 105.f});
-                addToggle("Show object hitboxes", "show-hitboxes", 111, 45.f);
-                addText("Draws object collision rectangles over the level.", {-245.f, -5.f}, 0.31f);
-                addText("Visual only; it does not change collision behavior.", {-245.f, -45.f}, 0.31f);
+                addToggle("Show object hitboxes", "show-hitboxes", 111, 65.f);
+                addToggle("FPS Bypass", "fps-bypass-enabled", 112, 15.f);
+                auto target = Mod::get()->getSettingValue<int64_t>("fps-target");
+                auto fpsText = fmt::format("FPS target: {}", target);
+                addText(fpsText.c_str(), {-245.f, -35.f}, 0.34f);
+                addText("Adjust FPS target in Geode > Universe settings.", {-245.f, -75.f}, 0.29f);
+                addText("FPS Bypass changes the render interval, not physics.", {-245.f, -115.f}, 0.28f);
                 break;
             case Page::Recorder:
                 addText("Recorder", {-245.f, 105.f});
@@ -199,6 +222,7 @@ protected:
                 addText("M  Toggle Speedhack", {-245.f, -60.f}, 0.34f);
                 addText("Ctrl+Shift+S  Toggle Safe Mode", {-245.f, -100.f}, 0.34f);
                 addText("H  Toggle object hitboxes", {-245.f, -140.f}, 0.34f);
+                addText("F8  Toggle FPS Bypass", {-245.f, -180.f}, 0.34f);
                 break;
             case Page::Settings:
                 addText("Universe settings", {-245.f, 105.f});
@@ -239,10 +263,12 @@ protected:
             case 105: key = "safe-mode"; break;
             case 106: key = "speedhack-enabled"; break;
             case 111: key = "show-hitboxes"; break;
+            case 112: key = "fps-bypass-enabled"; break;
             default: return;
         }
         bool current = mod->getSettingValue<bool>(key);
         mod->setSettingValue<bool>(key, !current);
+        if (tag == 112) applyFpsBypass();
         showPage(m_page);
     }
 
@@ -484,9 +510,18 @@ $on_game(Loaded) {
         auto mod = Mod::get();
         if (mod) mod->setSettingValue<bool>("show-hitboxes", !mod->getSettingValue<bool>("show-hitboxes"));
     });
+
+    listenForKeybindSettingPresses("keybind-fps-bypass", [](Keybind const&, bool down, bool repeat, double) {
+        if (!down || repeat) return;
+        auto mod = Mod::get();
+        if (!mod) return;
+        mod->setSettingValue<bool>("fps-bypass-enabled", !mod->getSettingValue<bool>("fps-bypass-enabled"));
+        applyFpsBypass();
+    });
 }
 
 $on_mod(Loaded) {
+    applyFpsBypass();
     auto delegate = UniverseTouchDelegate::create();
     if (!delegate) {
         log::error("Universe could not create its global touch delegate.");
