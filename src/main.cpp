@@ -1,10 +1,12 @@
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <fstream>
 #include <limits>
 #include <sstream>
 #include <vector>
 #include <Geode/Geode.hpp>
+#include <Geode/utils/web.hpp>
 #include <Geode/loader/GameEvent.hpp>
 #include <Geode/loader/SettingV3.hpp>
 #include <Geode/modify/MenuLayer.hpp>
@@ -227,9 +229,11 @@ public:
     }
 };
 
-class UniversePanel : public CCLayer {
+class UniversePanel : public CCLayer, public TextInputDelegate {
 protected:
     Page m_page = Page::Player;
+    CCTextInputNode* m_aiPrompt = nullptr;
+    async::TaskHolder<web::WebResponse> m_aiTask;
     CCMenu* m_menu = nullptr;
     CCLabelBMFont* m_pageTitle = nullptr;
     CCLayer* m_content = nullptr;
@@ -473,17 +477,23 @@ protected:
                 addText("F7  Play saved replay", {-245.f, -260.f}, 0.34f);
                 addText("J  Toggle path trail     K  Toggle movement projection", {-245.f, -300.f}, 0.31f);
                 break;
-            case Page::AI:
+            case Page::AI: {
                 addText("AI level design assistant", {-245.f, 105.f});
-                addText("Describe a theme, mood, gameplay style, or level name.", {-245.f, 60.f}, 0.31f);
-                addText("Examples:", {-245.f, 15.f}, 0.36f);
-                addText("Make my level Ribbons feel more polished and exciting.", {-245.f, -25.f}, 0.29f);
-                addText("Design a level called Skills with a 3D-style structure.", {-245.f, -65.f}, 0.29f);
-                addText("AI drafts are generated with scripts/level_maker.py.", {-245.f, -120.f}, 0.29f);
-                addText("The tool outputs a JSON blueprint, not a playable level.", {-245.f, -160.f}, 0.27f);
-                addText("Newgrounds music is a search suggestion, not auto-imported.", {-245.f, -195.f}, 0.27f);
-                addText("See AI_LEVEL_MAKER.md for setup and examples.", {-245.f, -235.f}, 0.29f);
+                addText("Describe your level idea. The result is a design draft.", {-245.f, 65.f}, 0.31f);
+                m_aiPrompt = CCTextInputNode::create(360.f, 30.f, "Describe your level idea...", "bigFont.fnt");
+                if (m_aiPrompt) {
+                    m_aiPrompt->setDelegate(this);
+                    m_aiPrompt->setPosition({0.f, 10.f});
+                    m_content->addChild(m_aiPrompt, 4);
+                }
+                addAction("GENERATE DRAFT", 126, {0.f, -45.f});
+                addText("Uses ANTHROPIC_API_KEY from your system environment.", {-245.f, -100.f}, 0.28f);
+                addText("Your key is not stored in Universe settings or its files.", {-245.f, -135.f}, 0.28f);
+                addText("Drafts are saved locally as universe-ai-draft.txt.", {-245.f, -170.f}, 0.28f);
+                addText("A design draft is not a playable/importable level.", {-245.f, -205.f}, 0.28f);
+                addText("API usage may cost money. Get adult permission first.", {-245.f, -240.f}, 0.27f);
                 break;
+            }
             case Page::Settings:
                 addText("Universe settings", {-245.f, 105.f});
                 addToggle("Global click sound", "click-sound", 104, 75.f);
@@ -495,12 +505,114 @@ protected:
         }
     }
 
+    void textChanged(CCTextInputNode*) override {}
+
+    void generateAIDraft() {
+        if (!m_aiPrompt) {
+            FLAlertLayer::create("Universe AI", "The prompt field could not be created. Reopen the AI tab and try again.", "OK")->show();
+            return;
+        }
+
+        auto prompt = std::string(m_aiPrompt->getString());
+        if (prompt.empty()) {
+            FLAlertLayer::create("Universe AI", "Enter a level idea first.", "OK")->show();
+            return;
+        }
+        if (prompt.size() > 1000) {
+            FLAlertLayer::create("Universe AI", "Please keep the prompt under 1000 characters.", "OK")->show();
+            return;
+        }
+
+        auto key = std::getenv("ANTHROPIC_API_KEY");
+        if (!key || std::string_view(key).empty()) {
+            FLAlertLayer::create(
+                "Universe AI",
+                "ANTHROPIC_API_KEY was not found. Set it in your operating system environment, then restart Geometry Dash. Do not paste your API key into chat or the mod source.",
+                "OK"
+            )->show();
+            return;
+        }
+
+        matjson::Value payload = matjson::Value::object();
+        payload["model"] = "claude-sonnet-4-6";
+        payload["max_tokens"] = 4096;
+        matjson::Array messages;
+        matjson::Value userMessage = matjson::Value::object();
+        userMessage["role"] = "user";
+        userMessage["content"] =
+            "You are a Geometry Dash level-design assistant. Create a useful level design blueprint from the user's idea. "
+            "Return ONLY a valid JSON object with keys: level_name, theme, difficulty, song_mood, gameplay_sections, "
+            "visual_style, decoration_notes, and build_notes. gameplay_sections must be an array of objects with "
+            "section_name, gameplay, and duration_hint. Do not claim to create or import a playable level. "
+            "User idea: " + prompt;
+        messages.push_back(userMessage);
+        payload["messages"] = messages;
+
+        auto request = web::WebRequest()
+            .header("x-api-key", key)
+            .header("anthropic-version", "2023-06-01")
+            .header("content-type", "application/json")
+            .timeout(std::chrono::seconds(90))
+            .bodyJSON(payload);
+
+        m_aiTask.spawn(
+            request.post("https://api.anthropic.com/v1/messages"),
+            [this](web::WebResponse response) {
+                if (!response.ok()) {
+                    auto details = response.string().unwrapOr("No response details were provided.");
+                    if (details.size() > 500) details.resize(500);
+                    auto message = fmt::format("Anthropic request failed (HTTP {}). {}", response.code(), details);
+                    FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
+                    return;
+                }
+
+                auto parsed = response.json();
+                if (!parsed) {
+                    FLAlertLayer::create("Universe AI", "The API returned a response that could not be read as JSON.", "OK")->show();
+                    return;
+                }
+
+                std::string draft;
+                auto blocks = parsed.unwrap()["content"].as_array();
+                for (auto const& block : blocks) {
+                    if (block["type"].as_string() == "text")
+                        draft += block["text"].as_string();
+                }
+                if (draft.empty()) {
+                    FLAlertLayer::create("Universe AI", "The API response did not contain a text draft.", "OK")->show();
+                    return;
+                }
+
+                auto mod = Mod::get();
+                if (!mod) return;
+                auto path = mod->getSaveDir() / "universe-ai-draft.txt";
+                std::ofstream file(path, std::ios::out | std::ios::trunc);
+                if (!file.is_open()) {
+                    FLAlertLayer::create("Universe AI", "The draft was generated, but Universe could not save the file.", "OK")->show();
+                    return;
+                }
+                file << draft;
+                file.close();
+
+                auto message = fmt::format(
+                    "Draft generated and saved to:\n{}\n\nOpen the file in your text editor to view the complete blueprint.",
+                    path.string()
+                );
+                FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
+            }
+        );
+    }
+
     void onAction(CCObject* sender) {
         auto node = static_cast<CCNode*>(sender);
         int tag = node->getTag();
         auto mod = Mod::get();
         if (!mod) return;
 
+        if (tag == 126) {
+            generateAIDraft();
+            return;
+        }
         if (tag == 124 || tag == 125) {
             auto iconID = mod->getSettingValue<int64_t>("preview-icon-id");
             iconID += tag == 125 ? 1 : -1;
