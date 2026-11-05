@@ -198,6 +198,7 @@ protected:
                 addText("N  Toggle Noclip", {-245.f, -20.f}, 0.34f);
                 addText("M  Toggle Speedhack", {-245.f, -60.f}, 0.34f);
                 addText("Ctrl+Shift+S  Toggle Safe Mode", {-245.f, -100.f}, 0.34f);
+                addText("H  Toggle object hitboxes", {-245.f, -140.f}, 0.34f);
                 break;
             case Page::Settings:
                 addText("Universe settings", {-245.f, 105.f});
@@ -476,6 +477,12 @@ $on_game(Loaded) {
         if (!down || repeat) return;
         auto mod = Mod::get();
         if (mod) mod->setSettingValue<bool>("safe-mode", !mod->getSettingValue<bool>("safe-mode"));
+    });
+
+    listenForKeybindSettingPresses("keybind-hitboxes", [](Keybind const&, bool down, bool repeat, double) {
+        if (!down || repeat) return;
+        auto mod = Mod::get();
+        if (mod) mod->setSettingValue<bool>("show-hitboxes", !mod->getSettingValue<bool>("show-hitboxes"));
     });
 }
 
