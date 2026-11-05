@@ -444,7 +444,7 @@ protected:
                 addText("F8  Toggle FPS Bypass", {-245.f, -180.f}, 0.34f);
                 addText("F6  Start / stop recorder", {-245.f, -220.f}, 0.34f);
                 addText("F7  Play saved replay", {-245.f, -260.f}, 0.34f);
-                addText("J  Toggle player path trail", {-245.f, -300.f}, 0.34f);
+                addText("J  Toggle path trail     K  Toggle movement projection", {-245.f, -300.f}, 0.31f);
                 break;
             case Page::Settings:
                 addText("Universe settings", {-245.f, 105.f});
