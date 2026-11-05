@@ -549,6 +549,8 @@ protected:
         }
         bool current = mod->getSettingValue<bool>(key);
         mod->setSettingValue<bool>(key, !current);
+        if (tag == 103 && !current)
+            mod->setSettingValue<bool>("practice-tools", true);
         if (tag == 112) applyFpsBypass();
         showPage(m_page);
     }
