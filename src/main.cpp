@@ -114,10 +114,16 @@ protected:
             case Page::Practice:
                 addText("Practice & testing", {-245.f, 105.f});
                 addText("Use these options for local practice sessions.", {-245.f, 65.f}, 0.34f);
-                addToggle("Practice tools", "practice-tools", 102, 15.f);
-                addToggle("Noclip (all modes)", "noclip", 103, -45.f);
-                addText("Noclip works in both Normal and Practice Mode.", {-245.f, -110.f}, 0.30f);
-                addText("Safe Mode ON marks the run as Practice Mode to avoid saving it as a normal record.", {-245.f, -140.f}, 0.27f);
+                addToggle("Practice tools", "practice-tools", 102, 35.f);
+                addToggle("Noclip (all modes)", "noclip", 103, -15.f);
+                addToggle("Speedhack", "speedhack-enabled", 106, -65.f);
+                auto speed = mod->getSettingValue<float>("speedhack-speed");
+                auto speedText = fmt::format("Speed: {:.2f}x", speed);
+                addText(speedText.c_str(), {-245.f, -110.f}, 0.36f);
+                addAction("-", 107, {125.f, -110.f});
+                addAction("+", 108, {205.f, -110.f});
+                addText("Speedhack changes local gameplay timing.", {-245.f, -145.f}, 0.28f);
+                addText("Safe Mode ON marks Noclip runs as Practice Mode.", {-245.f, -175.f}, 0.28f);
                 break;
             case Page::Level:
                 addText("Level tools", {-245.f, 105.f});
@@ -152,6 +158,18 @@ protected:
     void onAction(CCObject* sender) {
         auto node = static_cast<CCNode*>(sender);
         int tag = node->getTag();
+        auto mod = Mod::get();
+        if (!mod) return;
+
+        if (tag == 107 || tag == 108) {
+            float speed = mod->getSettingValue<float>("speedhack-speed");
+            speed += tag == 108 ? 0.25f : -0.25f;
+            speed = std::clamp(speed, 0.25f, 3.0f);
+            mod->setSettingValue<float>("speedhack-speed", speed);
+            showPage(m_page);
+            return;
+        }
+
         const char* key = nullptr;
         switch (tag) {
             case 101: key = "icon-preview"; break;
@@ -159,12 +177,10 @@ protected:
             case 103: key = "noclip"; break;
             case 104: key = "click-sound"; break;
             case 105: key = "safe-mode"; break;
+            case 106: key = "speedhack-enabled"; break;
             default: return;
         }
-        auto mod = Mod::get();
-        if (!mod) return;
         bool current = mod->getSettingValue<bool>(key);
-
         mod->setSettingValue<bool>(key, !current);
         showPage(m_page);
     }
@@ -263,8 +279,14 @@ class $modify(UniversePlayLayer, PlayLayer) {
             && mod->getSettingValue<bool>("safe-mode")
             && mod->getSettingValue<bool>("noclip")
             && !this->m_isPracticeMode) {
-            // Keep the modified attempt out of normal completion records.
+            // Local safeguard: prevent this modified attempt from being treated
+            // as a normal completion by the game's practice-mode state.
             this->m_isPracticeMode = true;
+        }
+
+        if (mod && mod->getSettingValue<bool>("speedhack-enabled")) {
+            float speed = mod->getSettingValue<float>("speedhack-speed");
+            dt *= std::clamp(speed, 0.25f, 3.0f);
         }
         PlayLayer::update(dt);
     }
