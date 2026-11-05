@@ -4,3 +4,10 @@
 - Initial Geode project scaffold.
 - Added Universe entry button and starter popup.
 - Added initial settings for click audio, Safe Mode, noclip, icon preview, and practice tools.
+
+## v0.6.0
+- Added all-mode Noclip source hooks and independently switchable Safe Mode.
+- Added Speedhack controls, configurable keybinds, FPS override, hitbox overlay, StartPos Switcher, and practice input recording/replay.
+- Added Smart StartPos selection.
+- Announced the upcoming AI Level Maker.
+- Added an Eclipse-inspired panel expansion roadmap.
