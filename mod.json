@@ -52,6 +52,19 @@
       "category": "gameplay",
       "default": "Ctrl+Shift+S"
     },
+    "keybind-hitboxes": {
+      "name": "Toggle hitboxes",
+      "description": "Show or hide object collision rectangles.",
+      "type": "keybind",
+      "category": "gameplay",
+      "default": "H"
+    },
+    "show-hitboxes": {
+      "name": "Show object hitboxes",
+      "description": "Draw object collision rectangles over the active level.",
+      "type": "bool",
+      "default": false
+    },
     "panel-color": {
       "name": "Universe panel color",
       "description": "Customize the panel background color.",
