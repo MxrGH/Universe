@@ -55,8 +55,12 @@ for key, setting in settings.items():
             fail(f"duplicate default keybind {default!r}: {defaults[default]} and {key}")
         defaults[default] = key
 
-for required in ("README.md", "about.md", "changelog.md", "AI_LEVEL_MAKER.md"):
+for required in ("README.md", "about.md", "changelog.md", "AI_LEVEL_MAKER.md", "VIDEO_EXPORT.md"):
     if not (ROOT / required).is_file():
         fail(f"missing project document: {required}")
+
+for required in ("scripts/level_maker.py", "scripts/export_video.py"):
+    if not (ROOT / required).is_file():
+        fail(f"missing tool script: {required}")
 
 print(f"Universe {mod.get('version', '(unknown version)')}: metadata checks passed.")
