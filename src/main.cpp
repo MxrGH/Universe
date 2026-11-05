@@ -114,7 +114,7 @@ protected:
                 addText("Icon preview is local-only; it does not change online profiles.", {-245.f, 25.f}, 0.32f);
                 addToggle("Local icon preview", "icon-preview", 101, -35.f);
                 break;
-            case Page::Practice:
+            case Page::Practice: {
                 auto mod = Mod::get();
                 addText("Practice & testing", {-245.f, 105.f});
                 addText("Use these options for local practice sessions.", {-245.f, 65.f}, 0.34f);
@@ -127,8 +127,9 @@ protected:
                 addAction("-", 107, {125.f, -110.f});
                 addAction("+", 108, {205.f, -110.f});
                 addText("Speedhack changes local gameplay timing.", {-245.f, -145.f}, 0.28f);
-                addText("Safe Mode ON marks Noclip runs as Practice Mode.", {-245.f, -175.f}, 0.28f);
+                addText("Safe Mode ON marks modified runs as Practice Mode.", {-245.f, -175.f}, 0.28f);
                 break;
+            }
             case Page::Level:
                 addText("Level tools", {-245.f, 105.f});
                 addText("Level information and start-position helpers are planned.", {-245.f, 65.f}, 0.34f);
