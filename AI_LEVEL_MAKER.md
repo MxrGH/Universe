@@ -1,17 +1,33 @@
-# AI Level Maker
+# Level draft generator
 
-AI Level Maker is a planned feature. It is not available in the current build.
+The repository includes scripts/level_maker.py. It can create a deterministic template draft without a network connection, or ask an OpenAI-compatible Chat Completions API to generate a design blueprint.
 
-## Proposed workflow
+## Offline mode
 
-1. Enter a level concept and choose a gameplay style, difficulty, and approximate length.
-2. Generate a rough layout.
-3. Review and edit the sections.
-4. Adjust pacing and song timing.
-5. Export an editable level draft.
+~~~bash
+python scripts/level_maker.py --offline --prompt "An underwater level with a calm opening" --difficulty normal --length 48 --style mixed --seed 42
+~~~
 
-## Requirements
+Offline mode uses a repeatable template generator. Changing the seed changes the layout.
 
-The feature needs a generation engine, an editor for reviewing the result, song-timing support, and a reliable way to create a valid Geometry Dash level. None of those parts are implemented yet.
+## AI-assisted mode
 
-The project has not selected an external AI provider or a local model. No API keys should be included in the public mod source. Any generated result should remain an editable draft; it should not claim verification, creator rewards, coins, achievements, or leaderboard placement.
+Set an API key in the environment variable UNIVERSE_AI_API_KEY, then run:
+
+~~~bash
+python scripts/level_maker.py --prompt "A neon city level with a difficult wave section" --difficulty demon --length 80 --style wave
+~~~
+
+The default endpoint is https://api.openai.com/v1 and the default model name is gpt-4o-mini. Both can be changed:
+
+~~~bash
+python scripts/level_maker.py --base-url https://your-compatible-endpoint/v1 --model your-model --prompt "..."
+~~~
+
+The key is read from the local environment. Do not paste it into source files, commit it, or put it in a public mod release.
+
+## Output format
+
+The output is a JSON blueprint with sections and events. Events contain an x/y design coordinate, a basic object type, and an optional note. The script checks the structure and limits the draft to 5,000 events.
+
+This is not a native Geometry Dash level file and cannot be imported directly into the game. A native level serializer and an in-game editing workflow are still needed.
