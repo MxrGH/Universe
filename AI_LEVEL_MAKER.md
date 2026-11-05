@@ -31,3 +31,10 @@ The key is read from the local environment. Do not paste it into source files, c
 The output is a JSON blueprint with sections and events. Events contain an x/y design coordinate, a basic object type, and an optional note. The script checks the structure and limits the draft to 5,000 events.
 
 This is not a native Geometry Dash level file and cannot be imported directly into the game. A native level serializer and an in-game editing workflow are still needed.
+
+
+## In-game AI tab
+
+Universe includes an experimental AI information tab. It is hidden by default; enable **Show AI tab (experimental)** in Geode's Universe mod settings to display it. The tab links to the external draft workflow and explains its current output limitations.
+
+The in-game tab is currently informational only: it does not yet contain a prompt editor or send API requests from Geometry Dash. Use the command-line workflow above for actual AI-assisted prompts. API credentials remain in your local environment and must not be committed to the repository.
