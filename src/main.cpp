@@ -5,6 +5,7 @@
 #include <Geode/modify/MenuLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/modify/PlayLayer.hpp>
+#include <Geode/cocos/draw_nodes/CCDrawNode.h>
 
 using namespace geode::prelude;
 
@@ -181,8 +182,9 @@ protected:
             }
             case Page::Visuals:
                 addText("Visual tools", {-245.f, 105.f});
-                addText("Visual customization controls are planned for a later update.", {-245.f, 65.f}, 0.34f);
-                addText("This page currently has no active visual modifications.", {-245.f, 25.f}, 0.32f);
+                addToggle("Show object hitboxes", "show-hitboxes", 111, 45.f);
+                addText("Draws object collision rectangles over the level.", {-245.f, -5.f}, 0.31f);
+                addText("Visual only; it does not change collision behavior.", {-245.f, -45.f}, 0.31f);
                 break;
             case Page::Recorder:
                 addText("Recorder", {-245.f, 105.f});
@@ -235,6 +237,7 @@ protected:
             case 104: key = "click-sound"; break;
             case 105: key = "safe-mode"; break;
             case 106: key = "speedhack-enabled"; break;
+            case 111: key = "show-hitboxes"; break;
             default: return;
         }
         bool current = mod->getSettingValue<bool>(key);
@@ -331,6 +334,44 @@ class $modify(UniversePlayerObject, PlayerObject) {
 };
 
 class $modify(UniversePlayLayer, PlayLayer) {
+    struct Fields {
+        CCDrawNode* hitboxDrawNode = nullptr;
+    };
+
+    void createObjectsFromSetupFinished() {
+        PlayLayer::createObjectsFromSetupFinished();
+        if (!m_fields->hitboxDrawNode) {
+            m_fields->hitboxDrawNode = CCDrawNode::create();
+            if (m_fields->hitboxDrawNode) {
+                m_fields->hitboxDrawNode->setID("universe-hitboxes"_spr);
+                this->addChild(m_fields->hitboxDrawNode, 10000);
+            }
+        }
+    }
+
+    void postUpdate(float dt) {
+        PlayLayer::postUpdate(dt);
+        auto node = m_fields->hitboxDrawNode;
+        if (!node) return;
+        node->clear();
+
+        auto mod = Mod::get();
+        if (!mod || !mod->getSettingValue<bool>("show-hitboxes"))
+            return;
+
+        for (auto object : CCArrayExt<GameObject*>(m_objects)) {
+            if (!object || object->m_isDecoration || object->m_isDecoration2)
+                continue;
+            auto rect = object->getObjectRect();
+            node->drawRect(
+                rect,
+                ccc4f(0.f, 0.f, 0.f, 0.f),
+                1.0f,
+                ccc4f(1.f, 0.18f, 0.25f, 0.85f)
+            );
+        }
+    }
+
     void update(float dt) {
         auto mod = Mod::get();
         static PlayLayer* trackedLayer = nullptr;
