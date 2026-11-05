@@ -49,6 +49,8 @@ The script uses an OpenAI-compatible Chat Completions endpoint. You can change -
 
 The output is a JSON design blueprint. It is not currently converted into a native, import-ready Geometry Dash level file.
 
+The experimental in-game AI tab is hidden by default and can be enabled in Geode settings. It currently provides guidance for the external level-draft workflow; prompt submission is performed by the Python tool, not inside the game.
+
 ## Video export
 
 scripts/export_video.py converts a gameplay screen recording to MP4 using an installed FFmpeg executable:
