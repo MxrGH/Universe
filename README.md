@@ -1,42 +1,46 @@
 # Universe
 
-A Geometry Dash 2.2091 Geode utility and local-practice mod by MxrMC.
+Universe is a Geode mod for Geometry Dash 2.2091. It adds a small in-game panel with local practice, visual, and replay tools.
 
-## Current source (v0.6.0)
+## Available in the current source
 
-### Panel and controls
-- Tabbed Universe panel: Player, Practice, Level, Visuals, Recorder, Keybinds, and Settings.
-- Global mouse/touch click sound.
-- Floating in-game UNIV panel button for touch access during gameplay; can be disabled in Geode settings.
-- Configurable Geode keybinds and RGBA panel background.
-- StartPos Switcher with Previous / Next and Smart selection (nearest StartPos ahead of the player).
+- **Practice controls:** Noclip, a local gameplay speed multiplier, and Safe Mode.
+- **StartPos tools:** move between StartPos objects or select the next one ahead of the player.
+- **Visual helpers:** object hitboxes and a trail showing recent player positions.
+- **Replay tools:** record and replay input events in Practice Mode. Recordings are stored locally.
+- **Display options:** panel color presets, a configurable panel color, and an optional floating button for touch screens.
+- **Frame timing:** an optional render-interval setting. This changes the render interval; it does not change the game's physics rate.
+- **Keybinds:** the main actions can be assigned in Geode's settings.
 
-### Gameplay and practice tools
-- Object and slope collision bypass (Noclip) for Normal and Practice Mode.
-- Adjustable gameplay Speedhack (0.25x–3.00x).
-- Safe Mode can be toggled independently. It remembers whether Noclip or Speedhack was used during the current PlayLayer and locally marks the run as Practice Mode when enabled.
-- Practice-only input recorder and local replay playback.
-- Object hitbox overlay.
-- Recent player movement trail (visual history, not predictive trajectory physics).
-- Three local panel color presets.
-- Recorder controls to stop playback and clear the saved replay.
-- FPS render-interval override (60–360 target setting).
+## Controls
 
-### Important limitations
-- Source features are not automatically confirmed working in-game. Noclip, Safe Mode behavior, Smart StartPos, hitboxes, FPS override, and recorder/replay still require gameplay testing across supported platforms.
-- Safe Mode is a local guard, not a guarantee of server-side leaderboard enforcement. Do not submit modified runs as legitimate records.
-- Icon preview is currently a stored local-only setting, not a completed icon renderer. Universe does not spoof online unlocks, verification, coins, achievements, profiles, or leaderboard results.
-- Predictive trajectory simulation, expanded player/icon rendering, FFmpeg video export, and a draggable/repositionable mobile panel are not implemented yet. The current mobile control is a fixed-position touch button. The current path trail only displays recent player positions.
-- Theme presets and replay management are now implemented in source, but still need in-game testing on Windows and Android.
+| Action | Default |
+| --- | --- |
+| Open Universe | Ctrl + U |
+| Toggle Noclip | N |
+| Toggle Speedhack | M |
+| Toggle Safe Mode | Ctrl + Shift + S |
+| Toggle hitboxes | H |
+| Toggle player trail | J |
+| Toggle FPS Bypass | F8 |
+| Start / stop recording | F6 |
+| Play saved replay | F7 |
 
-## Coming soon
+Keybinds can be changed in Geode's settings.
 
-### AI Level Maker
-**AI Level Maker is coming soon.** The planned tool will turn a written idea into a Geometry Dash level draft, with configurable gameplay style, difficulty, length, and song timing. The generated layout will be editable before export. This is an announcement, not a released feature; the generation engine and editor integration are still in development.
+## Notes and limitations
 
-### Eclipse-inspired panel expansion
-The current panel includes local practice tools, hitboxes, a recent movement trail, StartPos controls, replay management, theme colors, and a touch-friendly floating in-game opener. Full predictive trajectory, deeper player/icon tools, FFmpeg export, a draggable mobile control, and the complete Eclipse-style feature set remain planned.
+- Safe Mode is a local safeguard. If it is enabled after Noclip or Speedhack has been used during the current attempt, Universe switches that attempt to Practice Mode. It cannot guarantee how a server or leaderboard treats a run.
+- Replay playback switches the active level to Practice Mode. Replay files are local CSV files and are not uploaded.
+- The player trail shows recent positions. It does not predict future movement.
+- The icon preview setting is currently a preference only; a full icon preview is not available yet.
+- AI Level Maker, predictive trajectory physics, video export, and a movable touch button are not part of the current build.
+- The code compiling for a platform does not replace in-game testing. Windows and Android behavior still needs to be checked on real devices.
 
-## Build
+## Build targets
 
-GitHub Actions builds Windows x64 and Android ARM64/ARMv7, then combines the platform outputs into a universal .geode artifact.
+The GitHub Actions workflow builds Windows x64, Android ARM64, and Android ARMv7, then combines the platform builds into one .geode package.
+
+## Project status
+
+Universe is under active development. The changelog records source changes; check the Actions page for the result of the latest build.
