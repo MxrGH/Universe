@@ -808,6 +808,14 @@ class $modify(UniversePlayLayer, PlayLayer) {
     }
 
     void updateFloatingButton() {
+        auto scene = CCDirector::sharedDirector()->getRunningScene();
+        if (scene && scene->getChildByID("universe-panel"_spr)) {
+            if (m_fields->floatingButton) {
+                m_fields->floatingButton->removeFromParentAndCleanup(true);
+                m_fields->floatingButton = nullptr;
+            }
+            return;
+        }
         auto mod = Mod::get();
         bool shouldShow = mod && mod->getSettingValue<bool>("floating-button");
         if (!shouldShow) {
