@@ -442,14 +442,15 @@ protected:
                 addText("F8  Toggle FPS Bypass", {-245.f, -180.f}, 0.34f);
                 addText("F6  Start / stop recorder", {-245.f, -220.f}, 0.34f);
                 addText("F7  Play saved replay", {-245.f, -260.f}, 0.34f);
+                addText("J  Toggle player path trail", {-245.f, -300.f}, 0.34f);
                 break;
             case Page::Settings:
                 addText("Universe settings", {-245.f, 105.f});
-                addToggle("Global click sound", "click-sound", 104, 65.f);
-                addToggle("Safe Mode", "safe-mode", 105, 15.f);
-                addText("Safe Mode marks the current attempt as Practice after Noclip or Speedhack is used.", {-245.f, -45.f}, 0.29f);
-                addText("This is a local safeguard, not a server-side guarantee.", {-245.f, -80.f}, 0.29f);
-                addText("The floating touch button can be changed in Geode settings.", {-245.f, -125.f}, 0.29f);
+                addToggle("Global click sound", "click-sound", 104, 75.f);
+                addToggle("Safe Mode", "safe-mode", 105, 25.f);
+                addToggle("Floating touch button", "floating-button", 122, -25.f);
+                addText("Safe Mode marks the current attempt as Practice after Noclip or Speedhack is used.", {-245.f, -80.f}, 0.28f);
+                addText("This is a local safeguard, not a server-side guarantee.", {-245.f, -115.f}, 0.28f);
                 break;
         }
     }
@@ -540,6 +541,7 @@ protected:
             case 106: key = "speedhack-enabled"; break;
             case 111: key = "show-hitboxes"; break;
             case 112: key = "fps-bypass-enabled"; break;
+            case 122: key = "floating-button"; break;
             default: return;
         }
         bool current = mod->getSettingValue<bool>(key);
