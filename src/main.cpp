@@ -252,6 +252,41 @@ protected:
         }
     }
 
+    void smartStartPos() {
+        auto layer = PlayLayer::get();
+        if (!layer || !layer->m_startPosObjects || !layer->m_player1)
+            return;
+
+        auto objects = layer->m_startPosObjects;
+        StartPosObject* best = nullptr;
+        float playerX = layer->m_player1->getPositionX();
+        float bestDistance = std::numeric_limits<float>::max();
+
+        for (unsigned int i = 0; i < objects->count(); ++i) {
+            auto startPos = static_cast<StartPosObject*>(objects->objectAtIndex(i));
+            if (!startPos) continue;
+            float x = startPos->getPositionX();
+            if (x < playerX) continue;
+            float distance = x - playerX;
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                best = startPos;
+            }
+        }
+
+        if (!best && objects->count() > 0)
+            best = static_cast<StartPosObject*>(objects->lastObject());
+        if (!best) return;
+
+        layer->setActiveStartPosObject(best);
+        if (layer->isRunning()) {
+            if (layer->m_isPracticeMode)
+                layer->resetLevelFromStart();
+            layer->resetLevel();
+            layer->startMusic();
+        }
+    }
+
     void addToggle(const char* title, const char* setting, int tag, float y) {
         auto mod = Mod::get();
         bool enabled = mod && mod->getSettingValue<bool>(setting);
@@ -305,12 +340,14 @@ protected:
                         : 0;
                     auto positionText = fmt::format("StartPos: {} / {}", index, count);
                     addText(positionText.c_str(), {-245.f, 55.f}, 0.38f);
-                    addAction("PREVIOUS", 109, {-120.f, 0.f});
-                    addAction("NEXT", 110, {100.f, 0.f});
+                    addAction("PREVIOUS", 109, {-150.f, 0.f});
+                    addAction("SMART", 117, {0.f, 0.f});
+                    addAction("NEXT", 110, {150.f, 0.f});
                 } else {
                     addText("Enter a level with StartPos objects to use the switcher.", {-245.f, 55.f}, 0.31f);
                 }
-                addText("StartPos switching resets the current attempt.", {-245.f, -65.f}, 0.30f);
+                addText("SMART selects the nearest StartPos ahead of your player.", {-245.f, -40.f}, 0.29f);
+                addText("StartPos switching resets the current attempt.", {-245.f, -75.f}, 0.30f);
                 addText("No verification, coin, or leaderboard spoofing is provided.", {-245.f, -105.f}, 0.29f);
                 break;
             }
@@ -374,6 +411,11 @@ protected:
         }
         if (tag == 109 || tag == 110) {
             switchStartPos(tag == 109 ? -1 : 1);
+            showPage(m_page);
+            return;
+        }
+        if (tag == 117) {
+            smartStartPos();
             showPage(m_page);
             return;
         }
