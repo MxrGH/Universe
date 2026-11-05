@@ -38,6 +38,11 @@ jobs:
       - name: Validate project metadata
         run: python scripts/validate_project.py
 
+      - name: Check Python tools
+        run: |
+          python -m py_compile scripts/*.py
+          python scripts/level_maker.py --offline --prompt "Build workflow smoke test" --output universe-level-smoke-test.json
+
       - name: Build Geode mod
         uses: geode-sdk/build-geode-mod@main
         with:
