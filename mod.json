@@ -6,9 +6,9 @@
   },
   "id": "mxrmc.universe",
   "name": "Universe",
-  "version": "v0.6.0",
+  "version": "v0.6.1",
   "developer": "MxrMC",
-  "description": "A Geometry Dash utility and practice toolkit with all-mode Noclip and switchable Safe Mode.",
+  "description": "Local practice, visual, StartPos, and replay tools for Geometry Dash.",
   "tags": [
     "gameplay",
     "interface",
@@ -143,13 +143,13 @@
     },
     "safe-mode": {
       "name": "Safe Mode",
-      "description": "When enabled with Noclip, marks the active run as Practice Mode so it is not treated as a normal completion. Can be toggled at any time.",
+      "description": "If Noclip or Speedhack has been used during the current attempt, enabling Safe Mode switches that attempt to Practice Mode. This is a local safeguard only.",
       "type": "bool",
       "default": true
     },
     "noclip": {
       "name": "Noclip",
-      "description": "Bypass object and slope collisions in both Normal and Practice Mode. Use Safe Mode to mark the run as Practice Mode.",
+      "description": "Bypass object and slope collisions in Normal or Practice Mode. Safe Mode can switch the current attempt to Practice Mode.",
       "type": "bool",
       "default": false
     },
@@ -169,7 +169,7 @@
     },
     "icon-preview": {
       "name": "Icon preview",
-      "description": "Local-only icon appearance preview.",
+      "description": "Reserved setting for a future local icon preview. It does not currently render or unlock icons.",
       "type": "bool",
       "default": false
     },
