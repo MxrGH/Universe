@@ -1,14 +1,20 @@
 {
   "geode": "6.0.0-alpha.1",
   "gd": {
-    "win": "2.2091"
+    "win": "2.2091",
+    "android": "2.2091"
   },
   "id": "mxrmc.universe",
   "name": "Universe",
   "version": "v0.1.0",
   "developer": "MxrMC",
   "description": "A customizable Geometry Dash utility and practice toolkit.",
-  "tags": ["gameplay", "interface", "offline", "cheat"],
+  "tags": [
+    "gameplay",
+    "interface",
+    "offline",
+    "cheat"
+  ],
   "dependencies": {
     "geode.node-ids": ">=v1.23.3"
   },
