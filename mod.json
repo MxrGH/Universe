@@ -6,9 +6,9 @@
   },
   "id": "mxrmc.universe",
   "name": "Universe",
-  "version": "v0.3.0",
+  "version": "v0.4.0",
   "developer": "MxrMC",
-  "description": "A Geometry Dash utility and local-practice toolkit. Noclip is restricted to Practice Mode by Safe Mode.",
+  "description": "A Geometry Dash utility and practice toolkit with all-mode Noclip and switchable Safe Mode.",
   "tags": [
     "gameplay",
     "interface",
@@ -32,13 +32,13 @@
     },
     "safe-mode": {
       "name": "Safe Mode",
-      "description": "Required for Noclip. Restricts collision bypass to Practice Mode and cannot be disabled while Noclip is enabled.",
+      "description": "When enabled with Noclip, marks the active run as Practice Mode so it is not treated as a normal completion. Can be toggled at any time.",
       "type": "bool",
       "default": true
     },
     "noclip": {
       "name": "Noclip",
-      "description": "Bypass object and slope collisions only in Practice Mode while Safe Mode is enabled.",
+      "description": "Bypass object and slope collisions in both Normal and Practice Mode. Use Safe Mode to mark the run as Practice Mode.",
       "type": "bool",
       "default": false
     },
