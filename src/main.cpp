@@ -420,6 +420,9 @@ protected:
                 addText("SMART selects the nearest StartPos ahead of your player.", {-245.f, -40.f}, 0.29f);
                 addText("StartPos switching resets the current attempt.", {-245.f, -75.f}, 0.30f);
                 addText("No verification, coin, or leaderboard spoofing is provided.", {-245.f, -105.f}, 0.29f);
+                addText("Draft generator: scripts/level_maker.py", {-245.f, -165.f}, 0.29f);
+                addText("Use --offline for templates or configure an AI API key.", {-245.f, -200.f}, 0.27f);
+                addText("Output is a JSON blueprint, not an import-ready level.", {-245.f, -235.f}, 0.27f);
                 break;
             }
             case Page::Visuals: {
@@ -449,6 +452,8 @@ protected:
                 addAction("CLEAR SAVED REPLAY", 121, {125.f, -55.f});
                 addText("Practice Mode only. Replay is saved locally.", {-245.f, -115.f}, 0.30f);
                 addText("File: universe-practice-replay.csv", {-245.f, -150.f}, 0.29f);
+                addText("Video helper: scripts/export_video.py", {-245.f, -205.f}, 0.29f);
+                addText("Requires FFmpeg and a screen recording.", {-245.f, -240.f}, 0.29f);
                 break;
             }
             case Page::Keybinds:
