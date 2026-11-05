@@ -184,6 +184,19 @@
       "description": "Show a large touch-friendly UNIV button on the gameplay screen. Useful on Android and available on desktop too.",
       "type": "bool",
       "default": true
+    },
+    "keybind-projection": {
+      "name": "Toggle movement projection",
+      "description": "Show or hide a short straight-line projection based on recent player movement.",
+      "type": "keybind",
+      "category": "gameplay",
+      "default": "K"
+    },
+    "show-projection": {
+      "name": "Show movement projection",
+      "description": "Draw a short straight-line estimate from recent movement. This does not simulate gravity, portals, or collisions.",
+      "type": "bool",
+      "default": false
     }
   }
 }
