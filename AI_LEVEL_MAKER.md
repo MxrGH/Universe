@@ -20,4 +20,4 @@ AI Level Maker is a planned Universe feature, not yet available in the current b
 
 ## Implementation status
 
-The generation engine, prompt interface, song synchronization, preview, and level export integration are not implemented yet. An AI service or local model strategy must be selected before claiming AI generation works. API credentials must never be embedded in the public mod source.
+The actual AI generation engine, prompt interface, song synchronization, in-game preview, and native level export are not implemented yet. The mod now has an implementation plan, but an AI service or local model must be selected and integrated before this can generate levels from natural-language prompts. API credentials must never be embedded in the public mod source.
