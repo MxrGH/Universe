@@ -253,6 +253,18 @@ protected:
         }
     }
 
+    void cycleTheme() {
+        auto mod = Mod::get();
+        if (!mod) return;
+        auto current = mod->getSettingValue<int64_t>("theme-preset");
+        auto next = (current + 1) % 3;
+        mod->setSettingValue<int64_t>("theme-preset", next);
+        ccColor4B color = next == 0 ? ccColor4B{24, 28, 48, 255}
+            : next == 1 ? ccColor4B{38, 18, 58, 255}
+            : ccColor4B{12, 42, 48, 255};
+        mod->setSettingValue<ccColor4B>("panel-color", color);
+    }
+
     void smartStartPos() {
         auto layer = PlayLayer::get();
         if (!layer || !layer->m_startPosObjects || !layer->m_player1)
@@ -362,6 +374,9 @@ protected:
                 addAction("-", 113, {125.f, -35.f});
                 addAction("+", 114, {205.f, -35.f});
                 addText("FPS Bypass changes the render interval, not physics.", {-245.f, -85.f}, 0.28f);
+                addToggle("Show player path trail", "show-trajectory", 118, -125.f);
+                addAction("CYCLE PANEL THEME", 119, {90.f, -175.f});
+                addText("Trail shows recent movement, not a physics prediction.", {-245.f, -205.f}, 0.27f);
                 break;
             }
             case Page::Recorder: {
@@ -370,8 +385,10 @@ protected:
                 addText(status, {-245.f, 60.f}, 0.40f);
                 addAction(g_macroRecording ? "STOP & SAVE" : "START RECORDING", 115, {-115.f, 0.f});
                 addAction("PLAY SAVED REPLAY", 116, {125.f, 0.f});
-                addText("Practice Mode only. Replay is saved locally.", {-245.f, -65.f}, 0.30f);
-                addText("File: universe-practice-replay.csv", {-245.f, -105.f}, 0.29f);
+                addAction("STOP REPLAY", 120, {-115.f, -55.f});
+                addAction("CLEAR SAVED REPLAY", 121, {125.f, -55.f});
+                addText("Practice Mode only. Replay is saved locally.", {-245.f, -115.f}, 0.30f);
+                addText("File: universe-practice-replay.csv", {-245.f, -150.f}, 0.29f);
                 break;
             }
             case Page::Keybinds:
@@ -441,6 +458,34 @@ protected:
         if (tag == 116) {
             if (!startMacroPlayback())
                 FLAlertLayer::create("Universe", "Could not load the replay. Enter Practice Mode and make sure a saved replay exists.", "OK")->show();
+            showPage(m_page);
+            return;
+        }
+        if (tag == 118) {
+            mod->setSettingValue<bool>("show-trajectory", !mod->getSettingValue<bool>("show-trajectory"));
+            showPage(m_page);
+            return;
+        }
+        if (tag == 119) {
+            cycleTheme();
+            FLAlertLayer::create("Universe", "Panel theme preset changed. Reopen Universe to apply it.", "OK")->show();
+            return;
+        }
+        if (tag == 120) {
+            g_macroPlayingBack = false;
+            g_macroPlaybackIndex = 0;
+            showPage(m_page);
+            return;
+        }
+        if (tag == 121) {
+            g_macroPlayingBack = false;
+            g_macroRecording = false;
+            g_macroEvents.clear();
+            auto path = macroFilePath();
+            if (!path.empty()) {
+                std::ofstream file(path, std::ios::out | std::ios::trunc);
+                file.close();
+            }
             showPage(m_page);
             return;
         }
@@ -572,6 +617,7 @@ class $modify(UniversePlayerObject, PlayerObject) {
 class $modify(UniversePlayLayer, PlayLayer) {
     struct Fields {
         CCDrawNode* hitboxDrawNode = nullptr;
+        std::vector<CCPoint> trajectoryPoints;
     };
 
     void createObjectsFromSetupFinished() {
@@ -592,19 +638,35 @@ class $modify(UniversePlayLayer, PlayLayer) {
         node->clear();
 
         auto mod = Mod::get();
-        if (!mod || !mod->getSettingValue<bool>("show-hitboxes"))
-            return;
+        if (!mod) return;
 
-        for (auto object : CCArrayExt<GameObject*>(m_objects)) {
-            if (!object || object->m_isDecoration || object->m_isDecoration2)
-                continue;
-            auto rect = object->getObjectRect();
-            node->drawRect(
-                rect,
-                ccc4f(0.f, 0.f, 0.f, 0.f),
-                1.0f,
-                ccc4f(1.f, 0.18f, 0.25f, 0.85f)
-            );
+        if (mod->getSettingValue<bool>("show-hitboxes")) {
+            for (auto object : CCArrayExt<GameObject*>(m_objects)) {
+                if (!object || object->m_isDecoration || object->m_isDecoration2)
+                    continue;
+                auto rect = object->getObjectRect();
+                node->drawRect(
+                    rect,
+                    ccc4f(0.f, 0.f, 0.f, 0.f),
+                    1.0f,
+                    ccc4f(1.f, 0.18f, 0.25f, 0.85f)
+                );
+            }
+        }
+
+        if (mod->getSettingValue<bool>("show-trajectory") && m_player1) {
+            auto& points = m_fields->trajectoryPoints;
+            auto current = m_player1->getPosition();
+            if (points.empty() || ccpDistance(points.back(), current) >= 3.f)
+                points.push_back(current);
+            while (points.size() > 90)
+                points.erase(points.begin());
+            for (size_t i = 1; i < points.size(); ++i) {
+                node->drawSegment(points[i - 1], points[i], 1.5f,
+                    ccc4f(0.25f, 0.9f, 1.f, 0.8f));
+            }
+        } else {
+            m_fields->trajectoryPoints.clear();
         }
     }
 
@@ -714,6 +776,12 @@ $on_game(Loaded) {
         if (!down || repeat) return;
         auto mod = Mod::get();
         if (mod) mod->setSettingValue<bool>("safe-mode", !mod->getSettingValue<bool>("safe-mode"));
+    });
+
+    listenForKeybindSettingPresses("keybind-trajectory", [](Keybind const&, bool down, bool repeat, double) {
+        if (!down || repeat) return;
+        auto mod = Mod::get();
+        if (mod) mod->setSettingValue<bool>("show-trajectory", !mod->getSettingValue<bool>("show-trajectory"));
     });
 
     listenForKeybindSettingPresses("keybind-hitboxes", [](Keybind const&, bool down, bool repeat, double) {
