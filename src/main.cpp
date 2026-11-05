@@ -314,7 +314,7 @@ protected:
                 addText("No verification, coin, or leaderboard spoofing is provided.", {-245.f, -105.f}, 0.29f);
                 break;
             }
-            case Page::Visuals:
+            case Page::Visuals: {
                 addText("Visual tools", {-245.f, 105.f});
                 addToggle("Show object hitboxes", "show-hitboxes", 111, 65.f);
                 addToggle("FPS Bypass", "fps-bypass-enabled", 112, 15.f);
@@ -325,6 +325,7 @@ protected:
                 addAction("+", 114, {205.f, -35.f});
                 addText("FPS Bypass changes the render interval, not physics.", {-245.f, -85.f}, 0.28f);
                 break;
+            }
             case Page::Recorder: {
                 addText("Practice recorder", {-245.f, 105.f});
                 const char* status = g_macroRecording ? "RECORDING" : (g_macroPlayingBack ? "PLAYING BACK" : "IDLE");
