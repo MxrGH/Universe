@@ -115,6 +115,7 @@ protected:
                 addToggle("Local icon preview", "icon-preview", 101, -35.f);
                 break;
             case Page::Practice:
+                auto mod = Mod::get();
                 addText("Practice & testing", {-245.f, 105.f});
                 addText("Use these options for local practice sessions.", {-245.f, 65.f}, 0.34f);
                 addToggle("Practice tools", "practice-tools", 102, 35.f);
