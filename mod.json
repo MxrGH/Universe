@@ -6,7 +6,7 @@
   },
   "id": "mxrmc.universe",
   "name": "Universe",
-  "version": "v0.1.0",
+  "version": "v0.1.1",
   "developer": "MxrMC",
   "description": "A customizable Geometry Dash utility and practice toolkit.",
   "tags": [
@@ -18,10 +18,15 @@
   "dependencies": {
     "geode.node-ids": ">=v1.23.3"
   },
+  "resources": {
+    "files": [
+      "resources/click.mp3"
+    ]
+  },
   "settings": {
     "click-sound": {
       "name": "Global click sound",
-      "description": "Play the supplied sound for mouse clicks and touch taps.",
+      "description": "Play the supplied sound for mouse clicks and Android screen taps throughout Geometry Dash.",
       "type": "bool",
       "default": true
     },

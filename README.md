@@ -6,19 +6,22 @@ Repository: https://github.com/MxrGH/Universe
 
 ## Build targets
 
-The GitHub Actions workflow builds:
-- Windows x64
-- Android ARM64 (Android64)
-- Android ARMv7 (Android32)
+The GitHub Actions workflow builds Windows x64, Android ARM64, and Android ARMv7, then combines them into one universal `.geode` package.
 
-The platform builds are combined into a single universal `.geode` package. When the workflow completes, download the artifact named **Universe-Windows-Android-GD-2.2091** from the repository's Actions run.
+Download the artifact named **Universe-Windows-Android-GD-2.2091** from the repository's Actions run.
 
-## Current implementation status
+## Implemented
 
-- Geode project metadata and multi-platform build workflow are present.
-- A Universe entry button is present in the main menu.
-- Settings are declared for Safe Mode, click sound, noclip, local icon preview, and practice tools.
-- The full hack panel and gameplay hooks are still under development.
-- The supplied click sound has not yet been included in the packaged resources.
+- Main-menu Universe entry button.
+- Global, non-blocking touch listener.
+- Bundled click sound: plays on Android screen taps throughout Geometry Dash when **Global click sound** is enabled.
+- Click sound is included as a mod resource.
 
-Safe Mode is intended to keep modified gameplay from being submitted as legitimate records. Icon previews and testing features are local-only; the project will not spoof server-side data or fabricate online achievements.
+## In progress / not implemented yet
+
+- Full Eclipse/Mega Hack-style control panel.
+- Noclip gameplay hook and record-safety enforcement.
+- Local icon preview controls.
+- Local practice helper controls.
+
+Safe Mode is intended to keep modified gameplay from being submitted as legitimate records. This project does not spoof server-side icons, fabricate online achievements, or bypass leaderboard validation.
