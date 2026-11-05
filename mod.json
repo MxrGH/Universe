@@ -90,6 +90,27 @@
         "slider": true
       }
     },
+    "keybind-trajectory": {
+      "name": "Toggle player path trail",
+      "description": "Show or hide the recent player movement trail.",
+      "type": "keybind",
+      "category": "gameplay",
+      "default": "J"
+    },
+    "show-trajectory": {
+      "name": "Show player path trail",
+      "description": "Draw the recent movement path behind the player. This is not predictive physics.",
+      "type": "bool",
+      "default": false
+    },
+    "theme-preset": {
+      "name": "Panel theme preset",
+      "description": "Current Universe panel palette preset.",
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 2
+    },
     "keybind-hitboxes": {
       "name": "Toggle hitboxes",
       "description": "Show or hide object collision rectangles.",
