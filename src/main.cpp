@@ -24,6 +24,8 @@ namespace {
     std::vector<MacroEvent> g_macroEvents;
     bool g_macroRecording = false;
     bool g_macroPlayingBack = false;
+    PlayLayer* g_macroRecordingLayer = nullptr;
+    PlayLayer* g_macroPlaybackLayer = nullptr;
     float g_macroTime = 0.f;
     float g_macroPlaybackTime = 0.f;
     size_t g_macroPlaybackIndex = 0;
@@ -54,6 +56,7 @@ namespace {
             return false;
         g_macroEvents.clear();
         g_macroTime = 0.f;
+        g_macroRecordingLayer = layer;
         g_macroRecording = true;
         return true;
     }
@@ -86,6 +89,7 @@ namespace {
         g_macroEvents = std::move(loaded);
         g_macroPlaybackIndex = 0;
         g_macroPlaybackTime = 0.f;
+        g_macroPlaybackLayer = layer;
         g_macroPlayingBack = true;
         // Macro playback is always a local practice action.
         layer->m_isPracticeMode = true;
@@ -93,10 +97,17 @@ namespace {
     }
 
     void updateMacroPlayback(PlayLayer* layer, float dt) {
-        if (g_macroRecording)
-            g_macroTime += dt;
-        if (!g_macroPlayingBack || !layer || !layer->m_player1)
+        if (g_macroRecording) {
+            if (layer != g_macroRecordingLayer)
+                stopMacroRecording();
+            else
+                g_macroTime += dt;
+        }
+        if (!g_macroPlayingBack || !layer || layer != g_macroPlaybackLayer || !layer->m_player1) {
+            if (g_macroPlayingBack && layer != g_macroPlaybackLayer)
+                g_macroPlayingBack = false;
             return;
+        }
 
         g_macroPlaybackTime += dt;
         while (g_macroPlaybackIndex < g_macroEvents.size()
