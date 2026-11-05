@@ -128,7 +128,12 @@
       "name": "Universe panel color",
       "description": "Customize the panel background color.",
       "type": "rgba",
-      "default": [24, 28, 48, 255]
+      "default": [
+        24,
+        28,
+        48,
+        255
+      ]
     },
     "click-sound": {
       "name": "Global click sound",
@@ -158,9 +163,9 @@
       "name": "Speedhack multiplier",
       "description": "Gameplay speed multiplier, adjustable from 0.25x to 3.00x in the Universe panel.",
       "type": "float",
-      "default": 1.0,
+      "default": 1,
       "min": 0.25,
-      "max": 3.0
+      "max": 3
     },
     "icon-preview": {
       "name": "Icon preview",
@@ -171,6 +176,12 @@
     "practice-tools": {
       "name": "Practice tools",
       "description": "Enable local practice and testing helpers.",
+      "type": "bool",
+      "default": true
+    },
+    "floating-button": {
+      "name": "Floating in-game panel button",
+      "description": "Show a large touch-friendly UNIV button on the gameplay screen. Useful on Android and available on desktop too.",
       "type": "bool",
       "default": true
     }
