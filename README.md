@@ -16,13 +16,17 @@ A Geometry Dash 2.2091 Geode utility and local-practice mod by MxrMC.
 - Safe Mode can be toggled independently. It remembers whether Noclip or Speedhack was used during the current PlayLayer and locally marks the run as Practice Mode when enabled.
 - Practice-only input recorder and local replay playback.
 - Object hitbox overlay.
+- Recent player movement trail (visual history, not predictive trajectory physics).
+- Three local panel color presets.
+- Recorder controls to stop playback and clear the saved replay.
 - FPS render-interval override (60–360 target setting).
 
 ### Important limitations
 - Source features are not automatically confirmed working in-game. Noclip, Safe Mode behavior, Smart StartPos, hitboxes, FPS override, and recorder/replay still require gameplay testing across supported platforms.
 - Safe Mode is a local guard, not a guarantee of server-side leaderboard enforcement. Do not submit modified runs as legitimate records.
 - Icon preview is currently a stored local-only setting, not a completed icon renderer. Universe does not spoof online unlocks, verification, coins, achievements, profiles, or leaderboard results.
-- Trajectory prediction, expanded player/icon tools, theme presets, FFmpeg export, and the full mobile floating panel are not implemented yet.
+- Predictive trajectory simulation, expanded player/icon rendering, FFmpeg video export, and a draggable mobile floating panel are not implemented yet. The current path trail only displays recent player positions.
+- Theme presets and replay management are now implemented in source, but still need in-game testing on Windows and Android.
 
 ## Coming soon
 
