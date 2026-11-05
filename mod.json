@@ -52,6 +52,20 @@
       "category": "gameplay",
       "default": "Ctrl+Shift+S"
     },
+    "keybind-record": {
+      "name": "Start / stop practice recorder",
+      "description": "Record player input events during a Practice Mode session.",
+      "type": "keybind",
+      "category": "gameplay",
+      "default": "F6"
+    },
+    "keybind-replay": {
+      "name": "Play saved practice replay",
+      "description": "Play the locally saved input recording in Practice Mode.",
+      "type": "keybind",
+      "category": "gameplay",
+      "default": "F7"
+    },
     "keybind-fps-bypass": {
       "name": "Toggle FPS Bypass",
       "description": "Toggle the game's render frame interval override.",
