@@ -2,7 +2,7 @@
 
 Universe is a Geode mod for Geometry Dash 2.2091, developed by MxrMC.
 
-The current source includes local practice controls, StartPos tools, object hitboxes, a short movement projection, an icon preview, a draggable touch button, and a local input recorder.
+The current source includes local practice controls, StartPos tools, object hitboxes, a short movement projection, an icon preview, a draggable touch button, a movable panel, and a local input recorder.
 
 The repository also includes two standalone tools:
 - A level-design draft generator with offline templates and an optional OpenAI-compatible API.
