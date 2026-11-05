@@ -173,7 +173,7 @@ namespace {
     }
 
     enum class Page {
-        Player, Practice, Level, Visuals, Recorder, Keybinds, Settings
+        Player, Practice, Level, Visuals, Recorder, Keybinds, Settings, AI
     };
 
     void playUniverseClick() {
@@ -201,6 +201,7 @@ namespace {
             case Page::Recorder: return "Recorder";
             case Page::Keybinds: return "Keybinds";
             case Page::Settings: return "Settings";
+            case Page::AI: return "AI";
         }
         return "Universe";
     }
@@ -472,6 +473,17 @@ protected:
                 addText("F7  Play saved replay", {-245.f, -260.f}, 0.34f);
                 addText("J  Toggle path trail     K  Toggle movement projection", {-245.f, -300.f}, 0.31f);
                 break;
+            case Page::AI:
+                addText("AI level design assistant", {-245.f, 105.f});
+                addText("Describe a theme, mood, gameplay style, or level name.", {-245.f, 60.f}, 0.31f);
+                addText("Examples:", {-245.f, 15.f}, 0.36f);
+                addText("Make my level Ribbons feel more polished and exciting.", {-245.f, -25.f}, 0.29f);
+                addText("Design a level called Skills with a 3D-style structure.", {-245.f, -65.f}, 0.29f);
+                addText("AI drafts are generated with scripts/level_maker.py.", {-245.f, -120.f}, 0.29f);
+                addText("The tool outputs a JSON blueprint, not a playable level.", {-245.f, -160.f}, 0.27f);
+                addText("Newgrounds music is a search suggestion, not auto-imported.", {-245.f, -195.f}, 0.27f);
+                addText("See AI_LEVEL_MAKER.md for setup and examples.", {-245.f, -235.f}, 0.29f);
+                break;
             case Page::Settings:
                 addText("Universe settings", {-245.f, 105.f});
                 addToggle("Global click sound", "click-sound", 104, 75.f);
@@ -674,8 +686,10 @@ public:
         float left = win.width * 0.16f;
         float tabY = win.height * 0.64f;
         Page pages[] = {Page::Player, Page::Practice, Page::Level, Page::Visuals,
-                        Page::Recorder, Page::Keybinds, Page::Settings};
-        for (int i = 0; i < 7; ++i) {
+                        Page::Recorder, Page::Keybinds, Page::Settings, Page::AI};
+        int pageCount = 7;
+        if (Mod::get()->getSettingValue<bool>("ai-tab-enabled")) pageCount = 8;
+        for (int i = 0; i < pageCount; ++i) {
             auto label = CCLabelBMFont::create(pageName(pages[i]), "bigFont.fnt");
             label->setScale(0.34f);
             auto item = CCMenuItemLabel::create(label, this, menu_selector(UniversePanel::onTab));
@@ -696,7 +710,8 @@ public:
 
     void onTab(CCObject* sender) {
         int index = static_cast<CCNode*>(sender)->getTag() - 200;
-        if (index < 0 || index > 6) return;
+        if (index < 0 || index > 7) return;
+        if (index == 7 && !Mod::get()->getSettingValue<bool>("ai-tab-enabled")) return;
         showPage(static_cast<Page>(index));
     }
 };
