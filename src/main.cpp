@@ -21,10 +21,8 @@ namespace {
         auto layer = PlayLayer::get();
         return mod
             && layer
-            && mod->getSettingValue<bool>("safe-mode")
             && mod->getSettingValue<bool>("practice-tools")
-            && mod->getSettingValue<bool>("noclip")
-            && layer->m_isPracticeMode;
+            && mod->getSettingValue<bool>("noclip");
     }
 
     const char* pageName(Page page) {
@@ -116,9 +114,9 @@ protected:
                 addText("Practice & testing", {-245.f, 105.f});
                 addText("Use these options for local practice sessions.", {-245.f, 65.f}, 0.34f);
                 addToggle("Practice tools", "practice-tools", 102, 15.f);
-                addToggle("Noclip (practice only)", "noclip", 103, -45.f);
-                addText("Noclip activates only in Practice Mode with Safe Mode enabled.", {-245.f, -110.f}, 0.30f);
-                addText("It is disabled automatically in normal mode.", {-245.f, -140.f}, 0.30f);
+                addToggle("Noclip (all modes)", "noclip", 103, -45.f);
+                addText("Noclip works in both Normal and Practice Mode.", {-245.f, -110.f}, 0.30f);
+                addText("Safe Mode ON marks the run as Practice Mode to avoid saving it as a normal record.", {-245.f, -140.f}, 0.27f);
                 break;
             case Page::Level:
                 addText("Level tools", {-245.f, 105.f});
@@ -144,8 +142,8 @@ protected:
                 addText("Universe settings", {-245.f, 105.f});
                 addToggle("Global click sound", "click-sound", 104, 45.f);
                 addToggle("Safe Mode", "safe-mode", 105, -15.f);
-                addText("Required for Noclip. It confines collision bypass to Practice Mode.", {-245.f, -85.f}, 0.30f);
-                addText("Safe Mode cannot be disabled while Noclip is enabled.", {-245.f, -115.f}, 0.30f);
+                addText("When ON with Noclip, Universe marks the current run as Practice Mode.", {-245.f, -85.f}, 0.29f);
+                addText("You can switch Safe Mode ON or OFF at any time.", {-245.f, -115.f}, 0.30f);
                 break;
         }
     }
@@ -165,24 +163,6 @@ protected:
         auto mod = Mod::get();
         if (!mod) return;
         bool current = mod->getSettingValue<bool>(key);
-
-        if (tag == 103 && !current && !mod->getSettingValue<bool>("safe-mode")) {
-            FLAlertLayer::create(
-                "Universe",
-                "Enable Safe Mode before enabling Noclip. Noclip is restricted to Practice Mode.",
-                "OK"
-            )->show();
-            return;
-        }
-
-        if (tag == 105 && current && mod->getSettingValue<bool>("noclip")) {
-            FLAlertLayer::create(
-                "Universe",
-                "Turn Noclip off before disabling Safe Mode.",
-                "OK"
-            )->show();
-            return;
-        }
 
         mod->setSettingValue<bool>(key, !current);
         showPage(m_page);
@@ -261,8 +241,8 @@ public:
     }
 };
 
-// Noclip is deliberately limited to local Practice Mode. Both object and slope
-// collision handlers are bypassed only while all safety gates are satisfied.
+// Noclip works in Normal and Practice Mode. With Safe Mode enabled, the
+// PlayLayer hook below marks the run as Practice Mode before gameplay updates.
 class $modify(UniversePlayerObject, PlayerObject) {
     bool collidedWithObjectInternal(float dt, GameObject* object, CCRect rect, bool skipCheck) {
         if (isUniverseNoclipActive()) return false;
@@ -272,6 +252,20 @@ class $modify(UniversePlayerObject, PlayerObject) {
     void collidedWithSlopeInternal(float dt, GameObject* object, bool forced) {
         if (isUniverseNoclipActive()) return;
         PlayerObject::collidedWithSlopeInternal(dt, object, forced);
+    }
+};
+
+class $modify(UniversePlayLayer, PlayLayer) {
+    void update(float dt) {
+        auto mod = Mod::get();
+        if (mod
+            && mod->getSettingValue<bool>("safe-mode")
+            && mod->getSettingValue<bool>("noclip")
+            && !this->m_isPracticeMode) {
+            // Keep the modified attempt out of normal completion records.
+            this->m_isPracticeMode = true;
+        }
+        PlayLayer::update(dt);
     }
 };
 
