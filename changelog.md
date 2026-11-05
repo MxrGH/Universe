@@ -8,6 +8,7 @@
 ## v0.8.0
 - Add a cube icon preview with a local ID selector.
 - Replace the fixed floating menu button with a touch layer that can be dragged and remembers its position.
+- Allow the main panel to be moved by dragging its title bar.
 - Replace the straight-line path estimate with a short projection based on recent velocity and acceleration.
 - Add a level-draft tool with offline templates and optional AI-assisted generation through an OpenAI-compatible API.
 - Add an FFmpeg helper for converting existing gameplay recordings to MP4.
