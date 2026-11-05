@@ -907,7 +907,6 @@ class $modify(UniversePlayLayer, PlayLayer) {
                     auto p2 = points[n - 1];
                     auto v1 = ccp((p1.x - p0.x) / dt1, (p1.y - p0.y) / dt1);
                     auto v2 = ccp((p2.x - p1.x) / dt2, (p2.y - p1.y) / dt2);
-                    float averageDt = (dt1 + dt2) * 0.5f;
                     auto acceleration = ccp(
                         2.f * (v2.x - v1.x) / (dt1 + dt2),
                         2.f * (v2.y - v1.y) / (dt1 + dt2)
