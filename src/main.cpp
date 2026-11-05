@@ -1,4 +1,7 @@
 #include <algorithm>
+#include <fstream>
+#include <sstream>
+#include <vector>
 #include <Geode/Geode.hpp>
 #include <Geode/loader/GameEvent.hpp>
 #include <Geode/loader/SettingV3.hpp>
@@ -11,6 +14,107 @@ using namespace geode::prelude;
 
 namespace {
     double g_originalFrameInterval = 0.0;
+
+    struct MacroEvent {
+        float time = 0.f;
+        int button = 0;
+        bool down = false;
+    };
+
+    std::vector<MacroEvent> g_macroEvents;
+    bool g_macroRecording = false;
+    bool g_macroPlayingBack = false;
+    float g_macroTime = 0.f;
+    float g_macroPlaybackTime = 0.f;
+    size_t g_macroPlaybackIndex = 0;
+
+    std::string macroFilePath() {
+        auto mod = Mod::get();
+        if (!mod) return {};
+        return (mod->getSaveDir() / "universe-practice-replay.csv").string();
+    }
+
+    void stopMacroRecording() {
+        g_macroRecording = false;
+        auto path = macroFilePath();
+        if (path.empty()) return;
+        std::ofstream file(path, std::ios::out | std::ios::trunc);
+        if (!file.is_open()) {
+            log::error("Universe could not save the practice replay.");
+            return;
+        }
+        for (auto const& event : g_macroEvents)
+            file << event.time << ',' << event.button << ',' << (event.down ? 1 : 0) << '\\n';
+        log::info("Universe saved {} practice replay events.", g_macroEvents.size());
+    }
+
+    bool startMacroRecording() {
+        auto layer = PlayLayer::get();
+        if (!layer || !layer->m_isPracticeMode || g_macroPlayingBack)
+            return false;
+        g_macroEvents.clear();
+        g_macroTime = 0.f;
+        g_macroRecording = true;
+        return true;
+    }
+
+    bool startMacroPlayback() {
+        auto layer = PlayLayer::get();
+        if (!layer || g_macroRecording)
+            return false;
+        auto path = macroFilePath();
+        if (path.empty()) return false;
+        std::ifstream file(path);
+        if (!file.is_open()) return false;
+
+        std::vector<MacroEvent> loaded;
+        std::string line;
+        while (std::getline(file, line)) {
+            std::stringstream row(line);
+            MacroEvent event;
+            char comma1 = 0;
+            char comma2 = 0;
+            int down = 0;
+            if (row >> event.time >> comma1 >> event.button >> comma2 >> down
+                && comma1 == ',' && comma2 == ',') {
+                event.down = down != 0;
+                loaded.push_back(event);
+            }
+        }
+        if (loaded.empty()) return false;
+
+        g_macroEvents = std::move(loaded);
+        g_macroPlaybackIndex = 0;
+        g_macroPlaybackTime = 0.f;
+        g_macroPlayingBack = true;
+        // Macro playback is always a local practice action.
+        layer->m_isPracticeMode = true;
+        return true;
+    }
+
+    void updateMacroPlayback(PlayLayer* layer, float dt) {
+        if (g_macroRecording)
+            g_macroTime += dt;
+        if (!g_macroPlayingBack || !layer || !layer->m_player1)
+            return;
+
+        g_macroPlaybackTime += dt;
+        while (g_macroPlaybackIndex < g_macroEvents.size()
+            && g_macroEvents[g_macroPlaybackIndex].time <= g_macroPlaybackTime) {
+            auto const& event = g_macroEvents[g_macroPlaybackIndex++];
+            auto player = layer->m_player1;
+            g_macroPlayingBack = true;
+            auto button = static_cast<PlayerButton>(event.button);
+            if (event.down)
+                player->pushButton(button);
+            else
+                player->releaseButton(button);
+            g_macroPlayingBack = true;
+        }
+
+        if (g_macroPlaybackIndex >= g_macroEvents.size())
+            g_macroPlayingBack = false;
+    }
 
     void applyFpsBypass() {
         auto mod = Mod::get();
@@ -210,11 +314,16 @@ protected:
                 addAction("+", 114, {205.f, -35.f});
                 addText("FPS Bypass changes the render interval, not physics.", {-245.f, -85.f}, 0.28f);
                 break;
-            case Page::Recorder:
-                addText("Recorder", {-245.f, 105.f});
-                addText("Replay and recording integration is planned.", {-245.f, 65.f}, 0.34f);
-                addText("No recording is running in this build.", {-245.f, 25.f}, 0.32f);
+            case Page::Recorder: {
+                addText("Practice recorder", {-245.f, 105.f});
+                const char* status = g_macroRecording ? "RECORDING" : (g_macroPlayingBack ? "PLAYING BACK" : "IDLE");
+                addText(status, {-245.f, 60.f}, 0.40f);
+                addAction(g_macroRecording ? "STOP & SAVE" : "START RECORDING", 115, {-115.f, 0.f});
+                addAction("PLAY SAVED REPLAY", 116, {125.f, 0.f});
+                addText("Practice Mode only. Replay is saved locally.", {-245.f, -65.f}, 0.30f);
+                addText("File: universe-practice-replay.csv", {-245.f, -105.f}, 0.29f);
                 break;
+            }
             case Page::Keybinds:
                 addText("Keybinds", {-245.f, 105.f});
                 addText("Configure these bindings in Geode > Universe > Settings.", {-245.f, 65.f}, 0.32f);
@@ -224,6 +333,8 @@ protected:
                 addText("Ctrl+Shift+S  Toggle Safe Mode", {-245.f, -100.f}, 0.34f);
                 addText("H  Toggle object hitboxes", {-245.f, -140.f}, 0.34f);
                 addText("F8  Toggle FPS Bypass", {-245.f, -180.f}, 0.34f);
+                addText("F6  Start / stop recorder", {-245.f, -220.f}, 0.34f);
+                addText("F7  Play saved replay", {-245.f, -260.f}, 0.34f);
                 break;
             case Page::Settings:
                 addText("Universe settings", {-245.f, 105.f});
@@ -260,6 +371,21 @@ protected:
             target = std::clamp<int64_t>(target, 60, 360);
             mod->setSettingValue<int64_t>("fps-target", target);
             applyFpsBypass();
+            showPage(m_page);
+            return;
+        }
+        if (tag == 115) {
+            if (g_macroRecording) {
+                stopMacroRecording();
+            } else if (!startMacroRecording()) {
+                FLAlertLayer::create("Universe", "Start recording inside a Practice Mode level. Replay playback must be stopped.", "OK")->show();
+            }
+            showPage(m_page);
+            return;
+        }
+        if (tag == 116) {
+            if (!startMacroPlayback())
+                FLAlertLayer::create("Universe", "Could not load the replay. Enter Practice Mode and make sure a saved replay exists.", "OK")->show();
             showPage(m_page);
             return;
         }
@@ -359,6 +485,24 @@ public:
 // Noclip works in Normal and Practice Mode. With Safe Mode enabled, the
 // PlayLayer hook below marks the run as Practice Mode before gameplay updates.
 class $modify(UniversePlayerObject, PlayerObject) {
+    bool pushButton(PlayerButton button) {
+        auto layer = PlayLayer::get();
+        if (g_macroRecording && !g_macroPlayingBack && layer && layer->m_isPracticeMode
+            && layer->m_player1 == this) {
+            g_macroEvents.push_back({g_macroTime, static_cast<int>(button), true});
+        }
+        return PlayerObject::pushButton(button);
+    }
+
+    bool releaseButton(PlayerButton button) {
+        auto layer = PlayLayer::get();
+        if (g_macroRecording && !g_macroPlayingBack && layer && layer->m_isPracticeMode
+            && layer->m_player1 == this) {
+            g_macroEvents.push_back({g_macroTime, static_cast<int>(button), false});
+        }
+        return PlayerObject::releaseButton(button);
+    }
+
     bool collidedWithObjectInternal(float dt, GameObject* object, CCRect rect, bool skipCheck) {
         if (isUniverseNoclipActive()) return false;
         return PlayerObject::collidedWithObjectInternal(dt, object, rect, skipCheck);
@@ -421,11 +565,13 @@ class $modify(UniversePlayLayer, PlayLayer) {
             attemptUsedCheat = false;
         }
 
+        updateMacroPlayback(this, dt);
+
         if (mod) {
             bool noclipActive = mod->getSettingValue<bool>("practice-tools")
                 && mod->getSettingValue<bool>("noclip");
             bool speedhackActive = mod->getSettingValue<bool>("speedhack-enabled");
-            if (noclipActive || speedhackActive)
+            if (noclipActive || speedhackActive || g_macroPlayingBack)
                 attemptUsedCheat = true;
 
             // Safe Mode can be toggled at any time. If a cheat was used at any
@@ -527,6 +673,19 @@ $on_game(Loaded) {
         if (!mod) return;
         mod->setSettingValue<bool>("fps-bypass-enabled", !mod->getSettingValue<bool>("fps-bypass-enabled"));
         applyFpsBypass();
+    });
+
+    listenForKeybindSettingPresses("keybind-record", [](Keybind const&, bool down, bool repeat, double) {
+        if (!down || repeat) return;
+        if (g_macroRecording) stopMacroRecording();
+        else if (!startMacroRecording())
+            FLAlertLayer::create("Universe", "Start recording inside a Practice Mode level.", "OK")->show();
+    });
+
+    listenForKeybindSettingPresses("keybind-replay", [](Keybind const&, bool down, bool repeat, double) {
+        if (!down || repeat) return;
+        if (!startMacroPlayback())
+            FLAlertLayer::create("Universe", "Could not load the replay. Enter Practice Mode and make sure a saved replay exists.", "OK")->show();
     });
 }
 
