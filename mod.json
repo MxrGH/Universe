@@ -6,9 +6,9 @@
   },
   "id": "mxrmc.universe",
   "name": "Universe 1",
-  "version": "v1.0.2",
+  "version": "v1.1.0",
   "developer": "MxrGH",
-  "description": "Practice tools, visual overlays, local input replay, customizable UI, player icon previews, and AI-assisted Geometry Dash level-design blueprints.",
+  "description": "Geometry Dash hack client with gameplay modifiers, StartPos tools, visual overlays, replay tools, a customizable animated interface, and AI-assisted in-editor object placement.",
   "tags": [
     "gameplay",
     "interface",
@@ -35,14 +35,14 @@
     },
     "keybind-noclip": {
       "name": "Toggle Noclip",
-      "description": "Toggle Noclip during gameplay.",
+      "description": "Toggle Noclip. Safe Mode determines whether the current attempt switches to Practice Mode.",
       "type": "keybind",
       "category": "gameplay",
       "default": "N"
     },
     "keybind-speedhack": {
       "name": "Toggle Speedhack",
-      "description": "Toggle the gameplay speed multiplier.",
+      "description": "Toggle the gameplay speed multiplier. Safe Mode determines whether the current attempt switches to Practice Mode.",
       "type": "keybind",
       "category": "gameplay",
       "default": "M"
@@ -145,19 +145,19 @@
     },
     "safe-mode": {
       "name": "Safe Mode",
-      "description": "If Noclip or Speedhack has been used during the current attempt, enabling Safe Mode switches that attempt to Practice Mode. This is a local safeguard only.",
+      "description": "When enabled, using Noclip or Speedhack switches the current attempt to Practice Mode. Turn it off to leave gameplay modifiers active in Normal Mode.",
       "type": "bool",
       "default": true
     },
     "noclip": {
       "name": "Noclip",
-      "description": "Bypass object and slope collisions only in Practice Mode. This setting has no effect in Normal Mode.",
+      "description": "Toggle collision bypass. With Safe Mode ON, modified attempts switch to Practice Mode; with Safe Mode OFF, Noclip remains active in Normal Mode.",
       "type": "bool",
       "default": false
     },
     "speedhack-enabled": {
       "name": "Speedhack",
-      "description": "Change local gameplay speed only in Practice Mode. This modifies PlayLayer update delta and may affect physics or timing.",
+      "description": "Toggle local gameplay speed modification. Safe Mode ON switches modified attempts to Practice Mode; Safe Mode OFF allows the modifier in Normal Mode.",
       "type": "bool",
       "default": false
     },
