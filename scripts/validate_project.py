@@ -60,11 +60,17 @@ for feature_marker in (
     "if (tag >= 130 && tag <= 132)",
     "if (tag == 133)",
     "CCEaseBackOut::create(CCScaleTo::create(0.22f, 1.f))",
-    "CCFadeIn::create(0.16f)",
+    "CCEaseBackOut::create(CCScaleTo::create(0.18f, 1.f))",
+    "m_content->setScale(0.98f)",
     'addAction("RESET TO 1.00x", 134',
     'addAction("SAVE PROMPT", 141',
     'addAction("CLEAR", 142',
     "prompt.size() > 4000",
+    "void generateOfflineDraft()",
+    \"addAction(\\\"OFFLINE DRAFT\\\", 145",
+    "addAction(\\\"LOAD SAVED\\\", 143",
+    "loaded.size() >= 100000",
+    "layer->m_isPracticeMode",
 ):
     if feature_marker not in source:
         fail("missing 1.0 feature implementation: " + feature_marker)
