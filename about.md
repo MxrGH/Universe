@@ -2,7 +2,7 @@
 
 Universe 1 is a Geometry Dash 2.2091 Geode toolkit by MxrGH.
 
-It combines Practice Mode utilities, StartPos navigation, visual overlays, movement indicators, configurable FPS rendering, local recording/replay, icon selection, an animated customizable interface, touch controls, and an optional AI level-design assistant.
+It combines Practice Mode utilities, StartPos navigation, visual overlays, movement indicators, configurable FPS rendering, local recording/replay, nine-category icon preview with owned-only equipping, an animated customizable interface, touch controls, and an optional AI level-design assistant.
 
 The AI assistant remains included. Online generation uses an Anthropic-compatible Messages API over HTTPS and reads its key from the Geometry Dash process environment. Offline Draft creates a procedural JSON blueprint without a network request. The standalone Level Maker can validate JSON blueprints and export them to CSV or Markdown.
 
