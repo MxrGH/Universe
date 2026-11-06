@@ -157,7 +157,7 @@ jobs:
 
             Snapshot 26.5 completes the planned Universe 1 snapshot series for Geometry Dash 2.2091.
 
-            AI Level Maker now receives live editor context and supports adding objects plus selection-scoped move, rotate, and delete operations. The existing StartPos switcher, Noclip and Speedhack toggles, Safe Mode, hitboxes, movement trail and projection, FPS controls, Practice Mode recorder/replay, icon previews, themes, presets, keybinds, global touch sound, and circular draggable UNIV button are retained.
+            AI Level Maker now receives a bounded live editor summary and supports adding objects plus selected-object or exact-unique-ID move, rotate, and delete operations. The existing StartPos switcher, Noclip and Speedhack toggles, Safe Mode, hitboxes, movement trail and projection, FPS controls, Practice Mode recorder/replay, icon previews, themes, presets, keybinds, global touch sound, and circular draggable UNIV button are retained.
 
             One universal Geode package includes:
             - Windows x64
