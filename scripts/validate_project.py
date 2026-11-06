@@ -37,10 +37,10 @@ if not re.fullmatch(r"v?\d+\.\d+\.\d+", version):
 
 readme_path = ROOT / "README.md"
 readme_text = readme_path.read_text(encoding="utf-8") if readme_path.is_file() else ""
-if "**Release:** Universe 1 — Snapshot 26.2" not in readme_text:
+if "**Release:** Universe 1 — Snapshot 26.3" not in readme_text:
     fail("README must document Universe 1 — Snapshot 26.2")
-if mod.get("name") != "Universe 1" or mod.get("version") != "v1.0.1":
-    fail("release metadata must identify Universe 1 v1.0.1")
+if mod.get("name") != "Universe 1" or mod.get("version") != "v1.0.2":
+    fail("release metadata must identify Universe 1 v1.0.2")
 
 settings = mod.get("settings")
 if not isinstance(settings, dict):
@@ -102,7 +102,7 @@ for required in ("README.md", "about.md", "changelog.md", "AI_LEVEL_MAKER.md", "
     if not (ROOT / required).is_file():
         fail(f"missing project document: {required}")
 
-for required in ("scripts/level_maker.py", "scripts/export_video.py"):
+for required in ("scripts/level_maker.py", "scripts/test_level_maker.py", "scripts/export_video.py"):
     if not (ROOT / required).is_file():
         fail(f"missing tool script: {required}")
 
@@ -111,7 +111,7 @@ if logo_path.read_bytes()[:8] != b"\x89PNG\r\n\x1a\n":
     fail("logo.png is not a valid PNG file")
 if "MIT License" not in (ROOT / "LICENSE").read_text(encoding="utf-8"):
     fail("LICENSE must contain the MIT License")
-if "Snapshot 26.2" not in (ROOT / ".github" / "workflows" / "build.yml").read_text(encoding="utf-8"):
+if "Snapshot 26.3" not in (ROOT / ".github" / "workflows" / "build.yml").read_text(encoding="utf-8"):
     fail("build workflow must define the Snapshot 26.2 release")
 
 print(f"Universe {mod.get('version', '(unknown version)')}: metadata checks passed.")
