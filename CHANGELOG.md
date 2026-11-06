@@ -1,18 +1,23 @@
 # Changelog
 
-Notable changes to Universe are recorded here. This project is under active development, so entries describe repository changes rather than guaranteeing that every feature has been verified in-game.
+## v1.0.0 — Display label 1.00.0.00
 
-## Unreleased
+This is the first release candidate for the 1.0 line. The Geode manifest uses `v1.0.0`; the four-part display label is `1.00.0.00`.
 
-- Added editable AI model and API base URL fields to the in-game AI page.
-- Updated the cube selector to set the equipped cube ID without modifying unlock flags; public profile sync depends on Geometry Dash's normal account-save behavior.
-- Kept the Anthropic API key outside mod settings; the game reads `ANTHROPIC_API_KEY` from its process environment.
-- Fixed MATJSON array construction and response iteration in the AI request flow.
-- Fixed conversion of the Geode save-directory path before opening the generated draft file.
-- Reworked the README with setup instructions, feature details, security guidance, and known limitations.
-- Added this changelog.
-- Clarified the cube selector setting metadata and project description.
-- Added CI inspection of the combined `.geode` package to verify its metadata, resource, and Windows/Android binaries before upload.
+### Added
+- One-tap Practice, Visuals, and Clean Run setups in the Settings page.
+- A Restart Attempt action on the Start positions page.
+- Clearer, hand-written panel wording and more direct explanations of what each tool does.
+
+### Updated
+- Updated the project guide and release metadata for the 1.0 line.
+- Clarified that the cube selector changes the equipped cube ID but does not grant an unlock or achievement.
+- Kept the online level idea helper optional; the offline generator remains available without an API key.
+
+### Notes
+- CI success confirms that the Windows and Android packages build and combine. It does not prove every feature has been tested inside the game on physical devices.
+- Practice modifications are local tools. Safe Mode is not a guarantee about server or leaderboard treatment.
+- The level idea helper produces a design outline, not an importable Geometry Dash level.
 
 ## v0.8.0
 
