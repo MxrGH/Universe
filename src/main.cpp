@@ -360,7 +360,7 @@ protected:
 
         switch (page) {
             case Page::Player:
-                addText("Player status", {-245.f, 105.f});
+                addText("Your current run", {-245.f, 105.f});
                 if (auto layer = PlayLayer::get(); layer && layer->m_player1) {
                     auto mode = layer->m_isPracticeMode ? "Practice Mode" : "Normal Mode";
                     auto modeText = fmt::format("Current mode: {}", mode);
@@ -376,7 +376,7 @@ protected:
                 } else {
                     addText("Enter a level to see the current player state.", {-245.f, 55.f}, 0.34f);
                 }
-                addText("Cube icon selector", {-245.f, -90.f}, 0.34f);
+                addText("Choose your cube", {-245.f, -90.f}, 0.34f);
                 if (auto gm = GameManager::get()) {
                     auto previewID = static_cast<int>(Mod::get()->getSettingValue<int64_t>("preview-icon-id"));
                     auto icon = SimplePlayer::create(0);
@@ -394,12 +394,12 @@ protected:
                     addAction("+", 125, {205.f, -220.f});
                 }
                 addAction("EQUIP SELECTED", 127, {0.f, -265.f});
-                addText("Only icons already unlocked on your account can be equipped.", {-245.f, -300.f}, 0.27f);
+                addText("Pick an ID and equip it. Profile sync depends on Geometry Dash saving it.", {-245.f, -300.f}, 0.27f);
                 break;
             case Page::Practice: {
                 auto mod = Mod::get();
-                addText("Practice & testing", {-245.f, 105.f});
-                addText("Use these options for local practice sessions.", {-245.f, 65.f}, 0.34f);
+                addText("Practice tools", {-245.f, 105.f});
+                addText("Try these settings in Practice Mode before using them in a run.", {-245.f, 65.f}, 0.34f);
                 addToggle("Practice tools", "practice-tools", 102, 35.f);
                 addToggle("Noclip (all modes)", "noclip", 103, -15.f);
                 addToggle("Speedhack", "speedhack-enabled", 106, -65.f);
@@ -413,7 +413,7 @@ protected:
                 break;
             }
             case Page::Level: {
-                addText("Level tools", {-245.f, 105.f});
+                addText("Start positions", {-245.f, 105.f});
                 auto layer = PlayLayer::get();
                 if (layer && layer->m_startPosObjects) {
                     auto count = layer->m_startPosObjects->count();
@@ -426,18 +426,19 @@ protected:
                     addAction("SMART", 117, {0.f, 0.f});
                     addAction("NEXT", 110, {150.f, 0.f});
                 } else {
-                    addText("Enter a level with StartPos objects to use the switcher.", {-245.f, 55.f}, 0.31f);
+                    addText("This level has no StartPos objects to switch between.", {-245.f, 55.f}, 0.31f);
                 }
-                addText("SMART selects the nearest StartPos ahead of your player.", {-245.f, -40.f}, 0.29f);
-                addText("StartPos switching resets the current attempt.", {-245.f, -75.f}, 0.30f);
-                addText("No verification, coin, or leaderboard spoofing is provided.", {-245.f, -105.f}, 0.29f);
+                addText("Smart picks the next StartPos in front of you.", {-245.f, -40.f}, 0.29f);
+                addText("Changing a StartPos restarts the current attempt.", {-245.f, -75.f}, 0.30f);
+                if (layer) addAction("RESTART ATTEMPT", 133, {0.f, -135.f});
+                addText("These tools do not fake coins, records, or leaderboard results.", {-245.f, -175.f}, 0.29f);
                 addText("Draft generator: scripts/level_maker.py", {-245.f, -165.f}, 0.29f);
                 addText("Use --offline for templates or configure an AI API key.", {-245.f, -200.f}, 0.27f);
                 addText("Output is a JSON blueprint, not an import-ready level.", {-245.f, -235.f}, 0.27f);
                 break;
             }
             case Page::Visuals: {
-                addText("Visual tools", {-245.f, 105.f});
+                addText("Visual helpers", {-245.f, 105.f});
                 addToggle("Show object hitboxes", "show-hitboxes", 111, 65.f);
                 addToggle("FPS Bypass", "fps-bypass-enabled", 112, 15.f);
                 auto target = Mod::get()->getSettingValue<int64_t>("fps-target");
@@ -445,23 +446,23 @@ protected:
                 addText(fpsText.c_str(), {-245.f, -35.f}, 0.34f);
                 addAction("-", 113, {125.f, -35.f});
                 addAction("+", 114, {205.f, -35.f});
-                addText("FPS Bypass changes the render interval, not physics.", {-245.f, -85.f}, 0.28f);
+                addText("This changes how often frames are drawn, not the game physics.", {-245.f, -85.f}, 0.28f);
                 addToggle("Show player path trail", "show-trajectory", 118, -125.f);
                 addToggle("Show movement projection", "show-projection", 123, -170.f);
                 addAction("CYCLE PANEL THEME", 119, {90.f, -215.f});
-                addText("Projection extends recent movement in a straight line.", {-245.f, -245.f}, 0.27f);
-                addText("It does not simulate gravity, portals, or collisions.", {-245.f, -275.f}, 0.27f);
+                addText("The path preview follows your recent movement.", {-245.f, -245.f}, 0.27f);
+                addText("It cannot predict portals, gravity changes, or collisions.", {-245.f, -275.f}, 0.27f);
                 break;
             }
             case Page::Recorder: {
-                addText("Practice recorder", {-245.f, 105.f});
+                addText("Record a practice run", {-245.f, 105.f});
                 const char* status = g_macroRecording ? "RECORDING" : (g_macroPlayingBack ? "PLAYING BACK" : "IDLE");
                 addText(status, {-245.f, 60.f}, 0.40f);
                 addAction(g_macroRecording ? "STOP & SAVE" : "START RECORDING", 115, {-115.f, 0.f});
                 addAction("PLAY SAVED REPLAY", 116, {125.f, 0.f});
                 addAction("STOP REPLAY", 120, {-115.f, -55.f});
                 addAction("CLEAR SAVED REPLAY", 121, {125.f, -55.f});
-                addText("Practice Mode only. Replay is saved locally.", {-245.f, -115.f}, 0.30f);
+                addText("Recording and playback are for Practice Mode. Files stay on this device.", {-245.f, -115.f}, 0.30f);
                 addText("File: universe-practice-replay.csv", {-245.f, -150.f}, 0.29f);
                 addText("Video helper: scripts/export_video.py", {-245.f, -205.f}, 0.29f);
                 addText("Requires FFmpeg and a screen recording.", {-245.f, -240.f}, 0.29f);
@@ -481,7 +482,7 @@ protected:
                 addText("J  Toggle path trail     K  Toggle movement projection", {-245.f, -300.f}, 0.31f);
                 break;
             case Page::AI: {
-                addText("AI level design assistant", {-245.f, 105.f});
+                addText("Optional level idea helper", {-245.f, 105.f});
                 addText("Level idea", {-245.f, 72.f}, 0.31f);
                 m_aiPrompt = CCTextInputNode::create(340.f, 30.f, "Describe your level idea...", "bigFont.fnt");
                 if (m_aiPrompt) {
@@ -508,16 +509,21 @@ protected:
                 addAction("GENERATE DRAFT", 126, {0.f, -155.f});
                 addText("Key: ANTHROPIC_API_KEY environment variable (never saved).", {-245.f, -205.f}, 0.27f);
                 addText("Draft saved locally as universe-ai-draft.txt.", {-245.f, -235.f}, 0.27f);
-                addText("Blueprint only; API usage may cost money.", {-245.f, -265.f}, 0.27f);
+                addText("This makes a design outline, not a playable level. Check API costs first.", {-245.f, -265.f}, 0.27f);
                 break;
             }
             case Page::Settings:
-                addText("Universe settings", {-245.f, 105.f});
+                addText("Make Universe yours", {-245.f, 105.f});
                 addToggle("Global click sound", "click-sound", 104, 75.f);
                 addToggle("Safe Mode", "safe-mode", 105, 25.f);
                 addToggle("Floating touch button", "floating-button", 122, -25.f);
                 addText("Safe Mode marks the current attempt as Practice after Noclip or Speedhack is used.", {-245.f, -80.f}, 0.28f);
                 addText("This is a local safeguard, not a server-side guarantee.", {-245.f, -115.f}, 0.28f);
+                addText("Quick setups", {-245.f, -165.f}, 0.32f);
+                addAction("PRACTICE", 130, {-155.f, -205.f});
+                addAction("VISUALS", 131, {0.f, -205.f});
+                addAction("CLEAN RUN", 132, {155.f, -205.f});
+                addText("Choose a setup to change several options at once.", {-245.f, -245.f}, 0.27f);
                 break;
         }
     }
@@ -646,6 +652,48 @@ protected:
             generateAIDraft();
             return;
         }
+        if (tag == 133) {
+            if (auto layer = PlayLayer::get()) {
+                layer->resetLevel();
+                layer->startMusic();
+            }
+            showPage(m_page);
+            return;
+        }
+        if (tag >= 130 && tag <= 132) {
+            stopMacroPlayback(PlayLayer::get());
+            if (tag == 130) {
+                mod->setSettingValue<bool>("practice-tools", true);
+                mod->setSettingValue<bool>("safe-mode", true);
+                mod->setSettingValue<bool>("noclip", false);
+                mod->setSettingValue<bool>("speedhack-enabled", false);
+                mod->setSettingValue<bool>("show-hitboxes", false);
+                mod->setSettingValue<bool>("show-trajectory", false);
+                mod->setSettingValue<bool>("show-projection", false);
+                mod->setSettingValue<bool>("fps-bypass-enabled", false);
+                applyFpsBypass();
+                FLAlertLayer::create("Universe", "Practice setup is ready. Noclip and speedhack are off; Safe Mode is on.", "OK")->show();
+            } else if (tag == 131) {
+                mod->setSettingValue<bool>("show-hitboxes", true);
+                mod->setSettingValue<bool>("show-trajectory", true);
+                mod->setSettingValue<bool>("show-projection", true);
+                FLAlertLayer::create("Universe", "Visual helpers are on. Turn off anything you don't need from the Visuals page.", "OK")->show();
+            } else {
+                mod->setSettingValue<bool>("practice-tools", false);
+                mod->setSettingValue<bool>("safe-mode", true);
+                mod->setSettingValue<bool>("noclip", false);
+                mod->setSettingValue<bool>("speedhack-enabled", false);
+                mod->setSettingValue<bool>("show-hitboxes", false);
+                mod->setSettingValue<bool>("show-trajectory", false);
+                mod->setSettingValue<bool>("show-projection", false);
+                mod->setSettingValue<bool>("fps-bypass-enabled", false);
+                applyFpsBypass();
+                g_macroRecording = false;
+                FLAlertLayer::create("Universe", "Clean Run setup is ready. Practice modifications and visual overlays are off.", "OK")->show();
+            }
+            showPage(m_page);
+            return;
+        }
         if (tag == 127) {
             auto gm = GameManager::get();
             auto iconID = static_cast<int>(mod->getSettingValue<int64_t>("preview-icon-id"));
@@ -655,7 +703,7 @@ protected:
             gm->setPlayerFrame(iconID);
             FLAlertLayer::create(
                 "Universe",
-                "Selected cube equipped. Save your Geometry Dash account normally to sync your equipped profile icon. This does not grant the icon as an unlocked item.",
+                "Cube selected. Use Geometry Dash's normal save option to try syncing your profile. This does not unlock the icon on your account.",
                 "OK"
             )->show();
             showPage(m_page);
