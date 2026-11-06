@@ -94,7 +94,7 @@ def validate_draft(data: object) -> dict:
         if not isinstance(value, str) or len(value) > limit:
             raise ValueError(f"Draft field {field!r} must be text of at most {limit} characters.")
         data[field] = value
-    if data["difficulty"] not in DIFFICULTIES:
+    if not isinstance(data["difficulty"], str) or data["difficulty"] not in DIFFICULTIES:
         raise ValueError("Difficulty must be easy, normal, hard, insane, or demon.")
 
     total = 0
@@ -107,7 +107,7 @@ def validate_draft(data: object) -> dict:
         events = section.get("events")
         if not isinstance(name, str) or len(name) > 120:
             raise ValueError("Each section name must be text of at most 120 characters.")
-        if gameplay not in ALLOWED_GAMEPLAY:
+        if not isinstance(gameplay, str) or gameplay not in ALLOWED_GAMEPLAY:
             raise ValueError(f"Unsupported gameplay mode: {gameplay!r}")
         if not isinstance(events, list) or not events:
             raise ValueError("Every section must contain at least one event.")
@@ -116,7 +116,7 @@ def validate_draft(data: object) -> dict:
         for event in events:
             if not isinstance(event, dict):
                 raise ValueError("Every event must be an object.")
-            if event.get("type") not in ALLOWED_OBJECTS:
+            if not isinstance(event.get("type"), str) or event["type"] not in ALLOWED_OBJECTS:
                 raise ValueError(f"Unsupported object type: {event.get('type')!r}")
             for axis in ("x", "y"):
                 coordinate = event.get(axis)
@@ -183,6 +183,8 @@ def request_ai_draft(args: argparse.Namespace) -> dict:
     model = args.model or ("claude-sonnet-4-6" if args.provider == "anthropic" else "gpt-4o-mini")
     if args.provider == "anthropic":
         base = (args.base_url or "https://api.anthropic.com").rstrip("/")
+        if not base.startswith("https://"):
+            raise RuntimeError("AI API base URL must use HTTPS so the API key is not sent over an unencrypted connection.")
         endpoint = base + "/v1/messages"
         payload = {
             "model": model,
@@ -193,6 +195,8 @@ def request_ai_draft(args: argparse.Namespace) -> dict:
         headers = {"x-api-key": api_key, "anthropic-version": "2023-06-01", "Content-Type": "application/json"}
     else:
         base = (args.base_url or "https://api.openai.com/v1").rstrip("/")
+        if not base.startswith("https://"):
+            raise RuntimeError("AI API base URL must use HTTPS so the API key is not sent over an unencrypted connection.")
         endpoint = base + "/chat/completions"
         payload = {
             "model": model,
@@ -291,7 +295,10 @@ def main() -> int:
 
     try:
         if args.input:
-            data = json.loads(args.input.read_text(encoding="utf-8"))
+            if args.input.stat().st_size > 5_000_000:
+                raise ValueError("Input blueprint is too large (limit: 5 MB).")
+            raw_input = args.input.read_text(encoding="utf-8")
+            data = json.loads(strip_json_fence(raw_input))
             draft = validate_draft(data)
         else:
             draft = offline_draft(args.prompt, args.difficulty, args.length, args.style, args.seed) if args.offline else request_ai_draft(args)
