@@ -7,6 +7,7 @@
 - Load Saved Prompt action alongside save and clear.
 - Bounded replay file loading and event validation, plus stable event ordering before playback.
 - Practice Mode-only Noclip and Speedhack behavior.
+- Custom panel title and floating-button labels, live theme updates, and saved panel position with reset.
 - Fixed a Cocos layer animation compile error that blocked the previous Windows and Android builds.
 - Continued animated panel entrance, page transitions, and button feedback.
 - One-tap speed reset and quick FPS target presets at 120, 240, and 360.
