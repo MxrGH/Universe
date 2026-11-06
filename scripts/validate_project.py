@@ -31,6 +31,15 @@ if mod.get("gd", {}).get("win") != "2.2091":
 if mod.get("gd", {}).get("android") != "2.2091":
     fail("Android target must remain Geometry Dash 2.2091")
 
+version = mod.get("version", "")
+if not re.fullmatch(r"v?\\d+\\.\\d+\\.\\d+", version):
+    fail("Geode version must use standard three-part semantic versioning")
+
+readme_path = ROOT / "README.md"
+readme_text = readme_path.read_text(encoding="utf-8") if readme_path.is_file() else ""
+if "**Display/build label:** `1.00.0.00`" not in readme_text:
+    fail("README must document the requested four-part display/build label")
+
 settings = mod.get("settings")
 if not isinstance(settings, dict):
     fail("mod.json must contain a settings object")
@@ -42,6 +51,17 @@ missing_keybinds = [
 ]
 if missing_keybinds:
     fail("keybind settings are not referenced in source: " + ", ".join(missing_keybinds))
+
+for feature_marker in (
+    'addAction("PRACTICE", 130',
+    'addAction("VISUALS", 131',
+    'addAction("CLEAN RUN", 132',
+    'addAction("RESTART ATTEMPT", 133',
+    "if (tag >= 130 && tag <= 132)",
+    "if (tag == 133)",
+):
+    if feature_marker not in source:
+        fail("missing 1.0 feature implementation: " + feature_marker)
 
 defaults = {}
 for key, setting in settings.items():
