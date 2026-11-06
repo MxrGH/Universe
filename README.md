@@ -34,13 +34,14 @@ Universe 1 is a feature-rich Geometry Dash toolkit with a custom animated interf
 - Touch-friendly Android controls and Windows mouse/keyboard support.
 
 ### Icon tools
-- Preview cube IDs and select an icon to equip through the game's own player settings.
-- Does not grant locked icons, achievements, or account unlock flags.
+- Preview Cube, Ship, Ball, UFO, Wave, Robot, Spider, Swing, and Jetpack IDs.
+- Equip an icon only when Geometry Dash reports it as unlocked on the current account; locked icons remain local previews.
+- Does not grant unlocks, achievements, or account flags.
 
 ### AI Level Maker
 **The AI assistant remains included in Universe 1.**
 
-- **Online AI:** send a prompt to the configured Anthropic-compatible Messages API and save the generated level-design outline.
+- **Online AI:** send a prompt to the configured Anthropic-compatible Messages API and save the generated JSON level-design blueprint.
 - **Offline Draft:** generate a deterministic local JSON blueprint without internet, an API key, or a model.
 - **Prompt tools:** paste, edit, save, reload, and clear prompts.
 - **Configurable model and API base URL** through Geode settings.
