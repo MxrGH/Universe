@@ -376,7 +376,7 @@ protected:
                 } else {
                     addText("Enter a level to see the current player state.", {-245.f, 55.f}, 0.34f);
                 }
-                addText("Cube icon preview", {-245.f, -90.f}, 0.34f);
+                addText("Cube icon selector", {-245.f, -90.f}, 0.34f);
                 if (auto gm = GameManager::get()) {
                     auto previewID = static_cast<int>(Mod::get()->getSettingValue<int64_t>("preview-icon-id"));
                     auto icon = SimplePlayer::create(0);
@@ -393,7 +393,8 @@ protected:
                     addAction("-", 124, {125.f, -220.f});
                     addAction("+", 125, {205.f, -220.f});
                 }
-                addText("Preview only. Your equipped icon is not changed.", {-245.f, -270.f}, 0.28f);
+                addAction("EQUIP SELECTED", 127, {0.f, -265.f});
+                addText("Only icons already unlocked on your account can be equipped.", {-245.f, -300.f}, 0.27f);
                 break;
             case Page::Practice: {
                 auto mod = Mod::get();
@@ -643,6 +644,19 @@ protected:
 
         if (tag == 126) {
             generateAIDraft();
+            return;
+        }
+        if (tag == 127) {
+            auto gm = GameManager::get();
+            auto iconID = static_cast<int>(mod->getSettingValue<int64_t>("preview-icon-id"));
+            if (!gm) return;
+            if (!gm->isIconUnlocked(iconID, IconType::Cube)) {
+                FLAlertLayer::create("Universe", "That cube is locked in your Geometry Dash account. Universe only equips icons you have already unlocked.", "OK")->show();
+                return;
+            }
+            gm->setPlayerFrame(iconID);
+            FLAlertLayer::create("Universe", "Your selected unlocked cube has been equipped locally.", "OK")->show();
+            showPage(m_page);
             return;
         }
         if (tag == 124 || tag == 125) {
