@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import random
 import sys
@@ -72,7 +73,10 @@ def validate_draft(data: object) -> dict:
         raise ValueError("The model response must be a JSON object.")
     if not isinstance(data.get("sections"), list) or not data["sections"]:
         raise ValueError("The draft must contain at least one section.")
+    if len(data["sections"]) > 100:
+        raise ValueError("Draft has too many sections (limit: 100).")
     total = 0
+    previous_x = float("-inf")
     for section in data["sections"]:
         if not isinstance(section, dict) or not isinstance(section.get("events"), list):
             raise ValueError("Each section must contain an events array.")
@@ -82,8 +86,14 @@ def validate_draft(data: object) -> dict:
             if event.get("type") not in ALLOWED_OBJECTS:
                 raise ValueError(f"Unsupported object type: {event.get('type')!r}")
             for axis in ("x", "y"):
-                if not isinstance(event.get(axis), (int, float)):
+                coordinate = event.get(axis)
+                if isinstance(coordinate, bool) or not isinstance(coordinate, (int, float)):
                     raise ValueError(f"Every event needs a numeric {axis} coordinate.")
+                if not math.isfinite(coordinate):
+                    raise ValueError(f"Every event needs a finite {axis} coordinate.")
+            if event["x"] < previous_x:
+                raise ValueError("Event x coordinates must be in non-decreasing order.")
+            previous_x = event["x"]
             total += 1
             if total > 5000:
                 raise ValueError("Draft is too large (limit: 5000 events).")
@@ -118,7 +128,7 @@ def request_ai_draft(args: argparse.Namespace) -> dict:
         payload = {"model": model, "max_tokens": 8192,
                    "system": "You design Geometry Dash levels. Output valid JSON only, without markdown fences.",
                    "messages": [{"role": "user", "content": prompt}]}
-        headers = {"x-api-key": api_key, "anthropic-version": "2026-10-21", "Content-Type": "application/json"}
+        headers = {"x-api-key": api_key, "anthropic-version": "2023-06-01", "Content-Type": "application/json"}
     else:
         base = (args.base_url or "https://api.openai.com/v1").rstrip("/")
         endpoint = base + "/chat/completions"
@@ -132,6 +142,9 @@ def request_ai_draft(args: argparse.Namespace) -> dict:
     try:
         with urllib.request.urlopen(request, timeout=args.timeout) as response:
             result = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as error:
+        details = error.read(1000).decode("utf-8", errors="replace")
+        raise RuntimeError(f"AI request failed (HTTP {error.code}): {details}") from error
     except (urllib.error.URLError, TimeoutError) as error:
         raise RuntimeError(f"AI request failed: {error}") from error
 
@@ -161,6 +174,8 @@ def main() -> int:
     parser.add_argument("--output", type=Path, default=Path("Universe-Level-Draft.json"))
     args = parser.parse_args()
 
+    if not 1 <= args.timeout <= 300:
+        parser.error("--timeout must be between 1 and 300.")
     if args.length < 8 or args.length > 500:
         parser.error("--length must be between 8 and 500.")
 
@@ -168,7 +183,7 @@ def main() -> int:
         draft = offline_draft(args.prompt, args.difficulty, args.length, args.style, args.seed) if args.offline else request_ai_draft(args)
         draft = validate_draft(draft)
         args.output.write_text(json.dumps(draft, indent=2) + "\n", encoding="utf-8")
-    except (RuntimeError, ValueError, KeyError, IndexError, json.JSONDecodeError) as error:
+    except (RuntimeError, ValueError, KeyError, IndexError, OSError, json.JSONDecodeError) as error:
         print(f"Universe Level Maker: {error}", file=sys.stderr)
         return 1
 
