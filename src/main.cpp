@@ -1424,22 +1424,25 @@ class $modify(UniversePlayLayer, PlayLayer) {
         updateMacroPlayback(this, dt);
 
         if (mod) {
-            bool noclipActive = this->m_isPracticeMode
-                && mod->getSettingValue<bool>("practice-tools")
+            bool noclipRequested = mod->getSettingValue<bool>("practice-tools")
                 && mod->getSettingValue<bool>("noclip");
-            bool speedhackActive = this->m_isPracticeMode
-                && mod->getSettingValue<bool>("speedhack-enabled");
-            if (noclipActive || speedhackActive || g_macroPlayingBack)
-                attemptUsedCheat = true;
+            bool speedhackRequested = mod->getSettingValue<bool>("speedhack-enabled");
 
-            // Safe Mode can be toggled at any time. If a cheat was used at any
-            // point in this PlayLayer, enabling Safe Mode marks it as Practice.
+            // With Safe Mode enabled, requesting a gameplay modifier in a
+            // Normal Mode attempt first converts that attempt to Practice.
             if (mod->getSettingValue<bool>("safe-mode")
-                && attemptUsedCheat
-                && !this->m_isPracticeMode) {
+                && !this->m_isPracticeMode
+                && (noclipRequested || speedhackRequested || attemptUsedCheat)) {
                 this->m_isPracticeMode = true;
             }
 
+            if (noclipRequested || speedhackRequested || g_macroPlayingBack)
+                attemptUsedCheat = true;
+
+            // Modifiers have no effect in Normal Mode. Safe Mode above can
+            // move the attempt to Practice before any modified frame runs.
+            bool noclipActive = this->m_isPracticeMode && noclipRequested;
+            bool speedhackActive = this->m_isPracticeMode && speedhackRequested;
             if (speedhackActive) {
                 float speed = mod->getSettingValue<float>("speedhack-speed");
                 dt *= std::clamp(speed, 0.25f, 3.0f);
