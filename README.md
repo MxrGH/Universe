@@ -11,7 +11,7 @@ The project display/build label uses the four-part `x.x.x.x` format. The Geode p
 ## What you can do
 
 ### Practice
-- Toggle Noclip and a local speed multiplier.
+- Use Practice Mode-only Noclip and a local speed multiplier; both modifiers are inactive in Normal Mode.
 - Use Safe Mode to switch a modified attempt to Practice Mode.
 - Pick the next StartPos in front of you, or move to the previous/next StartPos.
 - Restart the current attempt from the panel.
@@ -35,7 +35,8 @@ The project display/build label uses the four-part `x.x.x.x` format. The Geode p
 ### Interface and quality of life
 - Animated panel entrance and page transitions.
 - Animated button feedback and cleaner navigation.
-- Paste or type longer prompts; save or clear them without generating.
+- Paste or type longer prompts; save, reload, or clear them without generating.
+- Generate an offline procedural level blueprint directly in the game on desktop or Android without an API key or network request.
 - Reset the speed multiplier to 1.00x with one tap.
 - Set FPS targets to 120, 240, or 360 from quick controls.
 
@@ -48,9 +49,9 @@ The Settings page includes three one-tap setups:
 ### Optional level idea helper
 The AI page is optional. Online mode can send a pasted prompt to an Anthropic Messages API-compatible endpoint and save the returned design outline as `universe-ai-draft.txt`. Prompts can also be saved locally as `universe-ai-prompt.txt`. It does not create a playable level or import a level into Geometry Dash.
 
-**Offline AI status:** the current in-game build does not yet include a neural model runtime. The standalone Python `--offline` mode is a deterministic template generator, not an AI model. Android offline model inference needs a runtime plus a local model file; it is not being presented as complete.
+**Offline generation status:** the in-game Offline Draft action and the Python `--offline` option use deterministic procedural generation. They work without a network request or API key, including on Android, but they are not neural AI. A true offline neural model still needs a bundled model and a mobile inference runtime; that is not implemented or claimed as complete.
 
-If you do not want to use an online AI service, use the offline generator instead:
+If you do not want to use an online AI service, choose **OFFLINE DRAFT** in the in-game AI tab, or use the standalone generator:
 
 ```bash
 python scripts/level_maker.py --offline --prompt "Neon city with fast ship sections" --difficulty insane --length 80 --style ship --output draft.json
@@ -91,14 +92,14 @@ A successful run uploads a combined `.geode` package as a workflow artifact. Che
 | --- | --- |
 | `src/main.cpp` | In-game panel, practice tools, visual helpers, and replay code |
 | `mod.json` | Geode metadata, settings, and keybinds |
-| `scripts/level_maker.py` | Offline and optional online level-design outline generator |
+| `scripts/level_maker.py` | Offline procedural and optional online level-design outline generator |
 | `scripts/export_video.py` | FFmpeg conversion helper |
 | `.github/workflows/build.yml` | Cross-platform build and package checks |
 | `CHANGELOG.md` | Release history |
 
 ## Important limits
 
-- Practice modifications change local gameplay. Use them in Practice Mode.
+- Noclip and Speedhack are restricted to Practice Mode. Other local visual tools can be used while playing.
 - Safe Mode is a local safeguard. It cannot guarantee how an online service or leaderboard treats a run.
 - The movement projection is an estimate. It does not simulate portals, gravity changes, collisions, or future triggers.
 - Replay playback can vary with game version, level, physics, and device timing.
