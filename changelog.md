@@ -1,5 +1,11 @@
 # Changelog
 
+## Universe 1 — Snapshot 26.5
+
+- Add live editor context and selection-scoped AI move, rotate, delete, and add operations.
+- Preserve existing gameplay modifiers, Safe Mode, StartPos tools, visual overlays, replay recorder, icon previews, themes, keybinds, presets, and mobile controls.
+- Bump Geode package version to v1.1.1 and prepare the final planned snapshot release.
+
 ## Universe 1 — Snapshot 26.4
 
 - Expand Noclip and Speedhack beyond Practice Mode; Safe Mode ON switches modified attempts to Practice, while Safe Mode OFF leaves the modifiers active in Normal Mode.
