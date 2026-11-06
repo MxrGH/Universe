@@ -6,9 +6,9 @@
   },
   "id": "mxrmc.universe",
   "name": "Universe 1",
-  "version": "v1.1.0",
+  "version": "v1.1.1",
   "developer": "MxrGH",
-  "description": "Geometry Dash hack client with gameplay modifiers, StartPos tools, visual overlays, replay tools, a customizable animated interface, and AI-assisted in-editor object placement.",
+  "description": "Geometry Dash hack client with local gameplay modifiers, StartPos tools, visual overlays, replay tools, an animated interface, and context-aware AI editor operations.",
   "tags": [
     "gameplay",
     "interface",
@@ -171,7 +171,7 @@
     },
     "icon-preview": {
       "name": "Icon preview",
-      "description": "Reserved setting for a future local icon preview. It does not currently render or unlock icons.",
+      "description": "Legacy compatibility toggle; icon browsing is available in the Universe Player tab and locked icons remain preview-only.",
       "type": "bool",
       "default": false
     },
