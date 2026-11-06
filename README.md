@@ -38,19 +38,20 @@ Universe 1 is a feature-rich Geometry Dash toolkit with a custom animated interf
 - Does not grant locked icons, achievements, or account unlock flags.
 
 ### AI Level Maker
-**The AI assistant is included in Universe 1. It has not been removed.**
+**The AI assistant remains included in Universe 1.**
 
 - **Online AI:** send a prompt to the configured Anthropic-compatible Messages API and save the generated level-design outline.
 - **Offline Draft:** generate a deterministic local JSON blueprint without internet, an API key, or a model.
 - **Prompt tools:** paste, edit, save, reload, and clear prompts.
 - **Configurable model and API base URL** through Geode settings.
 
-Online AI reads `ANTHROPIC_API_KEY` from the Geometry Dash process environment. The key is not stored in mod settings or source. Requests can incur provider charges; use a paid API account only with a parent or guardian's permission. Never put keys in chat, source files, commits, or screenshots.
+Online AI reads `ANTHROPIC_API_KEY` from the Geometry Dash process environment and requires an HTTPS API base URL. The key is not stored in mod settings or source. Requests can incur provider charges; use a paid API account only with a parent or guardian's permission. Never put keys in chat, source files, commits, or screenshots.
 
 Offline Draft is procedural generation, not neural inference. Both online and offline outputs are design blueprints, **not native/importable Geometry Dash levels**.
 
 ### Extra tools
-- Standalone Python level-design blueprint generator with JSON validation and JSON, CSV, and Markdown export.
+- Standalone Python level-design blueprint generator with strict JSON validation and JSON, CSV, and Markdown export.
+- Import an existing Universe JSON blueprint with `--input`, then export it to CSV or Markdown for editing and review.
 - FFmpeg helper to convert an existing gameplay recording to MP4; it does not capture gameplay.
 
 ## Default controls
