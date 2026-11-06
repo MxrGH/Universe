@@ -1,58 +1,58 @@
-# Level draft generator
+# Universe Level Maker
 
-The repository includes scripts/level_maker.py. It can create a deterministic template draft without a network connection, or ask an OpenAI-compatible Chat Completions API to generate a design blueprint.
+`scripts/level_maker.py` creates and validates Geometry Dash level-design blueprints. It supports deterministic offline drafts, optional online AI generation, importing existing JSON drafts, and exporting JSON, CSV, or Markdown.
 
-## Offline mode
+## Create a draft offline
 
-~~~bash
-python scripts/level_maker.py --offline --prompt "An underwater level with a calm opening" --difficulty normal --length 48 --style mixed --seed 42
-~~~
+```bash
+python scripts/level_maker.py --offline --prompt "An underwater level with a calm opening" --difficulty normal --length 48 --style mixed --seed 42 --output Ocean.json
+```
 
-Offline mode uses a repeatable template generator. Changing the seed changes the layout.
+Offline mode uses a deterministic template generator. The same prompt, settings, and seed produce the same draft.
 
-## AI-assisted mode
+## Optional online AI generation
 
-Set an API key in the environment variable UNIVERSE_AI_API_KEY, then run:
+Online mode supports Anthropic Messages and OpenAI-compatible Chat Completions APIs. The default provider is Anthropic. The key is read from an environment variable and is never saved in the repository or output file.
 
-~~~bash
-python scripts/level_maker.py --prompt "A neon city level with a difficult wave section" --difficulty demon --length 80 --style wave
-~~~
+- Anthropic: `ANTHROPIC_API_KEY`
+- OpenAI-compatible: `UNIVERSE_AI_API_KEY` by default, or choose another name with `--api-key-env`
 
-The default endpoint is https://api.openai.com/v1 and the default model name is gpt-4o-mini. Both can be changed:
+Use only an API account you are authorized to use. API calls may incur charges; involve a parent or guardian before using a paid account. Never paste API keys into chat, source files, screenshots, or commits. If a key is exposed, revoke it.
 
-~~~bash
-python scripts/level_maker.py --base-url https://your-compatible-endpoint/v1 --model your-model --prompt "..."
-~~~
+Custom API base URLs must use HTTPS so credentials are not sent over an unencrypted connection.
 
-The key is read from the local environment. Do not paste it into source files, commit it, or put it in a public mod release.
+## Import, validate, and export
 
-## Output format
+Load an existing JSON blueprint and export it to CSV:
 
-The output is a JSON blueprint with sections and events. Events contain an x/y design coordinate, a basic object type, and an optional note. The script checks the structure and limits the draft to 5,000 events.
+```bash
+python scripts/level_maker.py --input Ocean.json --format csv --output Ocean.csv
+```
 
-This is not a native Geometry Dash level file and cannot be imported directly into the game. A native level serializer and an in-game editing workflow are still needed.
+Export a readable Markdown design sheet:
 
+```bash
+python scripts/level_maker.py --input Ocean.json --format markdown --output Ocean.md
+```
+
+Validate and normalize an existing blueprint while keeping JSON:
+
+```bash
+python scripts/level_maker.py --input Ocean.json --format json --output Ocean-validated.json
+```
+
+The validator rejects unsupported object/gameplay types, invalid or non-finite coordinates, out-of-order events, empty sections, oversized notes, and drafts beyond the configured size limits. CSV output contains one row per object event.
+
+## Blueprint format and limits
+
+The format is `universe-level-draft-v1`. Each section has a name, gameplay mode, and event list. Events have x/y design coordinates, an object type, and an optional note. A draft is limited to 100 sections and 5,000 events.
 
 ## In-game AI and offline draft tab
 
-The Universe panel includes an optional AI tab (enabled by default; configurable in Geode > Universe settings). Save, reload, or clear a prompt. **GENERATE ONLINE** sends it to the configured Anthropic-compatible Messages API and saves the returned text to `universe-ai-draft.txt`. **OFFLINE DRAFT** creates a deterministic procedural JSON blueprint locally, without network access or an API key, and saves it as `universe-offline-draft.json`.
+The Universe panel includes an optional AI tab. Save, reload, or clear a prompt. **GENERATE ONLINE** sends it to the configured Anthropic-compatible Messages API and saves a JSON blueprint as `universe-ai-draft.json`. **OFFLINE DRAFT** creates a local procedural JSON blueprint as `universe-offline-draft.json`.
 
-The in-game feature reads `ANTHROPIC_API_KEY` from the environment of the Geometry Dash process. Set the variable before launching the game, then restart Geometry Dash so the process can read it. The key is not stored in mod settings or written to the repository. Both outputs are design blueprints, not playable or importable Geometry Dash levels. The offline option is procedural generation, not a neural model; true offline neural inference still needs a model runtime and model file.
+The in-game feature reads `ANTHROPIC_API_KEY` from the Geometry Dash process environment. Its configured API base URL must use HTTPS. The key is not stored in mod settings or written to the repository.
 
-The in-game prompt is limited to 4,000 characters. Requests use the `claude-sonnet-4-6` model and can incur API charges. Use an account and billing method only with a parent or guardian's permission.
+## Important limitation
 
-
-## Anthropic (default provider)
-
-The generator now uses Anthropic's Messages API by default. It reads the credential from the local `ANTHROPIC_API_KEY` environment variable; it does not save the key in the project, mod settings, generated JSON, or Git. The default model is `claude-sonnet-4-6`.
-
-On Windows PowerShell, set the environment variable for the current terminal session (use a replacement key only after revoking any key that was exposed):
-
-```powershell
-$env:ANTHROPIC_API_KEY = Read-Host "Paste your API key"
-python scripts/level_maker.py --prompt "Make my level Ribbons much cooler" --output Ribbons-Draft.json
-```
-
-For another provider, pass `--provider openai-compatible` and optionally `--base-url`, `--model`, and `--api-key-env`. Use `--offline` to generate a local template without contacting an AI service.
-
-API calls may incur charges according to the provider account. Only use an account and billing method you are authorized to use, with a parent or guardian's help where required. Never paste keys into chat, source code, screenshots, or commits. If a key is exposed, revoke it and replace it.
+These files are design blueprints, not native Geometry Dash `.gmd` save files. The tool does not claim to create a playable level or automatically import objects into the Geometry Dash editor. CSV/Markdown exports are planning and editing aids.
