@@ -213,6 +213,38 @@ namespace {
         return mod && layer && mod->getSettingValue<bool>("noclip");
     }
 
+    void drawRoundedPanel(CCDrawNode* node, CCSize size, ccColor4B color) {
+        if (!node || size.width <= 0.f || size.height <= 0.f) return;
+        node->clear();
+        float r = std::min(20.f, std::min(size.width, size.height) * 0.08f);
+        CCPoint points[] = {
+            {r, 0.f}, {size.width - r, 0.f},
+            {size.width - r * 0.29f, r * 0.29f}, {size.width, r},
+            {size.width, size.height - r},
+            {size.width - r * 0.29f, size.height - r * 0.29f},
+            {size.width - r, size.height}, {r, size.height},
+            {r * 0.29f, size.height - r * 0.29f}, {0.f, size.height - r},
+            {0.f, r}, {r * 0.29f, r * 0.29f}
+        };
+        auto fill = ccc4f(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
+        node->drawPolygon(points, sizeof(points) / sizeof(points[0]), fill, 0.f, fill);
+    }
+
+    void animateClosePanel(CCLayer* panel) {
+        if (!panel) return;
+        panel->stopAllActions();
+        panel->runAction(CCSequence::create(
+            CCSpawn::create(
+                CCFadeTo::create(0.16f, 0),
+                CCScaleTo::create(0.16f, 0.94f),
+                nullptr
+            ),
+            CCCallFunc::create(panel, callfunc_selector(CCNode::removeFromParent)),
+            nullptr
+        ));
+    }
+
+
     const char* pageName(Page page) {
         switch (page) {
             case Page::Player: return "Player";
