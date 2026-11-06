@@ -31,7 +31,7 @@
 
 | Area | What it does | Important detail |
 | --- | --- | --- |
-| Player | Shows current player state and a cube preview selector | The current preview does **not** equip or unlock an icon |
+| Player | Shows current player state and a cube preview selector | The cube selector can equip an icon only when it is already unlocked on the account |
 | Practice | Noclip and local speed multiplier | These modify local gameplay; use Practice Mode |
 | Safe Mode | Marks a modified attempt as Practice after Noclip or Speedhack is used | Local safeguard only; it cannot promise how any server or leaderboard treats a run |
 | Level | Previous/next StartPos and Smart StartPos | Switching StartPos resets the current attempt |
@@ -134,7 +134,7 @@ The GitHub Actions workflow targets Windows x64, Android ARM64, and Android ARMv
 
 ## Known limitations
 
-- The cube selector is currently a **preview only**. It does not equip an icon or unlock achievements.
+- The cube selector equips owned/unlocked cube icons locally. Locked icons remain unavailable; Universe does not unlock them or spoof achievements.
 - Universe does not generate native `.gmd` / import-ready level files.
 - AI requests require a working network connection and a compatible API account.
 - AI provider configuration in the in-game page currently targets the Anthropic Messages API format. It is not a universal adapter for every provider.
