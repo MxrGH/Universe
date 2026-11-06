@@ -62,6 +62,43 @@ jobs:
         id: combine
         uses: geode-sdk/build-geode-mod/combine@main
 
+      - name: Set up Python for package inspection
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Validate universal .geode contents
+        env:
+          PACKAGE_DIR: ${{ steps.combine.outputs.build-output }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          packages = list(Path(os.environ["PACKAGE_DIR"]).glob("*.geode"))
+          assert len(packages) == 1, f"Expected one .geode package, found {len(packages)}"
+          package = packages[0]
+
+          with ZipFile(package) as archive:
+              names = set(archive.namelist())
+              required = {
+                  "mod.json",
+                  "mxrmc.universe.dll",
+                  "mxrmc.universe.android64.so",
+                  "mxrmc.universe.android32.so",
+                  "resources/mxrmc.universe/click.mp3",
+              }
+              missing = required - names
+              assert not missing, f"Package is missing required entries: {sorted(missing)}"
+              metadata = json.loads(archive.read("mod.json"))
+              assert metadata["id"] == "mxrmc.universe", metadata.get("id")
+              assert metadata["gd"]["win"] == "2.2091", metadata["gd"]
+              assert metadata["gd"]["android"] == "2.2091", metadata["gd"]
+          print(f"Validated {package.name}: Windows x64 + Android ARM64/ARMv7")
+          PY
+
       - name: Upload universal .geode package
         uses: actions/upload-artifact@v4
         with:
