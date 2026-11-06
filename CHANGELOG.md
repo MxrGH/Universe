@@ -5,6 +5,7 @@ Notable changes to Universe are recorded here. This project is under active deve
 ## Unreleased
 
 - Added editable AI model and API base URL fields to the in-game AI page.
+- Added local equipping for cube icons already unlocked on the player's account; locked icons remain unavailable.
 - Kept the Anthropic API key outside mod settings; the game reads `ANTHROPIC_API_KEY` from its process environment.
 - Fixed MATJSON array construction and response iteration in the AI request flow.
 - Fixed conversion of the Geode save-directory path before opening the generated draft file.
