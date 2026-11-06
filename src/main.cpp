@@ -714,6 +714,45 @@ protected:
         FLAlertLayer::create("Universe Offline Draft", message.c_str(), "OK")->show();
     }
 
+    std::string buildEditorContext() {
+        auto editor = LevelEditorLayer::get();
+        if (!editor || !editor->m_editorUI)
+            return "Editor state: no level is currently open in the editor.";
+        auto objects = editor->getAllObjects();
+        auto ui = editor->m_editorUI;
+        auto selected = ui->m_selectedObjects;
+        size_t selectedCount = selected ? selected->count() : 0;
+        if (selectedCount == 0 && ui->m_selectedObject) selectedCount = 1;
+        std::string context = fmt::format(
+            "Editor state: {} objects in the open level; {} currently selected. ",
+            objects ? objects->count() : 0, selectedCount
+        );
+        context += "Selected object details (maximum 30): ";
+        size_t shown = 0;
+        if (selected && selected->count() > 0) {
+            for (unsigned int i = 0; i < selected->count() && shown < 30; ++i) {
+                auto object = static_cast<GameObject*>(selected->objectAtIndex(i));
+                if (!object) continue;
+                auto p = object->getPosition();
+                context += fmt::format(
+                    "[id={}, x={:.1f}, y={:.1f}, rotation={:.1f}] ",
+                    object->m_objectID, p.x, p.y, object->getRotation()
+                );
+                ++shown;
+            }
+        } else if (ui->m_selectedObject) {
+            auto object = ui->m_selectedObject;
+            auto p = object->getPosition();
+            context += fmt::format(
+                "[id={}, x={:.1f}, y={:.1f}, rotation={:.1f}]",
+                object->m_objectID, p.x, p.y, object->getRotation()
+            );
+        } else {
+            context += "none.";
+        }
+        return context;
+    }
+
     void generateAIDraft() {
         if (!m_aiPrompt) {
             FLAlertLayer::create("Universe AI", "The prompt field could not be created. Reopen the AI tab and try again.", "OK")->show();
@@ -747,14 +786,17 @@ protected:
         matjson::Value userMessage = matjson::Value::object();
         userMessage["role"] = "user";
         userMessage["content"] =
-            "You are a Geometry Dash level-design assistant. Return ONLY one valid JSON object matching "
-            "the Universe Level Draft schema. Required top-level keys: title, prompt, difficulty, style, sections, notes. "
-            "sections is an array of up to 100 objects with name, gameplay, and events. Each event has numeric x and y, "
-            "type (block, spike, saw, orb, pad, or deco), and a short note. Keep x coordinates non-decreasing, finite, "
-            "within +/-10000000, and the total event count below 5000. Do not include Markdown fences. "
-            "The user will apply this result directly inside the currently open Geometry Dash editor. "
-            "Create a coherent sequence of objects with playable spacing and clear transitions. "
-            "This result will be converted into actual editor objects; do not describe it as a .gmd file. User idea: " + prompt;
+            "You are a Geometry Dash editor assistant. Return ONLY one valid JSON object matching the "
+            "Universe Level Draft schema: title, prompt, difficulty, style, sections, notes. "
+            "Each section has name, gameplay, and events. Events may use action add, move_selected, rotate_selected, "
+            "or delete_selected. For add, include numeric x/y and type block, spike, saw, orb, pad, or deco. "
+            "For move_selected include finite dx/dy; for rotate_selected include finite degrees; delete_selected needs no coordinates. "
+            "Only request selected-object operations when the user's instruction clearly asks to edit current selections and "
+            "the editor context confirms selected objects exist. Never guess object identities or modify unselected objects. "
+            "Keep coordinates and offsets within +/-10000000, total events below 5000, and output valid JSON without Markdown. "
+            "New objects are pasted into the currently open editor; selected-object transforms/deletions are undoable editor operations. "
+            "If the user asks a follow-up edit, use the supplied live editor context. User idea: " + prompt +
+            "\n\nLive editor context: " + buildEditorContext();
         messages.push(userMessage);
         payload["messages"] = messages;
 
@@ -854,24 +896,97 @@ protected:
         static const std::regex xPattern(R"("x"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
         static const std::regex yPattern(R"("y"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
         static const std::regex typePattern(R"rx("type"\s*:\s*"([A-Za-z]+)")rx");
+        static const std::regex actionPattern(R"rx("action"\s*:\s*"([A-Za-z_]+)")rx");
+        static const std::regex dxPattern(R"("dx"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
+        static const std::regex dyPattern(R"("dy"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
+        static const std::regex degreesPattern(R"("degrees"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
         std::string serialized;
-        size_t count = 0;
+        size_t added = 0;
+        size_t changed = 0;
+        size_t deleted = 0;
+
+        auto selectedObjects = CCArray::create();
+        auto ui = editor->m_editorUI;
+        if (ui->m_selectedObjects && ui->m_selectedObjects->count() > 0) {
+            for (unsigned int i = 0; i < ui->m_selectedObjects->count(); ++i)
+                selectedObjects->addObject(ui->m_selectedObjects->objectAtIndex(i));
+        } else if (ui->m_selectedObject) {
+            selectedObjects->addObject(ui->m_selectedObject);
+        }
+
+        auto replaceSelectedWithTransform = [&](float dx, float dy, float degrees) {
+            if (selectedObjects->count() == 0) return false;
+            std::string replacements;
+            for (unsigned int i = 0; i < selectedObjects->count(); ++i) {
+                auto object = static_cast<GameObject*>(selectedObjects->objectAtIndex(i));
+                if (!object) continue;
+                auto oldPosition = object->getPosition();
+                auto oldRotation = object->getRotation();
+                object->setPosition({oldPosition.x + dx, oldPosition.y + dy});
+                object->setRotation(oldRotation + degrees);
+                replacements += object->getSaveString(editor) + ";";
+                object->setPosition(oldPosition);
+                object->setRotation(oldRotation);
+            }
+            if (replacements.empty()) return false;
+            for (unsigned int i = 0; i < selectedObjects->count(); ++i)
+                ui->deleteObject(static_cast<GameObject*>(selectedObjects->objectAtIndex(i)), false);
+            ui->pasteObjects(replacements, false, false);
+            selectedObjects->removeAllObjects();
+            ui->updateButtons();
+            ui->updateObjectInfoLabel();
+            return true;
+        };
+
         for (std::sregex_iterator it(draft.begin(), draft.end(), eventPattern), end; it != end; ++it) {
-            if (count >= 1000) break;
+            if (added + changed + deleted >= 1000) break;
             auto event = it->str();
-            std::smatch xMatch, yMatch, typeMatch;
-            if (!std::regex_search(event, xMatch, xPattern)
+            std::smatch actionMatch, xMatch, yMatch, typeMatch, dxMatch, dyMatch, degreesMatch;
+            std::string action = "add";
+            if (std::regex_search(event, actionMatch, actionPattern))
+                action = actionMatch[1].str();
+
+            if (action == "delete_selected") {
+                if (selectedObjects->count() == 0) continue;
+                for (unsigned int i = 0; i < selectedObjects->count(); ++i) {
+                    auto object = static_cast<GameObject*>(selectedObjects->objectAtIndex(i));
+                    if (object) ui->deleteObject(object, false);
+                }
+                deleted += selectedObjects->count();
+                selectedObjects->removeAllObjects();
+                ui->updateButtons();
+                ui->updateObjectInfoLabel();
+                continue;
+            }
+
+            if (action == "move_selected" || action == "rotate_selected") {
+                float dx = 0.f, dy = 0.f, degrees = 0.f;
+                try {
+                    if (action == "move_selected") {
+                        if (std::regex_search(event, dxMatch, dxPattern)) dx = std::stof(dxMatch[1].str());
+                        if (std::regex_search(event, dyMatch, dyPattern)) dy = std::stof(dyMatch[1].str());
+                    } else if (std::regex_search(event, degreesMatch, degreesPattern)) {
+                        degrees = std::stof(degreesMatch[1].str());
+                    }
+                } catch (...) { continue; }
+                if (!std::isfinite(dx) || !std::isfinite(dy) || !std::isfinite(degrees)) continue;
+                dx = std::clamp(dx, -100000.f, 100000.f);
+                dy = std::clamp(dy, -100000.f, 100000.f);
+                degrees = std::clamp(degrees, -3600.f, 3600.f);
+                if (replaceSelectedWithTransform(dx, dy, degrees))
+                    changed += selectedObjects->count() == 0 ? 1 : selectedObjects->count();
+                continue;
+            }
+
+            if (action != "add" || !std::regex_search(event, xMatch, xPattern)
                 || !std::regex_search(event, yMatch, yPattern)
                 || !std::regex_search(event, typeMatch, typePattern))
                 continue;
-            float x = 0.f;
-            float y = 0.f;
+            float x = 0.f, y = 0.f;
             try {
                 x = std::stof(xMatch[1].str());
                 y = std::stof(yMatch[1].str());
-            } catch (...) {
-                continue;
-            }
+            } catch (...) { continue; }
             if (!std::isfinite(x) || !std::isfinite(y)) continue;
             x = std::clamp(x, -10000000.f, 10000000.f);
             y = std::clamp(y, -10000000.f, 10000000.f);
@@ -885,18 +1000,22 @@ protected:
             else if (type != "block" && type != "deco") continue;
 
             serialized += fmt::format("1,{},2,{:.0f},3,{:.0f};", objectID, x, y);
-            ++count;
+            ++added;
         }
 
-        if (serialized.empty()) {
-            FLAlertLayer::create("Universe AI", "The draft contained no supported objects to place.", "OK")->show();
+        if (!serialized.empty()) {
+            ui->pasteObjects(serialized, false, false);
+            ui->updateButtons();
+            ui->updateObjectInfoLabel();
+        }
+        if (added + changed + deleted == 0) {
+            FLAlertLayer::create("Universe AI", "No supported add/move/rotate/delete operations were found. Select the objects you want edited, then generate a new instruction.", "OK")->show();
             return;
         }
-
-        editor->m_editorUI->pasteObjects(serialized, false, false);
-        editor->m_editorUI->updateButtons();
-        editor->m_editorUI->updateObjectInfoLabel();
-        auto message = fmt::format("Placed {} AI-generated objects into the open level. Use the editor Undo button if you want to revert the placement.", count);
+        auto message = fmt::format(
+            "Universe applied {} new objects, {} selected-object edits, and {} selected-object deletions. Use the editor Undo button to revert.",
+            added, changed, deleted
+        );
         FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
     }
 
@@ -1312,8 +1431,9 @@ public:
     }
 };
 
-// Noclip and Speedhack are local Practice Mode tools. Safe Mode converts an
-// attempt to Practice Mode before a requested modifier is applied.
+// Noclip and Speedhack are local gameplay modifiers. Safe Mode converts an
+// attempt to Practice Mode before a requested modifier is applied; with Safe
+// Mode disabled, the modifiers remain local client-side gameplay changes.
 class $modify(UniversePlayerObject, PlayerObject) {
     bool pushButton(PlayerButton button) {
         auto layer = PlayLayer::get();
