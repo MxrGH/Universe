@@ -2,7 +2,7 @@
 
 ## Universe 1 — Snapshot 26.5
 
-- Add live editor context and selection-scoped AI move, rotate, delete, and add operations.
+- Add live editor context and AI add/move/rotate/delete operations for selected objects or exact existing-object unique IDs.
 - Preserve existing gameplay modifiers, Safe Mode, StartPos tools, visual overlays, replay recorder, icon previews, themes, keybinds, presets, and mobile controls.
 - Bump Geode package version to v1.1.1 and prepare the final planned snapshot release.
 
