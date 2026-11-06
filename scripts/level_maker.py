@@ -89,8 +89,10 @@ def validate_draft(data: object) -> dict:
                 coordinate = event.get(axis)
                 if isinstance(coordinate, bool) or not isinstance(coordinate, (int, float)):
                     raise ValueError(f"Every event needs a numeric {axis} coordinate.")
-                if not math.isfinite(coordinate):
+                if isinstance(coordinate, float) and not math.isfinite(coordinate):
                     raise ValueError(f"Every event needs a finite {axis} coordinate.")
+                if abs(coordinate) > 10_000_000:
+                    raise ValueError(f"Event {axis} coordinate is outside the supported range.")
             if event["x"] < previous_x:
                 raise ValueError("Event x coordinates must be in non-decreasing order.")
             previous_x = event["x"]
@@ -183,7 +185,7 @@ def main() -> int:
         draft = offline_draft(args.prompt, args.difficulty, args.length, args.style, args.seed) if args.offline else request_ai_draft(args)
         draft = validate_draft(draft)
         args.output.write_text(json.dumps(draft, indent=2) + "\n", encoding="utf-8")
-    except (RuntimeError, ValueError, KeyError, IndexError, OSError, json.JSONDecodeError) as error:
+    except (RuntimeError, ValueError, KeyError, IndexError, OSError, OverflowError, json.JSONDecodeError) as error:
         print(f"Universe Level Maker: {error}", file=sys.stderr)
         return 1
 
