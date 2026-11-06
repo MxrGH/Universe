@@ -81,7 +81,7 @@ The release package contains Windows x64, Android ARM64, and Android ARMv7 binar
 
 ## Build and release verification
 
-GitHub Actions builds all three targets independently, combines them, inspects the resulting `.geode` archive, verifies all three binaries and required resources, and only then creates the Snapshot 26.2 prerelease.
+GitHub Actions builds all three targets independently, runs the Python regression suite, combines them, inspects the resulting `.geode` archive, verifies all three binaries and required resources, and only then creates the Snapshot 26.2 prerelease.
 
 A successful CI build confirms packaging. It does not replace gameplay testing on actual Windows and Android devices. Replay timing and performance can vary by device and game build.
 
