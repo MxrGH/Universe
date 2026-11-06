@@ -1,19 +1,18 @@
 # Changelog
 
-## Universe 1 — Snapshot 26.2
+## Universe 1 — Snapshot 26.3
 
-- Fix tab switching so old page buttons cannot remain active or stack beneath the current page.
-- Clear page-owned AI input references when switching tabs.
-- Make StartPos previous/next navigation wrap around at either end of the list.
-- Add defensive checks around optional UI and audio objects.
-- Correct the Anthropic API version header used by the standalone AI level maker.
-- Improve AI blueprint validation: reject invalid coordinates, unsupported object types, out-of-order events, and oversized drafts.
-- Return readable HTTP error details from the standalone AI generator and handle output-file errors cleanly.
-- Add automated regression tests for offline generation and blueprint validation.
-- Keep the in-game AI assistant, offline draft generator, and prompt save/load tools.
-- Update the Geode package version to `v1.0.1`; release name is Snapshot 26.2.
-- Build Windows x64, Android ARM64, and Android ARMv7 into one inspected universal `.geode`.
+- Harden Practice Mode replay: recording requires an active player, playback requires Practice Mode, and malformed, oversized, unsorted, or overlong replay files are rejected.
+- Prevent replay state from lingering if the active player disappears or a level scene changes.
+- Standardize the in-game online AI response around the same JSON blueprint schema used by the standalone generator.
+- Save online AI results as `universe-ai-draft.json` and direct users to the validation/export CLI.
+- Upgrade the standalone Level Maker with blueprint import, strict validation, and JSON, CSV, and Markdown export.
+- Expand the regression suite to cover invalid sections/gameplay, JSON output, CSV rows, and Markdown sections.
+- Retain all Snapshot 26.2 practice, visual, UI, replay, and AI tools.
+- Bump Geode package version to `v1.0.2`; release name is Snapshot 26.3.
+- Build and inspect one universal package for Windows x64, Android ARM64, and Android ARMv7 before publishing.
 
-## Previous development
+## Previous releases
 
-See the repository history for the feature work leading to Universe 1.
+- Snapshot 26.2 — replay/UI hardening and AI blueprint validation.
+- Snapshot 26.1 — initial Universe 1 release.
