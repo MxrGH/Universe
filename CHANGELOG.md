@@ -1,5 +1,15 @@
 # Changelog
 
+## Universe 1 — Snapshot 26.5
+
+- Add live editor context to AI generation: object count and selected object IDs, positions, and rotations.
+- Extend AI drafts with selection-scoped move, rotate, and delete operations, alongside object placement.
+- Rebuild transformed selections through the editor object serialization/paste path and keep deletion on the editor undo history.
+- Keep all prior StartPos, hitbox, trail/projection, FPS, replay, icon preview, theme, keybind, preset, touch, and floating-button features.
+- Tighten apply limits and reject invalid/non-finite operation values before editing.
+- Bump Geode package version to v1.1.1.
+- Build and inspect one universal package for Windows x64, Android ARM64, and Android ARMv7 before publishing.
+
 ## Universe 1 — Snapshot 26.3
 
 - Harden Practice Mode replay: require an active player, require Practice Mode for playback, and reject malformed, oversized, unsorted, or overlong replay files.
