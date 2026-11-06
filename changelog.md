@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.1.0 — Display/build label 1.1.0.1
+- Fix the panel page animation compile error blocking Windows and Android builds.
+- Add in-game offline procedural draft generation and saved-prompt loading.
+- Add bounded, validated practice replay loading and stable event ordering.
+- Restrict Noclip and Speedhack effects to Practice Mode; Safe Mode switches a requested modified attempt into Practice before applying it.
+- Add custom panel and floating-button labels, live theme changes, saved panel placement, and a reset action.
+- Add one-tap speed reset and quick FPS presets.
+
+
 ## v0.1.0
 - Initial Geode project scaffold.
 - Added Universe entry button and starter popup.
@@ -25,7 +34,7 @@
 - Clarified Safe Mode and icon preview settings.
 
 ## v0.6.0
-- Added all-mode Noclip source hooks and independently switchable Safe Mode.
+- Added Practice Mode-only Noclip source hooks and independently switchable Safe Mode.
 - Added Speedhack controls, configurable keybinds, FPS override, hitbox overlay, StartPos Switcher, and practice input recording/replay.
 - Added Smart StartPos selection.
 - Announced the upcoming AI Level Maker.
