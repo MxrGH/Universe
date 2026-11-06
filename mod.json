@@ -8,7 +8,7 @@
   "name": "Universe",
   "version": "v0.8.0",
   "developer": "MxrMC",
-  "description": "Local practice, visual, icon preview, StartPos, and replay tools for Geometry Dash.",
+  "description": "Geometry Dash 2.2091 practice tools, visual overlays, StartPos navigation, replay recording, cube selection, and AI level blueprints.",
   "tags": [
     "gameplay",
     "interface",
@@ -199,8 +199,8 @@
       "default": false
     },
     "preview-icon-id": {
-      "name": "Preview cube icon ID",
-      "description": "Select a cube icon for the local Universe preview. This does not unlock or equip the icon.",
+      "name": "Cube icon ID",
+      "description": "Choose the cube ID shown in the preview and used by EQUIP SELECTED. This does not grant the icon's unlock or achievements.",
       "type": "int",
       "default": 1,
       "min": 1,
