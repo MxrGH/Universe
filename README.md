@@ -35,6 +35,9 @@ The project display/build label uses the four-part `x.x.x.x` format. The Geode p
 ### Interface and quality of life
 - Animated panel entrance and page transitions.
 - Animated button feedback and cleaner navigation.
+- Custom panel and floating-button labels through Geode settings.
+- Live theme switching without reopening the panel.
+- Persistent draggable panel position, with a one-tap reset.
 - Paste or type longer prompts; save, reload, or clear them without generating.
 - Generate an offline procedural level blueprint directly in the game on desktop or Android without an API key or network request.
 - Reset the speed multiplier to 1.00x with one tap.
