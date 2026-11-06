@@ -650,12 +650,14 @@ protected:
             auto gm = GameManager::get();
             auto iconID = static_cast<int>(mod->getSettingValue<int64_t>("preview-icon-id"));
             if (!gm) return;
-            if (!gm->isIconUnlocked(iconID, IconType::Cube)) {
-                FLAlertLayer::create("Universe", "That cube is locked in your Geometry Dash account. Universe only equips icons you have already unlocked.", "OK")->show();
-                return;
-            }
+            // Set the equipped cube ID without changing the account's unlock flags.
+            // Geometry Dash profile visibility depends on the game's normal account-save flow.
             gm->setPlayerFrame(iconID);
-            FLAlertLayer::create("Universe", "Your selected unlocked cube has been equipped locally.", "OK")->show();
+            FLAlertLayer::create(
+                "Universe",
+                "Selected cube equipped. Save your Geometry Dash account normally to sync your equipped profile icon. This does not grant the icon as an unlocked item.",
+                "OK"
+            )->show();
             showPage(m_page);
             return;
         }
