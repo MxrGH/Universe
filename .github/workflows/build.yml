@@ -155,7 +155,9 @@ jobs:
           body: |
             # Universe 1 — Snapshot 26.4
 
-            The first Universe 1 release for Geometry Dash 2.2091.
+            Snapshot 26.4 adds Normal Mode gameplay modifiers when Safe Mode is disabled, AI object placement directly in the open Geometry Dash editor, and the redesigned circular UNIV control with rounded animated UI.
+
+            This is a prerelease build for Geometry Dash 2.2091. CI compiles Windows x64, Android ARM64, and Android ARMv7 before packaging the universal .geode asset.
 
             **One universal Geode package** includes:
             - Windows x64
