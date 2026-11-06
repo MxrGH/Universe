@@ -71,6 +71,12 @@ for feature_marker in (
     'addAction("LOAD SAVED", 143',
     "loaded.size() >= 100000",
     "layer->m_isPracticeMode",
+    "m_panelBackground->setColor",
+    "panel-offset-x",
+    "panel-offset-y",
+    "addAction(\"RESET PANEL POSITION\", 146",
+    "panel-title",
+    "floating-button-label",
 ):
     if feature_marker not in source:
         fail("missing 1.0 feature implementation: " + feature_marker)
