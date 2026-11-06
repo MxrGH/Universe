@@ -3,14 +3,17 @@
 ## v1.1.0 — Display label 1.1.0.1
 
 ### Added
-- Animated panel entrance, dim-layer fade, page transitions, and button feedback.
-- Longer prompt field with save and clear actions for pasted level ideas.
-- One-tap reset for the speed multiplier.
-- Quick FPS target presets at 120, 240, and 360.
+- In-game offline procedural draft generation that works without network access or an API key, including on Android.
+- Load Saved Prompt action alongside save and clear.
+- Bounded replay file loading and event validation, plus stable event ordering before playback.
+- Practice Mode-only Noclip and Speedhack behavior.
+- Fixed a Cocos layer animation compile error that blocked the previous Windows and Android builds.
+- Continued animated panel entrance, page transitions, and button feedback.
+- One-tap speed reset and quick FPS target presets at 120, 240, and 360.
 
 ### Important AI note
-- The current in-game build still uses online AI only. Android offline neural inference is not implemented yet.
-- The Python offline option is a deterministic template generator, not a trained AI model.
+- Offline Draft is procedural generation, not neural AI.
+- True offline neural inference on Android still needs a bundled model and mobile inference runtime.
 
 ## v1.0.0 — Display label 1.00.0.00
 
