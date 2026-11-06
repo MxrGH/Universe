@@ -11,6 +11,8 @@ Notable changes to Universe are recorded here. This project is under active deve
 - Fixed conversion of the Geode save-directory path before opening the generated draft file.
 - Reworked the README with setup instructions, feature details, security guidance, and known limitations.
 - Added this changelog.
+- Clarified the cube selector setting metadata and project description.
+- Added CI inspection of the combined `.geode` package to verify its metadata, resource, and Windows/Android binaries before upload.
 
 ## v0.8.0
 
