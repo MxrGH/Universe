@@ -38,7 +38,7 @@ if not re.fullmatch(r"v?\d+\.\d+\.\d+", version):
 readme_path = ROOT / "README.md"
 readme_text = readme_path.read_text(encoding="utf-8") if readme_path.is_file() else ""
 if "**Release:** Universe 1 — Snapshot 26.3" not in readme_text:
-    fail("README must document Universe 1 — Snapshot 26.2")
+    fail("README must document Universe 1 — Snapshot 26.3")
 if mod.get("name") != "Universe 1" or mod.get("version") != "v1.0.2":
     fail("release metadata must identify Universe 1 v1.0.2")
 
