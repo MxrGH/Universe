@@ -7,7 +7,7 @@
   "id": "mxrmc.universe",
   "name": "Universe",
   "version": "v1.0.0",
-  "developer": "MxrMC",
+  "developer": "MxrGH",
   "description": "A practical Geometry Dash toolkit with practice controls, visual helpers, replay tools, quick setups, and an optional level idea helper.",
   "tags": [
     "gameplay",
