@@ -98,7 +98,7 @@ jobs:
               metadata = json.loads(archive.read("mod.json"))
               assert metadata["id"] == "mxrmc.universe"
               assert metadata["name"] == "Universe 1"
-              assert metadata["version"] == "v1.1.0"
+              assert metadata["version"] == "v1.1.1"
               assert metadata["gd"]["win"] == "2.2091"
               assert metadata["gd"]["android"] == "2.2091"
               assert archive.read("resources/mxrmc.universe/logo.png")[:8] == b"\x89PNG\r\n\x1a\n"
