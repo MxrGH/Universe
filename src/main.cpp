@@ -547,7 +547,7 @@ protected:
             FLAlertLayer::create("Universe Offline Draft", "The prompt field could not be created. Reopen the Drafts tab and try again.", "OK")->show();
             return;
         }
-        std::string prompt = m_aiPrompt->getString();
+        std::string prompt = m_draftPrompt->getString();
         if (prompt.empty()) {
             FLAlertLayer::create("Universe Offline Draft", "Enter a level idea first.", "OK")->show();
             return;
@@ -646,7 +646,7 @@ protected:
             return;
         }
         if (tag == 141) {
-            if (!m_aiPrompt || std::string(m_aiPrompt->getString()).empty()) {
+            if (!m_draftPrompt || std::string(m_draftPrompt->getString()).empty()) {
                 FLAlertLayer::create("Universe Drafts", "Write or paste a prompt before saving it.", "OK")->show();
                 return;
             }
@@ -656,17 +656,17 @@ protected:
                 FLAlertLayer::create("Universe AI", "Universe could not save the prompt file.", "OK")->show();
                 return;
             }
-            file << m_aiPrompt->getString();
+            file << m_draftPrompt->getString();
             file.close();
             FLAlertLayer::create("Universe AI", "Prompt saved in the Universe mod folder.", "OK")->show();
             return;
         }
         if (tag == 142) {
-            if (m_aiPrompt) m_aiPrompt->setString("");
+            if (m_draftPrompt) m_draftPrompt->setString("");
             return;
         }
         if (tag == 143) {
-            if (!m_aiPrompt) return;
+            if (!m_draftPrompt) return;
             auto path = mod->getSaveDir() / "universe-ai-prompt.txt";
             std::ifstream file(path.string());
             if (!file.is_open()) {
@@ -675,7 +675,7 @@ protected:
             }
             std::string prompt((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
             if (prompt.size() > 4000) prompt.resize(4000);
-            m_aiPrompt->setString(prompt.c_str());
+            m_draftPrompt->setString(prompt.c_str());
             FLAlertLayer::create("Universe AI", "Saved prompt loaded.", "OK")->show();
             return;
         }
@@ -977,7 +977,7 @@ public:
     void onTab(CCObject* sender) {
         int index = static_cast<CCNode*>(sender)->getTag() - 200;
         if (index < 0 || index > 7) return;
-        if (index == 7 && !Mod::get()->getSettingValue<bool>("ai-tab-enabled")) return;
+        if (index == 7 && !Mod::get()->getSettingValue<bool>("drafts-tab-enabled")) return;
         showPage(static_cast<Page>(index));
     }
 };
