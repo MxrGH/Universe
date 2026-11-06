@@ -711,6 +711,14 @@ protected:
         if (model.empty()) model = "claude-sonnet-4-6";
         if (baseUrl.empty()) baseUrl = "https://api.anthropic.com";
         while (!baseUrl.empty() && baseUrl.back() == '/') baseUrl.pop_back();
+        if (baseUrl.rfind("https://", 0) != 0) {
+            FLAlertLayer::create(
+                "Universe AI",
+                "The AI API base URL must use HTTPS so your API key is not sent over an unencrypted connection.",
+                "OK"
+            )->show();
+            return;
+        }
         payload["model"] = model;
 
         auto request = web::WebRequest()
