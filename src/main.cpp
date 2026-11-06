@@ -257,7 +257,8 @@ protected:
     async::TaskHolder<web::WebResponse> m_aiTask;
     CCMenu* m_menu = nullptr;
     CCMenu* m_actionMenu = nullptr;
-    CCLayerColor* m_panelBackground = nullptr;
+    CCDrawNode* m_panelBackground = nullptr;
+    CCSize m_panelSize = {0.f, 0.f};
     CCLayerColor* m_dimBackground = nullptr;
     CCLabelBMFont* m_pageTitle = nullptr;
     CCLayer* m_content = nullptr;
@@ -323,10 +324,7 @@ protected:
             : next == 1 ? ccColor4B{38, 18, 58, 255}
             : ccColor4B{12, 42, 48, 255};
         mod->setSettingValue<ccColor4B>("panel-color", color);
-        if (m_panelBackground) {
-            m_panelBackground->setColor({color.r, color.g, color.b});
-            m_panelBackground->setOpacity(color.a);
-        }
+        if (m_panelBackground) drawRoundedPanel(m_panelBackground, m_panelSize, color);
     }
 
     void smartStartPos() {
@@ -1129,7 +1127,7 @@ protected:
     }
 
     void closePanel(CCObject*) {
-        this->removeFromParentAndCleanup(true);
+        animateClosePanel(this);
     }
 
 public:
@@ -1208,10 +1206,13 @@ public:
         this->addChild(dim, 0);
 
         auto themeColor = mod->getSettingValue<ccColor4B>("panel-color");
-        auto panel = CCLayerColor::create(themeColor);
+        auto panel = CCDrawNode::create();
+        if (!panel) return false;
         m_panelBackground = panel;
-        panel->setContentSize({win.width * 0.82f, win.height * 0.78f});
+        m_panelSize = {win.width * 0.82f, win.height * 0.78f};
+        panel->setContentSize(m_panelSize);
         panel->setPosition({win.width * 0.09f, win.height * 0.11f});
+        drawRoundedPanel(panel, m_panelSize, themeColor);
         panel->setScale(0.94f);
         panel->runAction(CCEaseBackOut::create(CCScaleTo::create(0.22f, 1.f)));
         this->addChild(panel, 1);
@@ -1311,7 +1312,7 @@ class UniverseFloatingButton : public CCLayer {
         auto scene = CCDirector::sharedDirector()->getRunningScene();
         if (!scene) return;
         if (auto existing = scene->getChildByID("universe-panel"_spr)) {
-            existing->removeFromParentAndCleanup(true);
+            animateClosePanel(static_cast<CCLayer*>(existing));
             return;
         }
         auto panel = UniversePanel::create();
@@ -1334,19 +1335,31 @@ public:
 
     bool init() override {
         if (!CCLayer::init()) return false;
-        setContentSize({76.f, 52.f});
+        setContentSize({68.f, 68.f});
         setTouchEnabled(true);
-        auto background = CCLayerColor::create({28, 32, 58, 220}, 76.f, 52.f);
-        if (background) this->addChild(background);
+        auto background = CCDrawNode::create();
+        if (background) {
+            background->drawDot({34.f, 34.f}, 34.f, ccc4f(0.20f, 0.16f, 0.38f, 0.96f));
+            this->addChild(background);
+        }
         auto mod = Mod::get();
         if (!mod) return false;
+        auto logoPath = (mod->getResourcesDir() / "logo.png").string();
+        auto logo = CCSprite::create(logoPath.c_str());
+        if (logo) {
+            auto size = logo->getContentSize();
+            if (size.width > 0.f && size.height > 0.f)
+                logo->setScale(std::min(38.f / size.width, 38.f / size.height));
+            logo->setPosition({34.f, 42.f});
+            this->addChild(logo, 1);
+        }
         auto buttonText = mod->getSettingValue<std::string>("floating-button-label");
         if (buttonText.empty()) buttonText = "UNIV";
         auto label = CCLabelBMFont::create(buttonText.c_str(), "goldFont.fnt");
         if (label) {
-            label->setScale(0.62f);
-            label->setPosition({38.f, 26.f});
-            this->addChild(label, 1);
+            label->setScale(0.24f);
+            label->setPosition({34.f, 13.f});
+            this->addChild(label, 2);
         }
         return true;
     }
@@ -1374,9 +1387,22 @@ public:
         auto parent = getParent();
         auto local = parent ? parent->convertToNodeSpace(current) : current;
         auto win = CCDirector::sharedDirector()->getWinSize();
+        if (parent && ccpDistance(getPosition(), local) > 4.f) {
+            auto ghost = CCDrawNode::create();
+            if (ghost) {
+                ghost->drawDot({34.f, 34.f}, 31.f, ccc4f(0.48f, 0.36f, 0.92f, 0.42f));
+                ghost->setPosition(getPosition());
+                parent->addChild(ghost, getZOrder() - 1);
+                ghost->runAction(CCSequence::create(
+                    CCFadeTo::create(0.20f, 0),
+                    CCCallFunc::create(ghost, callfunc_selector(CCNode::removeFromParent)),
+                    nullptr
+                ));
+            }
+        }
         setPosition({
-            std::clamp(local.x, 38.f, win.width - 38.f),
-            std::clamp(local.y, 26.f, win.height - 26.f)
+            std::clamp(local.x, 34.f, win.width - 34.f),
+            std::clamp(local.y, 34.f, win.height - 34.f)
         });
     }
 
@@ -1412,7 +1438,7 @@ class $modify(UniversePlayLayer, PlayLayer) {
         auto scene = CCDirector::sharedDirector()->getRunningScene();
         if (!scene) return;
         if (auto existing = scene->getChildByID("universe-panel"_spr)) {
-            existing->removeFromParentAndCleanup(true);
+            animateClosePanel(static_cast<CCLayer*>(existing));
             return;
         }
         auto panel = UniversePanel::create();
@@ -1623,7 +1649,7 @@ class $modify(UniverseMenuLayer, MenuLayer) {
         auto scene = CCDirector::sharedDirector()->getRunningScene();
         if (!scene) return;
         if (auto existing = scene->getChildByID("universe-panel"_spr)) {
-            existing->removeFromParentAndCleanup(true);
+            animateClosePanel(static_cast<CCLayer*>(existing));
             return;
         }
         auto panel = UniversePanel::create();
@@ -1640,7 +1666,7 @@ $on_game(Loaded) {
         auto scene = CCDirector::sharedDirector()->getRunningScene();
         if (!scene) return;
         if (auto existing = scene->getChildByID("universe-panel"_spr)) {
-            existing->removeFromParentAndCleanup(true);
+            animateClosePanel(static_cast<CCLayer*>(existing));
             return;
         }
         auto panel = UniversePanel::create();
