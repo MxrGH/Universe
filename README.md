@@ -3,10 +3,10 @@
 Universe is a Geometry Dash 2.2091 Geode mod by **MxrGH**. It puts practice controls, visual helpers, replay tools, and a polished animated interface in one in-game panel.
 
 - **Geode package version:** `v1.1.0`
-- **Display/build label:** `1.01.0.00`
+- **Display/build label:** `1.1.0.1`
 - **Game version:** Geometry Dash `2.2091`
 
-The four-part display label is for the project and release notes. The actual `mod.json` version stays on standard three-part semantic versioning because Geode expects a semantic version.
+The project display/build label uses the four-part `x.x.x.x` format. The Geode package version in `mod.json` remains standard three-part semantic versioning (`v1.1.0`) because Geode expects a SemVer version.
 
 ## What you can do
 
