@@ -1,25 +1,37 @@
 # Universe AI Level Editor
 
-Universe's in-game AI tab is intended to work with the level currently open in Geometry Dash's editor. It does not require a generated `.gmd` file or GDShare.
+Snapshot 26.5 keeps the AI workflow inside the currently open Geometry Dash editor. It does not require GDShare or a generated .gmd file.
 
-## In-game flow
+## In-game workflow
 
-1. Open Universe and go to the AI tab.
-2. Enter a level concept and select **GENERATE ONLINE**.
-3. Open the target level in the Geometry Dash editor.
-4. Select **APPLY DRAFT TO OPEN EDITOR**.
-5. Universe converts supported events into Geometry Dash editor objects and pastes them into the current level. Use the editor Undo control to revert.
+1. Open the target level in the Geometry Dash editor.
+2. Select the existing objects you want the AI to change, if any.
+3. Open Universe → AI and describe the task.
+4. Choose GENERATE ONLINE (configured model) or OFFLINE DRAFT (procedural template).
+5. Choose APPLY DRAFT TO OPEN EDITOR.
+6. Use the editor Undo control to revert the inserted or changed objects.
 
-The current implementation supports block, spike, saw, orb, and pad events, with a hard limit of 1,000 inserted objects per apply operation. It adds objects to the current level; it does not yet interpret arbitrary natural-language instructions to move, recolor, or delete existing objects.
+Before online generation, Universe includes a compact live context summary: total object count and the selected objects' IDs, positions, and rotations. Each new request reads the current editor state, so follow-up instructions can be based on the latest selection.
+
+## Supported editor operations
+
+- Add: insert supported blocks, spikes, saws, orbs, and pads at generated coordinates.
+- Move selected: move the current selection by an AI-proposed offset.
+- Rotate selected: rotate the current selection by an AI-proposed amount.
+- Delete selected: remove the current selection.
+
+Move, rotate, and delete actions are restricted to the current selection. Select the intended objects first. The AI does not identify or modify arbitrary unselected objects by guessing. The editor Undo control is the recovery path.
+
+The apply routine limits one operation batch to 1,000 supported objects and bounds coordinates and offsets before conversion to editor data.
 
 ## Online AI configuration
 
-The in-game client reads `ANTHROPIC_API_KEY` from the Geometry Dash process environment. Configure the model and HTTPS API base URL in Geode settings. Do not paste API keys into chat, source files, commits, or screenshots. API calls may incur charges; involve a parent or guardian before using a paid account.
+The in-game client reads ANTHROPIC_API_KEY from the Geometry Dash process environment. Configure the model and HTTPS API base URL in Geode settings. Do not paste API keys into chat, source files, commits, or screenshots. API calls may incur charges; involve a parent or guardian before using a paid account.
 
 ## Offline draft
 
-**OFFLINE DRAFT** creates a procedural template without a network request or neural model. The same Apply action can place its supported objects into the open editor.
+OFFLINE DRAFT creates a procedural template without a network request or neural model. It can be applied to the open editor, but it is not a neural AI model.
 
 ## Standalone design helper
 
-`scripts/level_maker.py` remains available for JSON blueprint validation and CSV/Markdown exports. Those exports are optional planning tools; they are not required for the in-game editor workflow.
+scripts/level_maker.py remains available for JSON blueprint validation and CSV/Markdown exports. Those exports are optional planning tools; they are not required for the in-game editor workflow.
