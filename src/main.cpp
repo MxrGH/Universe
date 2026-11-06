@@ -415,29 +415,41 @@ protected:
                 } else {
                     addText("Enter a level to see the current player state.", {-245.f, 55.f}, 0.34f);
                 }
-                addText("Choose your cube", {-245.f, -90.f}, 0.34f);
+                addText("Icon preview and selection", {-245.f, -90.f}, 0.34f);
                 if (auto gm = GameManager::get()) {
                     auto mod = Mod::get();
                     if (!mod) break;
+                    static const char* iconNames[] = {
+                        "Cube", "Ship", "Ball", "UFO", "Wave", "Robot", "Spider", "Swing", "Jetpack"
+                    };
+                    auto typeID = static_cast<int>(std::clamp<int64_t>(
+                        mod->getSettingValue<int64_t>("preview-icon-type"), 0, 8
+                    ));
+                    auto iconType = static_cast<IconType>(typeID);
                     auto previewID = static_cast<int>(std::clamp<int64_t>(
                         mod->getSettingValue<int64_t>("preview-icon-id"), 1, 500
                     ));
+                    auto typeText = fmt::format("Type: {}", iconNames[typeID]);
+                    addText(typeText.c_str(), {-245.f, -125.f}, 0.32f);
+                    addAction("<", 147, {125.f, -125.f});
+                    addAction(">", 148, {205.f, -125.f});
                     auto icon = SimplePlayer::create(0);
                     if (icon) {
-                        icon->updatePlayerFrame(previewID, IconType::Cube);
+                        icon->updatePlayerFrame(previewID, iconType);
                         icon->setColor(gm->colorForIdx(gm->getPlayerColor()));
                         icon->setSecondColor(gm->colorForIdx(gm->getPlayerColor2()));
-                        icon->setPosition({0.f, -155.f});
-                        icon->setScale(1.35f);
+                        icon->setPosition({0.f, -180.f});
+                        icon->setScale(1.25f);
                         m_content->addChild(icon);
                     }
-                    auto iconText = fmt::format("Preview ID: {}", previewID);
-                    addText(iconText.c_str(), {-245.f, -220.f}, 0.32f);
-                    addAction("-", 124, {125.f, -220.f});
-                    addAction("+", 125, {205.f, -220.f});
+                    auto owned = gm->isIconUnlocked(previewID, iconType);
+                    auto iconText = fmt::format("Preview ID: {}  |  {}", previewID, owned ? "OWNED" : "PREVIEW ONLY");
+                    addText(iconText.c_str(), {-245.f, -235.f}, 0.30f);
+                    addAction("-", 124, {125.f, -235.f});
+                    addAction("+", 125, {205.f, -235.f});
                 }
-                addAction("EQUIP SELECTED", 127, {0.f, -265.f});
-                addText("Pick an ID and equip it. Profile sync depends on Geometry Dash saving it.", {-245.f, -300.f}, 0.27f);
+                addAction("EQUIP IF OWNED", 127, {0.f, -280.f});
+                addText("Locked icons are preview-only; Universe never changes unlock flags.", {-245.f, -310.f}, 0.27f);
                 break;
             case Page::Practice: {
                 auto mod = Mod::get();
@@ -901,14 +913,37 @@ protected:
         }
         if (tag == 127) {
             auto gm = GameManager::get();
-            auto iconID = static_cast<int>(mod->getSettingValue<int64_t>("preview-icon-id"));
             if (!gm) return;
-            // Set the equipped cube ID without changing the account's unlock flags.
-            // Geometry Dash profile visibility depends on the game's normal account-save flow.
-            gm->setPlayerFrame(iconID);
+            auto typeID = static_cast<int>(std::clamp<int64_t>(
+                mod->getSettingValue<int64_t>("preview-icon-type"), 0, 8
+            ));
+            auto iconType = static_cast<IconType>(typeID);
+            auto iconID = static_cast<int>(std::clamp<int64_t>(
+                mod->getSettingValue<int64_t>("preview-icon-id"), 1, 500
+            ));
+            if (!gm->isIconUnlocked(iconID, iconType)) {
+                FLAlertLayer::create(
+                    "Universe",
+                    "That icon is locked on this account. You can preview it locally, but Universe will not equip it or change unlock flags.",
+                    "OK"
+                )->show();
+                return;
+            }
+            switch (iconType) {
+                case IconType::Cube: gm->setPlayerFrame(iconID); break;
+                case IconType::Ship: gm->setPlayerShip(iconID); break;
+                case IconType::Ball: gm->setPlayerBall(iconID); break;
+                case IconType::Ufo: gm->setPlayerBird(iconID); break;
+                case IconType::Wave: gm->setPlayerDart(iconID); break;
+                case IconType::Robot: gm->setPlayerRobot(iconID); break;
+                case IconType::Spider: gm->setPlayerSpider(iconID); break;
+                case IconType::Swing: gm->setPlayerSwing(iconID); break;
+                case IconType::Jetpack: gm->setPlayerJetpack(iconID); break;
+                default: return;
+            }
             FLAlertLayer::create(
                 "Universe",
-                "Cube selected. Use Geometry Dash's normal save option to try syncing your profile. This does not unlock the icon on your account.",
+                "Your owned icon was selected. Use Geometry Dash's normal save option if you want to save the selection.",
                 "OK"
             )->show();
             showPage(m_page);
@@ -919,6 +954,14 @@ protected:
             iconID += tag == 125 ? 1 : -1;
             iconID = std::clamp<int64_t>(iconID, 1, 500);
             mod->setSettingValue<int64_t>("preview-icon-id", iconID);
+            showPage(m_page);
+            return;
+        }
+        if (tag == 147 || tag == 148) {
+            auto typeID = mod->getSettingValue<int64_t>("preview-icon-type");
+            typeID += tag == 148 ? 1 : -1;
+            typeID = (typeID + 9) % 9;
+            mod->setSettingValue<int64_t>("preview-icon-type", typeID);
             showPage(m_page);
             return;
         }
