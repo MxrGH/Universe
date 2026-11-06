@@ -31,7 +31,7 @@
 
 | Area | What it does | Important detail |
 | --- | --- | --- |
-| Player | Shows current player state and a cube preview selector | The cube selector can equip an icon only when it is already unlocked on the account |
+| Player | Shows current player state and a cube preview selector | The selector sets the equipped cube ID; it does not change unlock flags. Profile visibility depends on the normal account-save flow |
 | Practice | Noclip and local speed multiplier | These modify local gameplay; use Practice Mode |
 | Safe Mode | Marks a modified attempt as Practice after Noclip or Speedhack is used | Local safeguard only; it cannot promise how any server or leaderboard treats a run |
 | Level | Previous/next StartPos and Smart StartPos | Switching StartPos resets the current attempt |
@@ -134,7 +134,7 @@ The GitHub Actions workflow targets Windows x64, Android ARM64, and Android ARMv
 
 ## Known limitations
 
-- The cube selector equips owned/unlocked cube icons locally. Locked icons remain unavailable; Universe does not unlock them or spoof achievements.
+- The cube selector can set a previewed cube ID as the equipped icon without changing unlock flags or granting achievements. To attempt profile sync, use Geometry Dash's normal account-save flow; whether the game/server accepts and displays a locked icon is not guaranteed.
 - Universe does not generate native `.gmd` / import-ready level files.
 - AI requests require a working network connection and a compatible API account.
 - AI provider configuration in the in-game page currently targets the Anthropic Messages API format. It is not a universal adapter for every provider.
