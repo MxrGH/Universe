@@ -50,8 +50,11 @@ namespace {
             log::error("Universe could not save the practice replay.");
             return;
         }
+        std::stable_sort(g_macroEvents.begin(), g_macroEvents.end(),
+            [](MacroEvent const& a, MacroEvent const& b) { return a.time < b.time; });
         for (auto const& event : g_macroEvents)
             file << event.time << ',' << event.button << ',' << (event.down ? 1 : 0) << '\n';
+        g_macroRecordingLayer = nullptr;
         log::info("Universe saved {} practice replay events.", g_macroEvents.size());
     }
 
@@ -83,14 +86,20 @@ namespace {
             char comma1 = 0;
             char comma2 = 0;
             int down = 0;
+            if (loaded.size() >= 100000) break;
             if (row >> event.time >> comma1 >> event.button >> comma2 >> down
-                && comma1 == ',' && comma2 == ',') {
+                && comma1 == ',' && comma2 == ','
+                && std::isfinite(event.time) && event.time >= 0.f
+                && event.button >= 0 && event.button <= 32
+                && (down == 0 || down == 1)) {
                 event.down = down != 0;
                 loaded.push_back(event);
             }
         }
         if (loaded.empty()) return false;
 
+        std::stable_sort(loaded.begin(), loaded.end(),
+            [](MacroEvent const& a, MacroEvent const& b) { return a.time < b.time; });
         g_macroEvents = std::move(loaded);
         g_macroPlaybackIndex = 0;
         g_macroPlaybackTime = 0.f;
@@ -355,10 +364,10 @@ protected:
         }
         m_content = CCLayer::create();
         m_content->setPosition({12.f, 0.f});
-        m_content->setOpacity(0);
+        m_content->setScale(0.98f);
         this->addChild(m_content, 3);
         m_content->runAction(CCSpawn::create(
-            CCFadeIn::create(0.16f),
+            CCEaseBackOut::create(CCScaleTo::create(0.18f, 1.f)),
             CCMoveTo::create(0.16f, {0.f, 0.f}),
             nullptr
         ));
@@ -521,12 +530,14 @@ protected:
                     m_aiBaseUrlInput->setPosition({55.f, -105.f});
                     m_content->addChild(m_aiBaseUrlInput, 4);
                 }
-                addAction("SAVE PROMPT", 141, {-145.f, -155.f});
-                addAction("CLEAR", 142, {145.f, -155.f});
-                addAction("GENERATE DRAFT", 126, {0.f, -205.f});
-                addText("Paste prompts from your clipboard into the field above.", {-245.f, -245.f}, 0.27f);
-                addText("Online generation needs a configured API key.", {-245.f, -275.f}, 0.27f);
-                addText("Offline neural AI on Android needs a local model/runtime; it is not enabled yet.", {-245.f, -305.f}, 0.25f);
+                addAction("SAVE PROMPT", 141, {-175.f, -155.f});
+                addAction("LOAD SAVED", 143, {0.f, -155.f});
+                addAction("CLEAR", 142, {175.f, -155.f});
+                addAction("GENERATE ONLINE", 126, {-115.f, -205.f});
+                addAction("OFFLINE DRAFT", 145, {125.f, -205.f});
+                addText("Paste a prompt, then choose online or offline generation.", {-245.f, -250.f}, 0.27f);
+                addText("Offline mode is procedural; it does not run a neural model.", {-245.f, -280.f}, 0.27f);
+                addText("Both modes save a JSON design blueprint, not a playable level.", {-245.f, -310.f}, 0.25f);
                 break;
             }
             case Page::Settings:
@@ -552,6 +563,85 @@ protected:
             mod->setSettingValue<std::string>("ai-model", input->getString());
         else if (input == m_aiBaseUrlInput)
             mod->setSettingValue<std::string>("ai-base-url", input->getString());
+    }
+
+    void generateOfflineDraft() {
+        if (!m_aiPrompt) {
+            FLAlertLayer::create("Universe Offline Draft", "The prompt field could not be created. Reopen the AI tab and try again.", "OK")->show();
+            return;
+        }
+        std::string prompt = m_aiPrompt->getString();
+        if (prompt.empty()) {
+            FLAlertLayer::create("Universe Offline Draft", "Enter a level idea first.", "OK")->show();
+            return;
+        }
+        if (prompt.size() > 4000) {
+            FLAlertLayer::create("Universe Offline Draft", "Please keep the prompt under 4000 characters.", "OK")->show();
+            return;
+        }
+
+        auto escapeJSON = [](std::string const& value) {
+            std::string out;
+            out.reserve(value.size() + 16);
+            for (unsigned char ch : value) {
+                switch (ch) {
+                    case '\\': out += "\\\\"; break;
+                    case '"': out += "\\\""; break;
+                    case '\n': out += "\\n"; break;
+                    case '\r': out += "\\r"; break;
+                    case '\t': out += "\\t"; break;
+                    default:
+                        if (ch >= 0x20) out += static_cast<char>(ch);
+                        break;
+                }
+            }
+            return out;
+        };
+
+        static const char* gameplay[] = {"cube", "ship", "ball", "ufo", "wave", "robot"};
+        static const char* objects[] = {"block", "spike", "orb", "saw", "pad", "deco"};
+        auto mod = Mod::get();
+        if (!mod) return;
+        auto path = mod->getSaveDir() / "universe-offline-draft.json";
+        std::ofstream file(path.string(), std::ios::out | std::ios::trunc);
+        if (!file.is_open()) {
+            FLAlertLayer::create("Universe Offline Draft", "Universe could not create the draft file.", "OK")->show();
+            return;
+        }
+
+        file << "{\n"
+             << "  \"format\": \"universe-level-draft-v1\",\n"
+             << "  \"generator\": \"offline-procedural\",\n"
+             << "  \"title\": \"" << escapeJSON(prompt.substr(0, 64)) << "\",\n"
+             << "  \"prompt\": \"" << escapeJSON(prompt) << "\",\n"
+             << "  \"difficulty\": \"hard\",\n"
+             << "  \"style\": \"mixed\",\n"
+             << "  \"sections\": [\n";
+        for (int section = 0; section < 6; ++section) {
+            file << "    {\n"
+                 << "      \"name\": \"Section " << (section + 1) << "\",\n"
+                 << "      \"gameplay\": \"" << gameplay[section] << "\",\n"
+                 << "      \"events\": [\n";
+            for (int event = 0; event < 6; ++event) {
+                int index = (section * 3 + event) % 6;
+                int x = section * 900 + event * 130;
+                int y = ((section + event) % 5) * 30;
+                file << "        {\"x\": " << x
+                     << ", \"y\": " << y
+                     << ", \"type\": \"" << objects[index]
+                     << "\", \"note\": \"Generated offline from your level concept\"}"
+                     << (event == 5 ? "\n" : ",\n");
+            }
+            file << "      ]\n    }" << (section == 5 ? "\n" : ",\n");
+        }
+        file << "  ],\n"
+             << "  \"notes\": [\"Procedural offline draft; no network or neural model was used.\", "
+             << "\"This is a design blueprint, not an import-ready Geometry Dash level.\"]\n"
+             << "}\n";
+        file.close();
+
+        auto message = fmt::format("Offline draft saved to:\\n{}\\n\\nThis is a procedural blueprint, not neural AI or a playable level.", path.string());
+        FLAlertLayer::create("Universe Offline Draft", message.c_str(), "OK")->show();
     }
 
     void generateAIDraft() {
@@ -705,6 +795,24 @@ protected:
         }
         if (tag == 142) {
             if (m_aiPrompt) m_aiPrompt->setString("");
+            return;
+        }
+        if (tag == 143) {
+            if (!m_aiPrompt) return;
+            auto path = mod->getSaveDir() / "universe-ai-prompt.txt";
+            std::ifstream file(path.string());
+            if (!file.is_open()) {
+                FLAlertLayer::create("Universe AI", "No saved prompt was found yet.", "OK")->show();
+                return;
+            }
+            std::string prompt((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+            if (prompt.size() > 4000) prompt.resize(4000);
+            m_aiPrompt->setString(prompt.c_str());
+            FLAlertLayer::create("Universe AI", "Saved prompt loaded.", "OK")->show();
+            return;
+        }
+        if (tag == 145) {
+            generateOfflineDraft();
             return;
         }
         if (tag == 133) {
@@ -989,7 +1097,7 @@ class $modify(UniversePlayerObject, PlayerObject) {
     bool pushButton(PlayerButton button) {
         auto layer = PlayLayer::get();
         if (g_macroRecording && !g_macroPlayingBack && layer && layer->m_isPracticeMode
-            && layer->m_player1 == this) {
+            && layer->m_player1 == this && g_macroEvents.size() < 100000) {
             g_macroEvents.push_back({g_macroTime, static_cast<int>(button), true});
         }
         return PlayerObject::pushButton(button);
@@ -998,7 +1106,7 @@ class $modify(UniversePlayerObject, PlayerObject) {
     bool releaseButton(PlayerButton button) {
         auto layer = PlayLayer::get();
         if (g_macroRecording && !g_macroPlayingBack && layer && layer->m_isPracticeMode
-            && layer->m_player1 == this) {
+            && layer->m_player1 == this && g_macroEvents.size() < 100000) {
             g_macroEvents.push_back({g_macroTime, static_cast<int>(button), false});
         }
         return PlayerObject::releaseButton(button);
