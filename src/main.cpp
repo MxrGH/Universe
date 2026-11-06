@@ -908,7 +908,7 @@ protected:
         auto selectedObjects = CCArray::create();
         auto ui = editor->m_editorUI;
         if (ui->m_selectedObjects && ui->m_selectedObjects->count() > 0) {
-            for (unsigned int i = 0; i < ui->m_selectedObjects->count(); ++i)
+            for (unsigned int i = 0; i < ui->m_selectedObjects->count() && selectedObjects->count() < 1000; ++i)
                 selectedObjects->addObject(ui->m_selectedObjects->objectAtIndex(i));
         } else if (ui->m_selectedObject) {
             selectedObjects->addObject(ui->m_selectedObject);
@@ -973,8 +973,9 @@ protected:
                 dx = std::clamp(dx, -100000.f, 100000.f);
                 dy = std::clamp(dy, -100000.f, 100000.f);
                 degrees = std::clamp(degrees, -3600.f, 3600.f);
+                auto selectedBeforeEdit = selectedObjects->count();
                 if (replaceSelectedWithTransform(dx, dy, degrees))
-                    changed += selectedObjects->count() == 0 ? 1 : selectedObjects->count();
+                    changed += selectedBeforeEdit;
                 continue;
             }
 
