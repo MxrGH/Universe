@@ -37,10 +37,10 @@ if not re.fullmatch(r"v?\d+\.\d+\.\d+", version):
 
 readme_path = ROOT / "README.md"
 readme_text = readme_path.read_text(encoding="utf-8") if readme_path.is_file() else ""
-if "**Release:** Universe 1 — Snapshot 26.3" not in readme_text:
-    fail("README must document Universe 1 — Snapshot 26.3")
-if mod.get("name") != "Universe 1" or mod.get("version") != "v1.0.2":
-    fail("release metadata must identify Universe 1 v1.0.2")
+if "**Release:** Universe 1 — Snapshot 26.4" not in readme_text:
+    fail("README must document Universe 1 — Snapshot 26.4")
+if mod.get("name") != "Universe 1" or mod.get("version") != "v1.1.0":
+    fail("release metadata must identify Universe 1 v1.1.0")
 
 settings = mod.get("settings")
 if not isinstance(settings, dict):
@@ -85,6 +85,12 @@ for feature_marker in (
     "preview-icon-type",
     "IconType::Jetpack",
     "isIconUnlocked",
+    "applySavedDraftToEditor",
+    "pasteObjects(serialized, false, false)",
+    "drawRoundedPanel",
+    "animateClosePanel",
+    "drawDot({34.f, 34.f}",
+    "bool speedhackActive = speedhackRequested",
 ):
     if feature_marker not in source:
         fail("missing 1.0 feature implementation: " + feature_marker)
@@ -114,7 +120,9 @@ if logo_path.read_bytes()[:8] != b"\x89PNG\r\n\x1a\n":
     fail("logo.png is not a valid PNG file")
 if "MIT License" not in (ROOT / "LICENSE").read_text(encoding="utf-8"):
     fail("LICENSE must contain the MIT License")
-if "Snapshot 26.3" not in (ROOT / ".github" / "workflows" / "build.yml").read_text(encoding="utf-8"):
-    fail("build workflow must define the Snapshot 26.3 release")
+if "Snapshot 26.4" not in (ROOT / ".github" / "workflows" / "build.yml").read_text(encoding="utf-8"):
+    fail("build workflow must define the Snapshot 26.4 release")
+if "pull_request:" not in (ROOT / ".github" / "workflows" / "build.yml").read_text(encoding="utf-8"):
+    fail("Snapshot 26.4 workflow must run CI for pull requests")
 
 print(f"Universe {mod.get('version', '(unknown version)')}: metadata checks passed.")
