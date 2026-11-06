@@ -1049,6 +1049,8 @@ public:
     bool init() override {
         if (!CCLayer::init()) return false;
 
+        auto mod = Mod::get();
+        if (!mod) return false;
         auto win = CCDirector::sharedDirector()->getWinSize();
         setContentSize(win);
         setPosition({
