@@ -6,9 +6,9 @@
   },
   "id": "mxrmc.universe",
   "name": "Universe 1",
-  "version": "v1.0.1",
+  "version": "v1.0.2",
   "developer": "MxrGH",
-  "description": "Practice tools, visual overlays, input replay, customizable UI, and AI-assisted level drafting for Geometry Dash 2.2091.",
+  "description": "Practice tools, visual overlays, local input replay, customizable UI, player icon previews, and AI-assisted Geometry Dash level-design blueprints.",
   "tags": [
     "gameplay",
     "interface",
