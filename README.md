@@ -1,11 +1,11 @@
 # Universe 1
 
-**Snapshot 26.2** · Geometry Dash **2.2091** · Geode · by **MxrGH**
+**Snapshot 26.3** · Geometry Dash **2.2091** · Geode · by **MxrGH**
 
 Universe 1 is a feature-rich Geometry Dash toolkit with a custom animated interface, practice utilities, visual overlays, local replay tools, and an optional AI level-design assistant.
 
-- **Release:** Universe 1 — Snapshot 26.2
-- **Geode package version:** `v1.0.1` (standard SemVer required by Geode)
+- **Release:** Universe 1 — Snapshot 26.3
+- **Geode package version:** `v1.0.2` (standard SemVer required by Geode)
 - **Mod ID:** `mxrmc.universe`
 - **Supported game version:** Geometry Dash `2.2091`
 - **Targets:** Windows x64, Android ARM64, Android ARMv7
@@ -50,7 +50,7 @@ Online AI reads `ANTHROPIC_API_KEY` from the Geometry Dash process environment. 
 Offline Draft is procedural generation, not neural inference. Both online and offline outputs are design blueprints, **not native/importable Geometry Dash levels**.
 
 ### Extra tools
-- Standalone Python level-design blueprint generator.
+- Standalone Python level-design blueprint generator with JSON validation and JSON, CSV, and Markdown export.
 - FFmpeg helper to convert an existing gameplay recording to MP4; it does not capture gameplay.
 
 ## Default controls
@@ -73,7 +73,7 @@ Keybinds can be changed in Geode settings. On Android, use the floating **UNIV**
 ## Install
 
 1. Install the matching Geode version for Geometry Dash 2.2091.
-2. Download `Universe-1-Snapshot-26.2.geode` from the GitHub release.
+2. Download `Universe-1-Snapshot-26.3.geode` from the GitHub release.
 3. Open the `.geode` file with Geode, or place it in the Geode mods folder.
 4. Enable Universe in Geode and restart the game if requested.
 
@@ -81,7 +81,7 @@ The release package contains Windows x64, Android ARM64, and Android ARMv7 binar
 
 ## Build and release verification
 
-GitHub Actions builds all three targets independently, runs the Python regression suite, combines them, inspects the resulting `.geode` archive, verifies all three binaries and required resources, and only then creates the Snapshot 26.2 prerelease.
+GitHub Actions builds all three targets independently, runs the Python regression suite, combines them, inspects the resulting `.geode` archive, verifies all three binaries and required resources, and only then creates the Snapshot 26.3 prerelease.
 
 A successful CI build confirms packaging. It does not replace gameplay testing on actual Windows and Android devices. Replay timing and performance can vary by device and game build.
 
