@@ -33,13 +33,13 @@ The output is a JSON blueprint with sections and events. Events contain an x/y d
 This is not a native Geometry Dash level file and cannot be imported directly into the game. A native level serializer and an in-game editing workflow are still needed.
 
 
-## In-game AI tab
+## In-game AI and offline draft tab
 
-The Universe panel includes an AI tab (enabled by default; configurable in Geode > Universe settings). Enter a level idea and choose **GENERATE DRAFT**. The mod sends the prompt directly to Anthropic's Messages API and saves the returned text to `universe-ai-draft.txt` in the mod's save directory.
+The Universe panel includes an optional AI tab (enabled by default; configurable in Geode > Universe settings). Save, reload, or clear a prompt. **GENERATE ONLINE** sends it to the configured Anthropic-compatible Messages API and saves the returned text to `universe-ai-draft.txt`. **OFFLINE DRAFT** creates a deterministic procedural JSON blueprint locally, without network access or an API key, and saves it as `universe-offline-draft.json`.
 
-The in-game feature reads `ANTHROPIC_API_KEY` from the environment of the Geometry Dash process. Set the variable before launching the game, then restart Geometry Dash so the process can read it. The key is not stored in mod settings or written to the repository. The generated text is a design blueprint, not a playable or importable Geometry Dash level.
+The in-game feature reads `ANTHROPIC_API_KEY` from the environment of the Geometry Dash process. Set the variable before launching the game, then restart Geometry Dash so the process can read it. The key is not stored in mod settings or written to the repository. Both outputs are design blueprints, not playable or importable Geometry Dash levels. The offline option is procedural generation, not a neural model; true offline neural inference still needs a model runtime and model file.
 
-The in-game prompt is limited to 1,000 characters. Requests use the `claude-sonnet-4-6` model and can incur API charges. Use an account and billing method only with a parent or guardian's permission.
+The in-game prompt is limited to 4,000 characters. Requests use the `claude-sonnet-4-6` model and can incur API charges. Use an account and billing method only with a parent or guardian's permission.
 
 
 ## Anthropic (default provider)
