@@ -191,7 +191,8 @@ namespace {
         auto mod = Mod::get();
         if (!mod || !mod->getSettingValue<bool>("click-sound")) return;
         auto audioPath = mod->getResourcesDir() / "click.mp3";
-        FMODAudioEngine::sharedEngine()->playEffect(audioPath.string());
+        auto audio = FMODAudioEngine::sharedEngine();
+        if (audio) audio->playEffect(audioPath.string());
     }
 
     bool isUniverseNoclipActive() {
@@ -283,16 +284,15 @@ protected:
         bool hasCurrent = layer->m_startPosObject && index >= 0;
         CCObject* next = nullptr;
 
-        if (direction < 0) {
-            if (!hasCurrent)
-                next = objects->lastObject();
-            else if (index > 0)
-                next = objects->objectAtIndex(index - 1);
+        auto count = objects->count();
+        if (!hasCurrent) {
+            next = direction < 0 ? objects->lastObject() : objects->firstObject();
+        } else if (direction < 0) {
+            auto previous = (static_cast<unsigned int>(index) + count - 1) % count;
+            next = objects->objectAtIndex(previous);
         } else {
-            if (!hasCurrent)
-                next = objects->firstObject();
-            else if (static_cast<unsigned int>(index + 1) < objects->count())
-                next = objects->objectAtIndex(index + 1);
+            auto following = (static_cast<unsigned int>(index) + 1) % count;
+            next = objects->objectAtIndex(following);
         }
 
         layer->setActiveStartPosObject(static_cast<StartPosObject*>(next));
@@ -404,7 +404,11 @@ protected:
                 }
                 addText("Choose your cube", {-245.f, -90.f}, 0.34f);
                 if (auto gm = GameManager::get()) {
-                    auto previewID = static_cast<int>(Mod::get()->getSettingValue<int64_t>("preview-icon-id"));
+                    auto mod = Mod::get();
+                    if (!mod) break;
+                    auto previewID = static_cast<int>(std::clamp<int64_t>(
+                        mod->getSettingValue<int64_t>("preview-icon-id"), 1, 500
+                    ));
                     auto icon = SimplePlayer::create(0);
                     if (icon) {
                         icon->updatePlayerFrame(previewID, IconType::Cube);
@@ -429,7 +433,7 @@ protected:
                 addToggle("Practice tools", "practice-tools", 102, 35.f);
                 addToggle("Practice-only noclip", "noclip", 103, -15.f);
                 addToggle("Speedhack", "speedhack-enabled", 106, -65.f);
-                auto speed = mod->getSettingValue<float>("speedhack-speed");
+                auto speed = mod ? std::clamp(mod->getSettingValue<float>("speedhack-speed"), 0.25f, 3.f) : 1.f;
                 auto speedText = fmt::format("Speed: {:.2f}x", speed);
                 addText(speedText.c_str(), {-245.f, -110.f}, 0.36f);
                 addAction("-", 107, {125.f, -110.f});
@@ -468,7 +472,8 @@ protected:
                 addText("Visual helpers", {-245.f, 105.f});
                 addToggle("Show object hitboxes", "show-hitboxes", 111, 65.f);
                 addToggle("FPS Bypass", "fps-bypass-enabled", 112, 15.f);
-                auto target = Mod::get()->getSettingValue<int64_t>("fps-target");
+                auto mod = Mod::get();
+                auto target = mod ? std::clamp<int64_t>(mod->getSettingValue<int64_t>("fps-target"), 60, 360) : 240;
                 auto fpsText = fmt::format("FPS target: {}", target);
                 addText(fpsText.c_str(), {-245.f, -35.f}, 0.34f);
                 addAction("-", 113, {125.f, -35.f});
@@ -1066,7 +1071,7 @@ public:
         dim->runAction(CCFadeTo::create(0.18f, 225));
         this->addChild(dim, 0);
 
-        auto themeColor = Mod::get()->getSettingValue<ccColor4B>("panel-color");
+        auto themeColor = mod->getSettingValue<ccColor4B>("panel-color");
         auto panel = CCLayerColor::create(themeColor);
         m_panelBackground = panel;
         panel->setContentSize({win.width * 0.82f, win.height * 0.78f});
@@ -1075,7 +1080,7 @@ public:
         panel->runAction(CCEaseBackOut::create(CCScaleTo::create(0.22f, 1.f)));
         this->addChild(panel, 1);
 
-        auto panelTitle = Mod::get()->getSettingValue<std::string>("panel-title");
+        auto panelTitle = mod->getSettingValue<std::string>("panel-title");
         if (panelTitle.empty()) panelTitle = "UNIVERSE";
         auto title = CCLabelBMFont::create(panelTitle.c_str(), "bigFont.fnt");
         title->setScale(0.72f);
@@ -1096,7 +1101,7 @@ public:
         Page pages[] = {Page::Player, Page::Practice, Page::Level, Page::Visuals,
                         Page::Recorder, Page::Keybinds, Page::Settings, Page::AI};
         int pageCount = 7;
-        if (Mod::get()->getSettingValue<bool>("ai-tab-enabled")) pageCount = 8;
+        if (mod->getSettingValue<bool>("ai-tab-enabled")) pageCount = 8;
         for (int i = 0; i < pageCount; ++i) {
             auto label = CCLabelBMFont::create(pageName(pages[i]), "bigFont.fnt");
             label->setScale(0.34f);
@@ -1119,7 +1124,9 @@ public:
     void onTab(CCObject* sender) {
         int index = static_cast<CCNode*>(sender)->getTag() - 200;
         if (index < 0 || index > 7) return;
-        if (index == 7 && !Mod::get()->getSettingValue<bool>("ai-tab-enabled")) return;
+        auto mod = Mod::get();
+        if (!mod) return;
+        if (index == 7 && !mod->getSettingValue<bool>("ai-tab-enabled")) return;
         showPage(static_cast<Page>(index));
     }
 };
@@ -1191,7 +1198,9 @@ public:
         setTouchEnabled(true);
         auto background = CCLayerColor::create({28, 32, 58, 220}, 76.f, 52.f);
         if (background) this->addChild(background);
-        auto buttonText = Mod::get()->getSettingValue<std::string>("floating-button-label");
+        auto mod = Mod::get();
+        if (!mod) return false;
+        auto buttonText = mod->getSettingValue<std::string>("floating-button-label");
         if (buttonText.empty()) buttonText = "UNIV";
         auto label = CCLabelBMFont::create(buttonText.c_str(), "goldFont.fnt");
         if (label) {
