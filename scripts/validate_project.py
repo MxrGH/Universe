@@ -112,6 +112,6 @@ if logo_path.read_bytes()[:8] != b"\x89PNG\r\n\x1a\n":
 if "MIT License" not in (ROOT / "LICENSE").read_text(encoding="utf-8"):
     fail("LICENSE must contain the MIT License")
 if "Snapshot 26.3" not in (ROOT / ".github" / "workflows" / "build.yml").read_text(encoding="utf-8"):
-    fail("build workflow must define the Snapshot 26.2 release")
+    fail("build workflow must define the Snapshot 26.3 release")
 
 print(f"Universe {mod.get('version', '(unknown version)')}: metadata checks passed.")
