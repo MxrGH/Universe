@@ -46,8 +46,10 @@ jobs:
           python -c "import pathlib, py_compile; [py_compile.compile(str(p), doraise=True) for p in pathlib.Path('scripts').glob('*.py')]"
           python -m unittest discover -s scripts -p "test_*.py" -v
           python scripts/level_maker.py --offline --prompt "Snapshot 26.3 smoke test" --output universe-level-smoke-test.json
+          python scripts/level_maker.py --input universe-level-smoke-test.json --format csv --output universe-level-smoke-test.csv
+          python scripts/level_maker.py --input universe-level-smoke-test.json --format markdown --output universe-level-smoke-test.md
           python scripts/export_video.py --help
-          python -c "import json, pathlib; data=json.loads(pathlib.Path('universe-level-smoke-test.json').read_text()); assert data['sections'] and sum(len(s['events']) for s in data['sections']) > 0"
+          python -c "import json, pathlib; data=json.loads(pathlib.Path('universe-level-smoke-test.json').read_text()); assert data['sections'] and sum(len(s['events']) for s in data['sections']) > 0; assert pathlib.Path('universe-level-smoke-test.csv').is_file(); assert pathlib.Path('universe-level-smoke-test.md').is_file()"
 
       - name: Build Geode mod
         uses: geode-sdk/build-geode-mod@main
