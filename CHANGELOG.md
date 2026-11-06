@@ -8,6 +8,7 @@
 - Save online AI results as `universe-ai-draft.json`.
 - Add JSON blueprint import/validation and CSV/Markdown export to the standalone Level Maker.
 - Expand regression tests for invalid gameplay/sections and all supported export formats.
+- Add all nine icon categories to the local preview; equip only icons the account owns.
 - Require HTTPS for AI API endpoints to protect API keys in transit.
 - Retain the existing Practice Mode tools, overlays, customization, mobile controls, and AI assistant.
 
