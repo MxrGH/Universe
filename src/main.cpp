@@ -248,6 +248,7 @@ protected:
     CCTextInputNode* m_aiBaseUrlInput = nullptr;
     async::TaskHolder<web::WebResponse> m_aiTask;
     CCMenu* m_menu = nullptr;
+    CCMenu* m_actionMenu = nullptr;
     CCLayerColor* m_panelBackground = nullptr;
     CCLayerColor* m_dimBackground = nullptr;
     CCLabelBMFont* m_pageTitle = nullptr;
@@ -271,7 +272,7 @@ protected:
         item->setTag(tag);
         item->setPosition(pos);
         item->setScale(0.96f);
-        m_menu->addChild(item);
+        if (m_actionMenu) m_actionMenu->addChild(item);
     }
 
     void switchStartPos(int direction) {
@@ -365,6 +366,10 @@ protected:
 
     void showPage(Page page) {
         m_page = page;
+        if (m_actionMenu) m_actionMenu->removeAllChildrenWithCleanup(true);
+        m_aiPrompt = nullptr;
+        m_aiModelInput = nullptr;
+        m_aiBaseUrlInput = nullptr;
         if (m_content) {
             m_content->removeFromParentAndCleanup(true);
             m_content = nullptr;
@@ -1095,6 +1100,10 @@ public:
         m_menu = CCMenu::create();
         m_menu->setPosition({0.f, 0.f});
         this->addChild(m_menu, 5);
+
+        m_actionMenu = CCMenu::create();
+        m_actionMenu->setPosition({0.f, 0.f});
+        this->addChild(m_actionMenu, 6);
 
         float left = win.width * 0.16f;
         float tabY = win.height * 0.64f;
