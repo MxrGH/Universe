@@ -82,6 +82,9 @@ for feature_marker in (
     "void generateAIDraft()",
     "Page::AI",
     "ANTHROPIC_API_KEY",
+    "preview-icon-type",
+    "IconType::Jetpack",
+    "isIconUnlocked",
 ):
     if feature_marker not in source:
         fail("missing 1.0 feature implementation: " + feature_marker)
