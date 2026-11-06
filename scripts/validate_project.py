@@ -37,7 +37,7 @@ if not re.fullmatch(r"v?\d+\.\d+\.\d+", version):
 
 readme_path = ROOT / "README.md"
 readme_text = readme_path.read_text(encoding="utf-8") if readme_path.is_file() else ""
-if "**Display/build label:** `1.00.0.00`" not in readme_text:
+if "**Display/build label:** `1.01.0.00`" not in readme_text:
     fail("README must document the requested four-part display/build label")
 
 settings = mod.get("settings")
@@ -59,6 +59,12 @@ for feature_marker in (
     'addAction("RESTART ATTEMPT", 133',
     "if (tag >= 130 && tag <= 132)",
     "if (tag == 133)",
+    "CCEaseBackOut::create(CCScaleTo::create(0.22f, 1.f))",
+    "CCFadeIn::create(0.16f)",
+    'addAction("RESET TO 1.00x", 134',
+    'addAction("SAVE PROMPT", 141',
+    'addAction("CLEAR", 142',
+    "prompt.size() > 4000",
 ):
     if feature_marker not in source:
         fail("missing 1.0 feature implementation: " + feature_marker)
