@@ -257,6 +257,7 @@ protected:
         auto item = CCMenuItemLabel::create(label, this, menu_selector(UniversePanel::onAction));
         item->setTag(tag);
         item->setPosition(pos);
+        item->setScale(0.96f);
         m_menu->addChild(item);
     }
 
@@ -353,10 +354,19 @@ protected:
             m_content = nullptr;
         }
         m_content = CCLayer::create();
-        m_content->setPosition({0.f, 0.f});
+        m_content->setPosition({12.f, 0.f});
+        m_content->setOpacity(0);
         this->addChild(m_content, 3);
+        m_content->runAction(CCSpawn::create(
+            CCFadeIn::create(0.16f),
+            CCMoveTo::create(0.16f, {0.f, 0.f}),
+            nullptr
+        ));
 
         m_pageTitle->setString(pageName(page));
+        m_pageTitle->stopAllActions();
+        m_pageTitle->setScale(0.48f);
+        m_pageTitle->runAction(CCEaseBackOut::create(CCScaleTo::create(0.18f, 0.55f)));
 
         switch (page) {
             case Page::Player:
@@ -408,6 +418,7 @@ protected:
                 addText(speedText.c_str(), {-245.f, -110.f}, 0.36f);
                 addAction("-", 107, {125.f, -110.f});
                 addAction("+", 108, {205.f, -110.f});
+                addAction("RESET TO 1.00x", 134, {0.f, -205.f});
                 addText("Speedhack changes local gameplay timing.", {-245.f, -145.f}, 0.28f);
                 addText("Safe Mode ON marks modified runs as Practice Mode.", {-245.f, -175.f}, 0.28f);
                 break;
@@ -446,7 +457,11 @@ protected:
                 addText(fpsText.c_str(), {-245.f, -35.f}, 0.34f);
                 addAction("-", 113, {125.f, -35.f});
                 addAction("+", 114, {205.f, -35.f});
-                addText("This changes how often frames are drawn, not the game physics.", {-245.f, -85.f}, 0.28f);
+                addText("Quick FPS targets", {-245.f, -75.f}, 0.30f);
+                addAction("120", 135, {-150.f, -108.f});
+                addAction("240", 136, {0.f, -108.f});
+                addAction("360", 137, {150.f, -108.f});
+                addText("Render target only; it does not change game physics.", {-245.f, -145.f}, 0.27f);
                 addToggle("Show player path trail", "show-trajectory", 118, -125.f);
                 addToggle("Show movement projection", "show-projection", 123, -170.f);
                 addAction("CYCLE PANEL THEME", 119, {90.f, -215.f});
@@ -484,7 +499,7 @@ protected:
             case Page::AI: {
                 addText("Optional level idea helper", {-245.f, 105.f});
                 addText("Level idea", {-245.f, 72.f}, 0.31f);
-                m_aiPrompt = CCTextInputNode::create(340.f, 30.f, "Describe your level idea...", "bigFont.fnt");
+                m_aiPrompt = CCTextInputNode::create(430.f, 42.f, "Paste or type your full level prompt here...", "bigFont.fnt");
                 if (m_aiPrompt) {
                     m_aiPrompt->setDelegate(this);
                     m_aiPrompt->setPosition({55.f, 42.f});
@@ -506,10 +521,12 @@ protected:
                     m_aiBaseUrlInput->setPosition({55.f, -105.f});
                     m_content->addChild(m_aiBaseUrlInput, 4);
                 }
-                addAction("GENERATE DRAFT", 126, {0.f, -155.f});
-                addText("Key: ANTHROPIC_API_KEY environment variable (never saved).", {-245.f, -205.f}, 0.27f);
-                addText("Draft saved locally as universe-ai-draft.txt.", {-245.f, -235.f}, 0.27f);
-                addText("This makes a design outline, not a playable level. Check API costs first.", {-245.f, -265.f}, 0.27f);
+                addAction("SAVE PROMPT", 141, {-145.f, -155.f});
+                addAction("CLEAR", 142, {145.f, -155.f});
+                addAction("GENERATE DRAFT", 126, {0.f, -205.f});
+                addText("Paste prompts from your clipboard into the field above.", {-245.f, -245.f}, 0.27f);
+                addText("Online generation needs a configured API key.", {-245.f, -275.f}, 0.27f);
+                addText("Offline neural AI on Android needs a local model/runtime; it is not enabled yet.", {-245.f, -305.f}, 0.25f);
                 break;
             }
             case Page::Settings:
@@ -548,8 +565,8 @@ protected:
             FLAlertLayer::create("Universe AI", "Enter a level idea first.", "OK")->show();
             return;
         }
-        if (prompt.size() > 1000) {
-            FLAlertLayer::create("Universe AI", "Please keep the prompt under 1000 characters.", "OK")->show();
+        if (prompt.size() > 4000) {
+            FLAlertLayer::create("Universe AI", "Please keep the prompt under 4000 characters.", "OK")->show();
             return;
         }
 
@@ -644,12 +661,50 @@ protected:
 
     void onAction(CCObject* sender) {
         auto node = static_cast<CCNode*>(sender);
+        node->stopAllActions();
+        node->runAction(CCSequence::create(
+            CCScaleTo::create(0.06f, 1.04f),
+            CCScaleTo::create(0.10f, 0.96f),
+            nullptr
+        ));
         int tag = node->getTag();
         auto mod = Mod::get();
         if (!mod) return;
 
         if (tag == 126) {
             generateAIDraft();
+            return;
+        }
+        if (tag == 134) {
+            mod->setSettingValue<float>("speedhack-speed", 1.f);
+            showPage(m_page);
+            return;
+        }
+        if (tag >= 135 && tag <= 137) {
+            const int64_t targets[] = {120, 240, 360};
+            mod->setSettingValue<int64_t>("fps-target", targets[tag - 135]);
+            applyFpsBypass();
+            showPage(m_page);
+            return;
+        }
+        if (tag == 141) {
+            if (!m_aiPrompt || std::string(m_aiPrompt->getString()).empty()) {
+                FLAlertLayer::create("Universe AI", "Write or paste a prompt before saving it.", "OK")->show();
+                return;
+            }
+            auto path = mod->getSaveDir() / "universe-ai-prompt.txt";
+            std::ofstream file(path.string(), std::ios::out | std::ios::trunc);
+            if (!file.is_open()) {
+                FLAlertLayer::create("Universe AI", "Universe could not save the prompt file.", "OK")->show();
+                return;
+            }
+            file << m_aiPrompt->getString();
+            file.close();
+            FLAlertLayer::create("Universe AI", "Prompt saved in the Universe mod folder.", "OK")->show();
+            return;
+        }
+        if (tag == 142) {
+            if (m_aiPrompt) m_aiPrompt->setString("");
             return;
         }
         if (tag == 133) {
@@ -869,12 +924,16 @@ public:
         auto dim = CCLayerColor::create({8, 10, 22, 225});
         dim->setContentSize(win);
         dim->setPosition({0.f, 0.f});
+        dim->setOpacity(0);
+        dim->runAction(CCFadeTo::create(0.18f, 225));
         this->addChild(dim, 0);
 
         auto themeColor = Mod::get()->getSettingValue<ccColor4B>("panel-color");
         auto panel = CCLayerColor::create(themeColor);
         panel->setContentSize({win.width * 0.82f, win.height * 0.78f});
         panel->setPosition({win.width * 0.09f, win.height * 0.11f});
+        panel->setScale(0.94f);
+        panel->runAction(CCEaseBackOut::create(CCScaleTo::create(0.22f, 1.f)));
         this->addChild(panel, 1);
 
         auto title = CCLabelBMFont::create("UNIVERSE", "bigFont.fnt");
