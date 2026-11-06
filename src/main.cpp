@@ -233,6 +233,8 @@ class UniversePanel : public CCLayer, public TextInputDelegate {
 protected:
     Page m_page = Page::Player;
     CCTextInputNode* m_aiPrompt = nullptr;
+    CCTextInputNode* m_aiModelInput = nullptr;
+    CCTextInputNode* m_aiBaseUrlInput = nullptr;
     async::TaskHolder<web::WebResponse> m_aiTask;
     CCMenu* m_menu = nullptr;
     CCLabelBMFont* m_pageTitle = nullptr;
@@ -479,19 +481,33 @@ protected:
                 break;
             case Page::AI: {
                 addText("AI level design assistant", {-245.f, 105.f});
-                addText("Describe your level idea. The result is a design draft.", {-245.f, 65.f}, 0.31f);
-                m_aiPrompt = CCTextInputNode::create(360.f, 30.f, "Describe your level idea...", "bigFont.fnt");
+                addText("Level idea", {-245.f, 72.f}, 0.31f);
+                m_aiPrompt = CCTextInputNode::create(340.f, 30.f, "Describe your level idea...", "bigFont.fnt");
                 if (m_aiPrompt) {
                     m_aiPrompt->setDelegate(this);
-                    m_aiPrompt->setPosition({0.f, 10.f});
+                    m_aiPrompt->setPosition({55.f, 42.f});
                     m_content->addChild(m_aiPrompt, 4);
                 }
-                addAction("GENERATE DRAFT", 126, {0.f, -45.f});
-                addText("Uses ANTHROPIC_API_KEY from your system environment.", {-245.f, -100.f}, 0.28f);
-                addText("Your key is not stored in Universe settings or its files.", {-245.f, -135.f}, 0.28f);
-                addText("Drafts are saved locally as universe-ai-draft.txt.", {-245.f, -170.f}, 0.28f);
-                addText("A design draft is not a playable/importable level.", {-245.f, -205.f}, 0.28f);
-                addText("API usage may cost money. Get adult permission first.", {-245.f, -240.f}, 0.27f);
+                addText("Model", {-245.f, -5.f}, 0.31f);
+                m_aiModelInput = CCTextInputNode::create(340.f, 30.f, "claude-sonnet-4-6", "bigFont.fnt");
+                if (m_aiModelInput) {
+                    m_aiModelInput->setDelegate(this);
+                    m_aiModelInput->setString(Mod::get()->getSettingValue<std::string>("ai-model").c_str());
+                    m_aiModelInput->setPosition({55.f, -35.f});
+                    m_content->addChild(m_aiModelInput, 4);
+                }
+                addText("API base URL", {-245.f, -75.f}, 0.31f);
+                m_aiBaseUrlInput = CCTextInputNode::create(340.f, 30.f, "https://api.anthropic.com", "bigFont.fnt");
+                if (m_aiBaseUrlInput) {
+                    m_aiBaseUrlInput->setDelegate(this);
+                    m_aiBaseUrlInput->setString(Mod::get()->getSettingValue<std::string>("ai-base-url").c_str());
+                    m_aiBaseUrlInput->setPosition({55.f, -105.f});
+                    m_content->addChild(m_aiBaseUrlInput, 4);
+                }
+                addAction("GENERATE DRAFT", 126, {0.f, -155.f});
+                addText("Key: ANTHROPIC_API_KEY environment variable (never saved).", {-245.f, -205.f}, 0.27f);
+                addText("Draft saved locally as universe-ai-draft.txt.", {-245.f, -235.f}, 0.27f);
+                addText("Blueprint only; API usage may cost money.", {-245.f, -265.f}, 0.27f);
                 break;
             }
             case Page::Settings:
@@ -505,7 +521,14 @@ protected:
         }
     }
 
-    void textChanged(CCTextInputNode*) override {}
+    void textChanged(CCTextInputNode* input) override {
+        auto mod = Mod::get();
+        if (!mod || !input) return;
+        if (input == m_aiModelInput)
+            mod->setSettingValue<std::string>("ai-model", input->getString());
+        else if (input == m_aiBaseUrlInput)
+            mod->setSettingValue<std::string>("ai-base-url", input->getString());
+    }
 
     void generateAIDraft() {
         if (!m_aiPrompt) {
@@ -548,6 +571,13 @@ protected:
         messages.push(userMessage);
         payload["messages"] = messages;
 
+        auto model = Mod::get()->getSettingValue<std::string>("ai-model");
+        auto baseUrl = Mod::get()->getSettingValue<std::string>("ai-base-url");
+        if (model.empty()) model = "claude-sonnet-4-6";
+        if (baseUrl.empty()) baseUrl = "https://api.anthropic.com";
+        while (!baseUrl.empty() && baseUrl.back() == '/') baseUrl.pop_back();
+        payload["model"] = model;
+
         auto request = web::WebRequest()
             .header("x-api-key", key)
             .header("anthropic-version", "2023-06-01")
@@ -556,7 +586,7 @@ protected:
             .bodyJSON(payload);
 
         m_aiTask.spawn(
-            request.post("https://api.anthropic.com/v1/messages"),
+            request.post(baseUrl + "/v1/messages"),
             [this](web::WebResponse response) {
                 if (!response.ok()) {
                     auto details = response.string().unwrapOr("No response details were provided.");
