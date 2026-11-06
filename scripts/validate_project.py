@@ -32,7 +32,7 @@ if mod.get("gd", {}).get("android") != "2.2091":
     fail("Android target must remain Geometry Dash 2.2091")
 
 version = mod.get("version", "")
-if not re.fullmatch(r"v?\\d+\\.\\d+\\.\\d+", version):
+if not re.fullmatch(r"v?\d+\.\d+\.\d+", version):
     fail("Geode version must use standard three-part semantic versioning")
 
 readme_path = ROOT / "README.md"
