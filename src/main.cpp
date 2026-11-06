@@ -536,7 +536,7 @@ protected:
         matjson::Value payload = matjson::Value::object();
         payload["model"] = "claude-sonnet-4-6";
         payload["max_tokens"] = 4096;
-        matjson::Array messages;
+        matjson::Value messages = matjson::Value::array();
         matjson::Value userMessage = matjson::Value::object();
         userMessage["role"] = "user";
         userMessage["content"] =
@@ -545,7 +545,7 @@ protected:
             "visual_style, decoration_notes, and build_notes. gameplay_sections must be an array of objects with "
             "section_name, gameplay, and duration_hint. Do not claim to create or import a playable level. "
             "User idea: " + prompt;
-        messages.push_back(userMessage);
+        messages.push(userMessage);
         payload["messages"] = messages;
 
         auto request = web::WebRequest()
@@ -573,10 +573,12 @@ protected:
                 }
 
                 std::string draft;
-                auto blocks = parsed.unwrap()["content"].as_array();
-                for (auto const& block : blocks) {
-                    if (block["type"].as_string() == "text")
-                        draft += block["text"].as_string();
+                auto blocks = parsed.unwrap()["content"].asArray();
+                if (blocks) {
+                    for (auto const& block : blocks.unwrap()) {
+                        if (block["type"].asString().unwrapOr("") == "text")
+                            draft += block["text"].asString().unwrapOr("");
+                    }
                 }
                 if (draft.empty()) {
                     FLAlertLayer::create("Universe AI", "The API response did not contain a text draft.", "OK")->show();
@@ -586,7 +588,7 @@ protected:
                 auto mod = Mod::get();
                 if (!mod) return;
                 auto path = mod->getSaveDir() / "universe-ai-draft.txt";
-                std::ofstream file(path, std::ios::out | std::ios::trunc);
+                std::ofstream file(path.string(), std::ios::out | std::ios::trunc);
                 if (!file.is_open()) {
                     FLAlertLayer::create("Universe AI", "The draft was generated, but Universe could not save the file.", "OK")->show();
                     return;
