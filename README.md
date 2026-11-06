@@ -1,53 +1,59 @@
 # Universe
 
-**Universe** is a Geode mod for **Geometry Dash 2.2091** by **MxrMC**. It combines local practice controls, visual debugging, input recording, a movable in-game panel, and an AI-assisted level concept tool.
+Universe is a Geometry Dash 2.2091 Geode mod by **MxrMC**. It puts practice controls, visual helpers, replay tools, and a few quality-of-life shortcuts in one in-game panel.
 
-> Universe is a work in progress. The feature list below distinguishes implemented tools from limitations. A successful CI build is not a substitute for testing inside Geometry Dash on every target device.
+- **Geode package version:** `v1.0.0`
+- **Display/build label:** `1.00.0.00`
+- **Game version:** Geometry Dash `2.2091`
 
-## Contents
+The four-part display label is for the project and release notes. The actual `mod.json` version stays on standard three-part semantic versioning because Geode expects a semantic version.
 
-- [Highlights](#highlights)
-- [Feature guide](#feature-guide)
-- [Controls](#controls)
-- [AI level assistant](#ai-level-assistant)
-- [Build and install](#build-and-install)
-- [Project layout](#project-layout)
-- [Known limitations](#known-limitations)
-- [Security](#security)
-- [Contributing](#contributing)
+## What you can do
 
-## Highlights
+### Practice
+- Toggle Noclip and a local speed multiplier.
+- Use Safe Mode to switch a modified attempt to Practice Mode.
+- Pick the next StartPos in front of you, or move to the previous/next StartPos.
+- Restart the current attempt from the panel.
 
-- In-game panel with Player, Practice, Level, Visuals, Recorder, Keybinds, Settings, and AI pages.
-- Local Noclip and speed multiplier controls, with a Safe Mode safeguard.
-- StartPos navigation, including a nearest-ahead Smart StartPos action.
-- Hitbox overlay, recent movement trail, and a short movement projection.
-- Practice-mode input recording and local replay playback.
-- Draggable floating button and draggable panel.
-- Configurable panel appearance and click sound.
-- AI-generated level design blueprints, saved locally.
+### Visuals
+- Draw object hitboxes.
+- Follow your recent movement with a short trail.
+- Preview a short movement projection based on recent movement.
+- Change the render frame interval with FPS Bypass. This does not change the game's physics tick.
 
-## Feature guide
+### Recording
+- Record input events during a Practice Mode session.
+- Play back a saved local recording.
+- Stop or clear a recording from the panel.
+- Convert an existing screen recording to MP4 with the optional FFmpeg helper in `scripts/export_video.py`.
 
-| Area | What it does | Important detail |
-| --- | --- | --- |
-| Player | Shows current player state and a cube preview selector | The selector sets the equipped cube ID; it does not change unlock flags. Profile visibility depends on the normal account-save flow |
-| Practice | Noclip and local speed multiplier | These modify local gameplay; use Practice Mode |
-| Safe Mode | Marks a modified attempt as Practice after Noclip or Speedhack is used | Local safeguard only; it cannot promise how any server or leaderboard treats a run |
-| Level | Previous/next StartPos and Smart StartPos | Switching StartPos resets the current attempt |
-| Visuals | Object hitboxes, recent path trail, movement projection | Projection is an estimate, not a full physics simulation |
-| Recorder | Record and replay input events | Local files; recording starts in Practice Mode |
-| Display | Movable panel, floating touch button, panel colors, click sound | Button position is saved in Geode settings |
-| FPS | Changes the render animation interval | Does not increase the game's physics tick rate |
-| AI | Sends a level concept to an Anthropic-compatible Messages API | Produces a text/JSON design blueprint, not a playable level file |
+### Player
+- Preview cube IDs and set the selected cube as your equipped cube.
+- This does not unlock icons, grant achievements, or change your account's unlock flags. Whether a selected ID appears on a synced profile depends on Geometry Dash's own save and server behavior.
+
+### Quick setups
+The Settings page includes three one-tap setups:
+- **Practice** turns on Safe Mode and leaves Noclip and Speedhack off.
+- **Visuals** turns on the hitbox, trail, and movement projection helpers.
+- **Clean Run** turns off practice modifications and visual overlays.
+
+### Optional level idea helper
+The AI page is optional. It can send a level idea to an Anthropic Messages API-compatible endpoint and save the returned design outline as `universe-ai-draft.txt`. It does not create a playable level or import a level into Geometry Dash.
+
+If you do not want to use an online AI service, use the offline generator instead:
+
+```bash
+python scripts/level_maker.py --offline --prompt "Neon city with fast ship sections" --difficulty insane --length 80 --style ship --output draft.json
+```
+
+Online requests require an API key in the `ANTHROPIC_API_KEY` environment variable. The key is read from the game's process environment and is not stored in Geode settings. Check API pricing with a parent or guardian before enabling paid usage. Never put a key in source code, commits, screenshots, or chat.
 
 ## Controls
 
-Default bindings (editable in Geode's mod settings):
-
 | Action | Default |
 | --- | --- |
-| Open / close Universe | `Ctrl + U` |
+| Open or close Universe | `Ctrl + U` |
 | Toggle Noclip | `N` |
 | Toggle Speedhack | `M` |
 | Toggle Safe Mode | `Ctrl + Shift + S` |
@@ -55,117 +61,48 @@ Default bindings (editable in Geode's mod settings):
 | Toggle movement trail | `J` |
 | Toggle movement projection | `K` |
 | Toggle FPS Bypass | `F8` |
-| Start / stop recording | `F6` |
+| Start or stop recording | `F6` |
 | Play saved replay | `F7` |
 
-On touch devices, use the floating **UNIV** button if enabled. Drag it to reposition it. The main panel can be moved by dragging its title bar.
-
-## AI level assistant
-
-The AI page includes a prompt field, model field, and API base URL field. It sends requests to an Anthropic-compatible **Messages API** and writes the returned draft to the mod save directory as `universe-ai-draft.txt`.
-
-### Configuration
-
-1. Create an API key through an account you are authorized to use. If billing is enabled, ask a parent or guardian to help review the costs first.
-2. Set the `ANTHROPIC_API_KEY` environment variable on the computer running Geometry Dash.
-3. Restart Geometry Dash so the game process receives the environment variable.
-4. Open Universe → AI and enter your level concept.
-5. Set the model and API base URL if your provider requires different values, then choose **GENERATE DRAFT**.
-
-Default values:
-
-- Model: `claude-sonnet-4-6`
-- Base URL: `https://api.anthropic.com`
-- Endpoint path: `/v1/messages`
-- Key variable: `ANTHROPIC_API_KEY`
-
-The API key is read from the process environment. Universe does not provide a key textbox and does not save the key in Geode settings. The model and base URL are ordinary configuration values, not secrets.
-
-The response is a design document. It is **not** a native Geometry Dash level and cannot be imported directly as a playable level. Review generated gameplay spacing and build the level in the editor.
-
-### Local offline generator
-
-The Python helper can create a deterministic draft without contacting an AI service:
-
-```bash
-python scripts/level_maker.py --offline --prompt "Neon city with fast ship sections" --difficulty insane --length 80 --style ship --output draft.json
-```
-
-For AI generation through the script, set `ANTHROPIC_API_KEY` in the local environment and run:
-
-```bash
-python scripts/level_maker.py --prompt "A cave that transforms into a bright city" --output draft.json
-```
-
-The script also supports an OpenAI-compatible Chat Completions provider with `--provider openai-compatible`, plus `--base-url`, `--model`, and `--api-key-env` options. Use `--offline` to avoid network requests.
-
-## Video export helper
-
-`scripts/export_video.py` converts an existing gameplay recording to MP4 using FFmpeg:
-
-```bash
-python scripts/export_video.py recording.mkv --output Universe-Gameplay.mp4 --fps 60 --crf 20
-```
-
-FFmpeg must be installed and available on PATH. This script converts a recording; it does not capture gameplay.
+You can change keybinds in Geode's mod settings. On touch devices, open the panel with the floating **UNIV** button. Drag it to move it. The panel can also be moved by its title area.
 
 ## Build and install
 
-Universe uses the Geode SDK and CMake-based Geode build tooling.
+Universe uses the Geode SDK and the Geode CMake build workflow. The GitHub Actions workflow builds these targets:
 
-1. Install the Geode SDK/toolchain for your platform.
-2. Clone this repository.
-3. Configure and build with the Geode SDK workflow for your platform.
-4. Install the generated `.geode` package through Geode.
-5. Test on a copy of your Geometry Dash data before using a development build.
+- Windows x64
+- Android ARM64
+- Android ARMv7
 
-The GitHub Actions workflow targets Windows x64, Android ARM64, and Android ARMv7. Check the Actions page for the status of the latest build; do not assume a commit has a downloadable package until the workflow has completed successfully.
+A successful run uploads a combined `.geode` package as a workflow artifact. Check the run's artifacts section for the download. A CI build confirms that the package was produced; it does not replace testing in Geometry Dash on each device.
 
-## Project layout
+## Project files
 
 | Path | Purpose |
 | --- | --- |
-| `src/main.cpp` | Geode mod UI, gameplay hooks, recorder, and AI request |
-| `mod.json` | Mod metadata, keybinds, and settings |
-| `scripts/level_maker.py` | Offline and AI-assisted level blueprint generator |
-| `scripts/export_video.py` | FFmpeg-based recording conversion helper |
-| `.github/workflows/build.yml` | CI build and validation workflow |
-| `AI_LEVEL_MAKER.md` | Additional level generator instructions |
+| `src/main.cpp` | In-game panel, practice tools, visual helpers, and replay code |
+| `mod.json` | Geode metadata, settings, and keybinds |
+| `scripts/level_maker.py` | Offline and optional online level-design outline generator |
+| `scripts/export_video.py` | FFmpeg conversion helper |
+| `.github/workflows/build.yml` | Cross-platform build and package checks |
+| `CHANGELOG.md` | Release history |
 
-## Known limitations
+## Important limits
 
-- The cube selector can set a previewed cube ID as the equipped icon without changing unlock flags or granting achievements. To attempt profile sync, use Geometry Dash's normal account-save flow; whether the game/server accepts and displays a locked icon is not guaranteed.
-- Universe does not generate native `.gmd` / import-ready level files.
-- AI requests require a working network connection and a compatible API account.
-- AI provider configuration in the in-game page currently targets the Anthropic Messages API format. It is not a universal adapter for every provider.
-- Safe Mode is local and cannot guarantee leaderboard or server-side treatment.
-- Movement projection does not simulate portals, gravity changes, collisions, or upcoming triggers.
-- FPS Bypass changes render timing only; performance depends on the device and game.
-- Replays are local input-event recordings. Playback can differ if the game version, level, physics, or device timing changes.
-- Windows and Android builds need real-device testing after CI succeeds.
+- Practice modifications change local gameplay. Use them in Practice Mode.
+- Safe Mode is a local safeguard. It cannot guarantee how an online service or leaderboard treats a run.
+- The movement projection is an estimate. It does not simulate portals, gravity changes, collisions, or future triggers.
+- Replay playback can vary with game version, level, physics, and device timing.
+- The AI helper returns a design outline, not a native `.gmd` file.
+- The cube selector does not award unlocks or achievements.
+- Windows and Android builds still need real-device testing.
 
 ## Security
 
-- Never paste API keys into chat, issue reports, screenshots, source files, or commits.
-- Keep API keys in environment variables and never commit them.
-- If a key is exposed, revoke it with the provider and create a replacement. Deleting a repository commit does not invalidate a leaked key.
-- Review API billing and usage limits before making requests.
-- Do not publish a repository until its current files, commit history, branches, workflow logs, and releases have been checked for secrets.
-
-## Contributing
-
-Bug reports and focused pull requests are welcome. Include:
-
-- Geometry Dash version and platform.
-- Geode version.
-- Steps to reproduce the issue.
-- Relevant logs with tokens, account details, and personal information removed.
-- Whether the issue occurs with other mods disabled.
-
-Please keep pull requests focused and describe what was actually tested.
+Keep API keys private. If a key is exposed, revoke it with its provider; removing a file or commit does not invalidate the key. Before making the repository public, review the current files, all branches and tags, commit history, releases, and CI logs for secrets.
 
 ## Credits
 
-- **MxrMC** — Universe author
-- **Geode SDK** — mod loading and development framework
+- **MxrMC** — project author
+- **Geode SDK** — mod framework
 - **RobTop Games** — Geometry Dash
