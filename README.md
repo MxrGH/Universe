@@ -1,11 +1,11 @@
 # Universe 1
 
-**Snapshot 26.4** · Geometry Dash **2.2091** · Geode · by **MxrGH**
+**Snapshot 26.5** · Geometry Dash **2.2091** · Geode · by **MxrGH**
 
 Universe is a Geometry Dash hack client with gameplay modifiers, editor tools, visual overlays, replay features, and an animated in-game interface.
 
-- **Release:** Universe 1 — Snapshot 26.4
-- **Geode package version:** `v1.1.0`
+- **Release:** Universe 1 — Snapshot 26.5
+- **Geode package version:** `v1.1.1`
 - **Mod ID:** `mxrmc.universe`
 - **Supported game version:** Geometry Dash `2.2091`
 - **Targets:** Windows x64, Android ARM64, Android ARMv7
@@ -47,7 +47,7 @@ The AI tab is designed to modify the level currently open in Geometry Dash's edi
 4. Choose **APPLY DRAFT TO OPEN EDITOR**. Universe converts supported block, spike, saw, orb, and pad events into editor objects and pastes them into the current level.
 5. Use the editor's Undo control to revert the placement if needed.
 
-The current 26.4 editor integration adds generated objects to the open level; it does not yet interpret arbitrary natural-language edits to existing objects or remove existing objects. No GDShare or `.gmd` export is required.
+The 26.5 editor integration reads the live editor object count and current selection before generation. It can add supported objects, move or rotate the currently selected objects, and delete the current selection. Follow-up prompts use fresh editor context; select the objects you want changed before asking for a transform or deletion. Selected-object transforms are rebuilt through the editor's object serialization/paste path so the editor Undo control can revert them. It deliberately does not guess which unselected objects you mean. No GDShare or `.gmd` export is required.
 
 Online AI uses the Anthropic-compatible Messages API over HTTPS and reads `ANTHROPIC_API_KEY` from the Geometry Dash process environment. The key is not stored in mod settings or source. API calls may incur charges; use a paid API account only with a parent or guardian's permission. Never put keys in chat, source files, commits, or screenshots.
 
@@ -73,7 +73,7 @@ Keybinds can be changed in Geode settings. On Android, use the circular **UNIV**
 ## Install
 
 1. Install a Geode build compatible with Geometry Dash 2.2091.
-2. Download `Universe-1-Snapshot-26.4.geode` from the GitHub release.
+2. Download `Universe-1-Snapshot-26.5.geode` from the GitHub release.
 3. Open the `.geode` file with Geode, or place it in the Geode mods folder.
 4. Enable Universe in Geode and restart the game if requested.
 
@@ -81,7 +81,7 @@ The release package contains Windows x64, Android ARM64, and Android ARMv7 binar
 
 ## Build and verification
 
-GitHub Actions builds all three targets independently, runs the Python regression suite, combines them, inspects the resulting archive, verifies platform binaries and resources, and only then publishes Snapshot 26.4.
+GitHub Actions builds all three targets independently, runs the Python regression suite, combines them, inspects the resulting archive, verifies platform binaries and resources, and only then publishes Snapshot 26.5.
 
 A successful CI build confirms compilation and packaging. It does not replace gameplay testing on actual Windows and Android devices. No claim of zero bugs is made.
 
@@ -99,7 +99,7 @@ A successful CI build confirms compilation and packaging. It does not replace ga
 
 ## Important limitations
 
-- AI currently adds supported objects to the open editor; it does not yet edit/delete arbitrary existing objects.
+- AI editing is selection-scoped for transforms and deletion; it does not infer arbitrary targets among unselected objects.
 - Noclip and Speedhack can run in Normal Mode when Safe Mode is OFF. Modified attempts are not represented as legitimate server-verified completions.
 - Replay recording and playback are Practice Mode-only.
 - Movement projection estimates recent motion; it is not full Geometry Dash physics.
