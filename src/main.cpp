@@ -574,7 +574,9 @@ protected:
                 addAction("OFFLINE DRAFT", 145, {125.f, -205.f});
                 addText("Paste a prompt, then choose online or offline generation.", {-245.f, -250.f}, 0.27f);
                 addText("Offline mode is procedural; it does not run a neural model.", {-245.f, -280.f}, 0.27f);
-                addText("Both modes save a JSON design blueprint, not a playable level.", {-245.f, -310.f}, 0.25f);
+                addAction("APPLY DRAFT TO OPEN EDITOR", 149, {0.f, -250.f});
+                addText("Online AI designs the section; Apply places objects in your open editor.", {-245.f, -290.f}, 0.25f);
+                addText("No .gmd export or GDShare required.", {-245.f, -320.f}, 0.27f);
                 break;
             }
             case Page::Settings:
@@ -640,7 +642,7 @@ protected:
         static const char* objects[] = {"block", "spike", "orb", "saw", "pad", "deco"};
         auto mod = Mod::get();
         if (!mod) return;
-        auto path = mod->getSaveDir() / "universe-offline-draft.json";
+        auto path = mod->getSaveDir() / "universe-ai-draft.json";
         std::ofstream file(path.string(), std::ios::out | std::ios::trunc);
         if (!file.is_open()) {
             FLAlertLayer::create("Universe Offline Draft", "Universe could not create the draft file.", "OK")->show();
@@ -720,7 +722,9 @@ protected:
             "sections is an array of up to 100 objects with name, gameplay, and events. Each event has numeric x and y, "
             "type (block, spike, saw, orb, pad, or deco), and a short note. Keep x coordinates non-decreasing, finite, "
             "within +/-10000000, and the total event count below 5000. Do not include Markdown fences. "
-            "This is a design blueprint, not a playable or import-ready .gmd level. User idea: " + prompt;
+            "The user will apply this result directly inside the currently open Geometry Dash editor. "
+            "Create a coherent sequence of objects with playable spacing and clear transitions. "
+            "This result will be converted into actual editor objects; do not describe it as a .gmd file. User idea: " + prompt;
         messages.push(userMessage);
         payload["messages"] = messages;
 
@@ -788,12 +792,75 @@ protected:
                 file.close();
 
                 auto message = fmt::format(
-                    "JSON blueprint generated and saved to:\n{}\n\nUse scripts/level_maker.py --input to validate or export it.",
+                    "AI draft generated. Open the level editor and click APPLY DRAFT TO OPEN EDITOR.\n\nDraft: {}",
                     path.string()
                 );
                 FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
             }
         );
+    }
+
+    void applySavedDraftToEditor() {
+        auto mod = Mod::get();
+        auto editor = LevelEditorLayer::get();
+        if (!mod || !editor || !editor->m_editorUI) {
+            FLAlertLayer::create("Universe AI", "Open a Geometry Dash level in the editor first, then apply the generated draft.", "OK")->show();
+            return;
+        }
+
+        auto path = mod->getSaveDir() / "universe-ai-draft.json";
+        std::ifstream file(path.string(), std::ios::in);
+        if (!file.is_open()) {
+            FLAlertLayer::create("Universe AI", "No generated draft was found. Generate an online AI draft first.", "OK")->show();
+            return;
+        }
+        std::string draft((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        if (draft.empty() || draft.size() > 2'000'000) {
+            FLAlertLayer::create("Universe AI", "The saved draft is empty or exceeds the 2 MB safety limit.", "OK")->show();
+            return;
+        }
+
+        static const std::regex eventPattern(
+            R"(\{\s*"x"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)\s*,\s*"y"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)\s*,\s*"type"\s*:\s*"([A-Za-z]+)")"
+        );
+        std::string serialized;
+        size_t count = 0;
+        for (std::sregex_iterator it(draft.begin(), draft.end(), eventPattern), end; it != end; ++it) {
+            if (count >= 1000) break;
+            float x = 0.f;
+            float y = 0.f;
+            try {
+                x = std::stof((*it)[1].str());
+                y = std::stof((*it)[2].str());
+            } catch (...) {
+                continue;
+            }
+            if (!std::isfinite(x) || !std::isfinite(y)) continue;
+            x = std::clamp(x, -10000000.f, 10000000.f);
+            y = std::clamp(y, -10000000.f, 10000000.f);
+
+            auto type = (*it)[3].str();
+            int objectID = 1;
+            if (type == "spike") objectID = 8;
+            else if (type == "saw") objectID = 39;
+            else if (type == "orb") objectID = 36;
+            else if (type == "pad") objectID = 35;
+            else if (type != "block" && type != "deco") continue;
+
+            serialized += fmt::format("1,{},2,{:.0f},3,{:.0f};", objectID, x, y);
+            ++count;
+        }
+
+        if (serialized.empty()) {
+            FLAlertLayer::create("Universe AI", "The draft contained no supported objects to place.", "OK")->show();
+            return;
+        }
+
+        editor->m_editorUI->pasteObjects(serialized, false, false);
+        editor->m_editorUI->updateButtons();
+        editor->m_editorUI->updateObjectInfoLabel();
+        auto message = fmt::format("Placed {} AI-generated objects into the open level. Use the editor Undo button if you want to revert the placement.", count);
+        FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
     }
 
     void onAction(CCObject* sender) {
@@ -810,6 +877,10 @@ protected:
 
         if (tag == 126) {
             generateAIDraft();
+            return;
+        }
+        if (tag == 149) {
+            applySavedDraftToEditor();
             return;
         }
         if (tag == 134) {
