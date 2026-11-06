@@ -841,7 +841,7 @@ protected:
         auto path = mod->getSaveDir() / "universe-ai-draft.json";
         std::ifstream file(path.string(), std::ios::in);
         if (!file.is_open()) {
-            FLAlertLayer::create("Universe AI", "No generated draft was found. Generate an online AI draft first.", "OK")->show();
+            FLAlertLayer::create("Universe AI", "No generated draft was found. Generate an online AI or offline draft first.", "OK")->show();
             return;
         }
         std::string draft((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
@@ -850,18 +850,25 @@ protected:
             return;
         }
 
-        static const std::regex eventPattern(
-            R"(\{\s*"x"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)\s*,\s*"y"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)\s*,\s*"type"\s*:\s*"([A-Za-z]+)")"
-        );
+        static const std::regex eventPattern(R"(\{[^{}]*\})");
+        static const std::regex xPattern(R"("x"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
+        static const std::regex yPattern(R"("y"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
+        static const std::regex typePattern(R"("type"\s*:\s*"([A-Za-z]+)")");
         std::string serialized;
         size_t count = 0;
         for (std::sregex_iterator it(draft.begin(), draft.end(), eventPattern), end; it != end; ++it) {
             if (count >= 1000) break;
+            auto event = it->str();
+            std::smatch xMatch, yMatch, typeMatch;
+            if (!std::regex_search(event, xMatch, xPattern)
+                || !std::regex_search(event, yMatch, yPattern)
+                || !std::regex_search(event, typeMatch, typePattern))
+                continue;
             float x = 0.f;
             float y = 0.f;
             try {
-                x = std::stof((*it)[1].str());
-                y = std::stof((*it)[2].str());
+                x = std::stof(xMatch[1].str());
+                y = std::stof(yMatch[1].str());
             } catch (...) {
                 continue;
             }
@@ -869,7 +876,7 @@ protected:
             x = std::clamp(x, -10000000.f, 10000000.f);
             y = std::clamp(y, -10000000.f, 10000000.f);
 
-            auto type = (*it)[3].str();
+            auto type = typeMatch[1].str();
             int objectID = 1;
             if (type == "spike") objectID = 8;
             else if (type == "saw") objectID = 39;
