@@ -455,7 +455,7 @@ protected:
                 if (layer) addAction("RESTART ATTEMPT", 133, {0.f, -135.f});
                 addText("These tools do not fake coins, records, or leaderboard results.", {-245.f, -175.f}, 0.29f);
                 addText("Draft generator: scripts/level_maker.py", {-245.f, -165.f}, 0.29f);
-                addText("Use --offline for templates or configure an AI API key.", {-245.f, -200.f}, 0.27f);
+                addText("Use --offline for templates or configure an Offline API key.", {-245.f, -200.f}, 0.27f);
                 addText("Output is a JSON blueprint, not an import-ready level.", {-245.f, -235.f}, 0.27f);
                 break;
             }
@@ -520,7 +520,7 @@ protected:
                 addAction("CLEAR", 142, {175.f, -35.f});
                 addAction("GENERATE OFFLINE DRAFT", 145, {0.f, -100.f});
                 addText("Creates a local procedural JSON design blueprint.", {-245.f, -155.f}, 0.30f);
-                addText("No account, API key, internet, or AI model is used.", {-245.f, -190.f}, 0.30f);
+                addText("No account, API key, internet, or Offline model is used.", {-245.f, -190.f}, 0.30f);
                 addText("The blueprint is a planning aid, not an importable level.", {-245.f, -225.f}, 0.28f);
                 addText("Saved files stay in the Universe mod folder.", {-245.f, -260.f}, 0.28f);
                 break;
@@ -653,12 +653,12 @@ protected:
             auto path = mod->getSaveDir() / "universe-draft-prompt.txt";
             std::ofstream file(path.string(), std::ios::out | std::ios::trunc);
             if (!file.is_open()) {
-                FLAlertLayer::create("Universe AI", "Universe could not save the prompt file.", "OK")->show();
+                FLAlertLayer::create("Universe Offline", "Universe could not save the prompt file.", "OK")->show();
                 return;
             }
             file << m_draftPrompt->getString();
             file.close();
-            FLAlertLayer::create("Universe AI", "Prompt saved in the Universe mod folder.", "OK")->show();
+            FLAlertLayer::create("Universe Offline", "Prompt saved in the Universe mod folder.", "OK")->show();
             return;
         }
         if (tag == 142) {
@@ -670,13 +670,13 @@ protected:
             auto path = mod->getSaveDir() / "universe-ai-prompt.txt";
             std::ifstream file(path.string());
             if (!file.is_open()) {
-                FLAlertLayer::create("Universe AI", "No saved prompt was found yet.", "OK")->show();
+                FLAlertLayer::create("Universe Offline", "No saved prompt was found yet.", "OK")->show();
                 return;
             }
             std::string prompt((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
             if (prompt.size() > 4000) prompt.resize(4000);
             m_draftPrompt->setString(prompt.c_str());
-            FLAlertLayer::create("Universe AI", "Saved prompt loaded.", "OK")->show();
+            FLAlertLayer::create("Universe Offline", "Saved prompt loaded.", "OK")->show();
             return;
         }
         if (tag == 145) {
