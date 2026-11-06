@@ -37,8 +37,8 @@ if not re.fullmatch(r"v?\d+\.\d+\.\d+", version):
 
 readme_path = ROOT / "README.md"
 readme_text = readme_path.read_text(encoding="utf-8") if readme_path.is_file() else ""
-if "**Display/build label:** `1.01.0.00`" not in readme_text:
-    fail("README must document the requested four-part display/build label")
+if "**Display/build label:** `1.1.0.1`" not in readme_text:
+    fail("README must document the requested x.x.x.x display/build label")
 
 settings = mod.get("settings")
 if not isinstance(settings, dict):
