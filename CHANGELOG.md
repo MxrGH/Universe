@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.1.0 — Display label 1.01.0.00
+
+### Added
+- Animated panel entrance, dim-layer fade, page transitions, and button feedback.
+- Longer prompt field with save and clear actions for pasted level ideas.
+- One-tap reset for the speed multiplier.
+- Quick FPS target presets at 120, 240, and 360.
+
+### Important AI note
+- The current in-game build still uses online AI only. Android offline neural inference is not implemented yet.
+- The Python offline option is a deterministic template generator, not a trained AI model.
+
 ## v1.0.0 — Display label 1.00.0.00
 
 This is the first release candidate for the 1.0 line. The Geode manifest uses `v1.0.0`; the four-part display label is `1.00.0.00`.
