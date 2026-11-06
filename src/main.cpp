@@ -129,15 +129,18 @@ namespace {
             else
                 g_macroTime += dt;
         }
-        if (!g_macroPlayingBack || !layer || layer != g_macroPlaybackLayer || !layer->m_player1) {
-            if (g_macroPlayingBack && layer != g_macroPlaybackLayer) {
-                // The old PlayLayer is no longer active. Do not dereference it;
-                // just discard the held-button bookkeeping for that scene.
+        if (!g_macroPlayingBack || !layer || layer != g_macroPlaybackLayer) {
+            if (g_macroPlayingBack) {
+                // The previous PlayLayer has gone away; never dereference it.
                 g_macroHeldButtons.clear();
                 g_macroPlayingBack = false;
                 g_macroPlaybackIndex = 0;
                 g_macroPlaybackLayer = nullptr;
             }
+            return;
+        }
+        if (!layer->m_player1) {
+            stopMacroPlayback(layer);
             return;
         }
 
