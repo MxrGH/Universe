@@ -1,7 +1,10 @@
-name: Build Universe
+name: Build and release Universe 1
+
+permissions:
+  contents: write
 
 concurrency:
-  group: universe-build-${{ github.ref }}
+  group: universe-release-\${{ github.ref }}
   cancel-in-progress: true
 
 on:
@@ -11,7 +14,7 @@ on:
 
 jobs:
   build:
-    name: Build ${{ matrix.platform.name }}
+    name: Build \${{ matrix.platform.name }}
     strategy:
       fail-fast: false
       matrix:
@@ -25,7 +28,7 @@ jobs:
           - name: Android ARMv7
             os: ubuntu-latest
             target: Android32
-    runs-on: ${{ matrix.platform.os }}
+    runs-on: \${{ matrix.platform.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,26 +38,26 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Validate project metadata
+      - name: Validate metadata, logo, and license
         run: python scripts/validate_project.py
 
       - name: Check Python tools
         run: |
           python -c "import pathlib, py_compile; [py_compile.compile(str(p), doraise=True) for p in pathlib.Path('scripts').glob('*.py')]"
-          python scripts/level_maker.py --offline --prompt "Build workflow smoke test" --output universe-level-smoke-test.json
+          python scripts/level_maker.py --offline --prompt "Snapshot 26.1 smoke test" --output universe-level-smoke-test.json
           python scripts/export_video.py --help
-          python -c "import json, pathlib; data=json.loads(pathlib.Path('universe-level-smoke-test.json').read_text()); assert data['sections']"
+          python -c "import json, pathlib; data=json.loads(pathlib.Path('universe-level-smoke-test.json').read_text()); assert data['sections'] and sum(len(s['events']) for s in data['sections']) > 0"
 
       - name: Build Geode mod
         uses: geode-sdk/build-geode-mod@main
         with:
           sdk: given
           cli: latest
-          target: ${{ matrix.platform.target }}
+          target: \${{ matrix.platform.target }}
           combine: true
 
   package:
-    name: Combine into one .geode package
+    name: Combine and inspect universal package
     runs-on: ubuntu-latest
     needs: build
     steps:
@@ -62,14 +65,9 @@ jobs:
         id: combine
         uses: geode-sdk/build-geode-mod/combine@main
 
-      - name: Set up Python for package inspection
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.14"
-
-      - name: Validate universal .geode contents
+      - name: Inspect universal .geode contents
         env:
-          PACKAGE_DIR: ${{ steps.combine.outputs.build-output }}
+          PACKAGE_DIR: \${{ steps.combine.outputs.build-output }}
         run: |
           python - <<'PY'
           import json
@@ -80,7 +78,6 @@ jobs:
           packages = list(Path(os.environ["PACKAGE_DIR"]).glob("*.geode"))
           assert len(packages) == 1, f"Expected one .geode package, found {len(packages)}"
           package = packages[0]
-
           with ZipFile(package) as archive:
               names = set(archive.namelist())
               required = {
@@ -89,19 +86,69 @@ jobs:
                   "mxrmc.universe.android64.so",
                   "mxrmc.universe.android32.so",
                   "resources/mxrmc.universe/click.mp3",
+                  "resources/mxrmc.universe/logo.png",
               }
               missing = required - names
-              assert not missing, f"Package is missing required entries: {sorted(missing)}"
+              assert not missing, f"Package is missing: {sorted(missing)}"
               metadata = json.loads(archive.read("mod.json"))
-              assert metadata["id"] == "mxrmc.universe", metadata.get("id")
-              assert metadata["gd"]["win"] == "2.2091", metadata["gd"]
-              assert metadata["gd"]["android"] == "2.2091", metadata["gd"]
-          print(f"Validated {package.name}: Windows x64 + Android ARM64/ARMv7")
+              assert metadata["id"] == "mxrmc.universe"
+              assert metadata["name"] == "Universe 1"
+              assert metadata["version"] == "v1.0.0"
+              assert metadata["gd"]["win"] == "2.2091"
+              assert metadata["gd"]["android"] == "2.2091"
+              assert archive.read("resources/mxrmc.universe/logo.png")[:8] == b"\x89PNG\r\n\x1a\n"
+          print(f"Validated {package.name}: Windows x64 + Android ARM64 + Android ARMv7 + logo")
           PY
 
-      - name: Upload universal .geode package
+      - name: Upload verified universal package
         uses: actions/upload-artifact@v4
         with:
-          name: Universe-Windows-Android-GD-2.2091
-          path: ${{ steps.combine.outputs.build-output }}/*.geode
+          name: Universe-1-Snapshot-26.1
+          path: \${{ steps.combine.outputs.build-output }}/*.geode
           if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: Publish Universe 1 — Snapshot 26.1
+    runs-on: ubuntu-latest
+    needs: package
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[release]')
+    steps:
+      - name: Checkout release metadata and logo
+        uses: actions/checkout@v4
+
+      - name: Download verified universal package
+        uses: actions/download-artifact@v4
+        with:
+          name: Universe-1-Snapshot-26.1
+          path: release-assets
+
+      - name: Publish Snapshot 26.1 prerelease
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: snapshot-26.1
+          target_commitish: \${{ github.sha }}
+          name: Universe 1 — Snapshot 26.1
+          prerelease: true
+          draft: false
+          make_latest: false
+          overwrite_files: true
+          generate_release_notes: true
+          body: |
+            # Universe 1 — Snapshot 26.1
+
+            The first Universe 1 release for Geometry Dash 2.2091.
+
+            **One universal Geode package** includes:
+            - Windows x64
+            - Android ARM64
+            - Android ARMv7
+
+            The package is published only after all three builds pass and the combined archive is inspected.
+
+            AI Level Maker is included, with optional online generation and offline procedural drafts. Online AI requires a user-configured API key; no API key is bundled.
+          files: |
+            release-assets/*.geode
+            logo.png
+        env:
+          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}

@@ -1,17 +1,11 @@
-# Universe
+# Universe 1 — Snapshot 26.1
 
-Universe is a Geode mod for Geometry Dash 2.2091, developed by MxrGH.
+Universe 1 is a Geometry Dash 2.2091 Geode toolkit by MxrGH.
 
-The current source includes Practice Mode-only gameplay modifiers, Safe Mode, StartPos tools, object hitboxes, a movement trail and projection, cube preview/equip selection without unlock spoofing, a draggable touch button, a movable panel, animated navigation, customizable labels, live theme switching, persistent panel placement, quick FPS presets, and a local input recorder/replay system.
+It combines Practice Mode utilities, StartPos navigation, visual overlays, movement indicators, configurable FPS rendering, local recording/replay, icon selection, an animated customizable interface, and an optional AI level-design assistant.
 
-The AI page supports saved prompts, optional online generation, and an in-game offline procedural draft generator. Offline generation works without a network request or API key, including on Android, but it is not neural AI. A true offline neural model still needs a bundled model and an on-device inference runtime.
+The AI assistant remains included. Online generation uses an Anthropic-compatible Messages API and reads its key from the Geometry Dash process environment. Offline Draft creates a procedural JSON blueprint without a network request. Neither output is a native playable level file.
 
-The repository also includes:
-- A standalone level-design blueprint generator with offline templates and optional online AI assistance.
-- An FFmpeg helper for converting existing gameplay recordings to MP4.
+The release pipeline builds Windows x64, Android ARM64, and Android ARMv7 independently, combines them into one .geode package, validates its contents, and publishes Snapshot 26.1 only after all platform builds pass.
 
-The level generator creates JSON design blueprints, not native Geometry Dash level files. Video conversion requires FFmpeg and a recording captured separately. Selecting a cube ID does not unlock it or grant achievements.
-
-Noclip and Speedhack effects are restricted to Practice Mode. With Safe Mode enabled, requesting either modifier in a Normal Mode attempt switches that attempt to Practice before the modifier is applied. Safe Mode is a local safeguard, not a server-side guarantee.
-
-Windows and Android builds still need testing inside Geometry Dash on actual devices.
+Noclip and Speedhack are restricted to Practice Mode. Safe Mode is a local safeguard, not a server-side guarantee. The icon selector does not unlock locked icons or grant achievements.

@@ -5,22 +5,24 @@
     "android": "2.2091"
   },
   "id": "mxrmc.universe",
-  "name": "Universe",
-  "version": "v1.1.0",
+  "name": "Universe 1",
+  "version": "v1.0.0",
   "developer": "MxrGH",
-  "description": "A polished Geometry Dash toolkit with animated navigation, quick controls, practice helpers, visual tools, replay utilities, and prompt-based level drafting.",
+  "description": "Practice tools, visual overlays, input replay, customizable UI, and AI-assisted level drafting for Geometry Dash 2.2091.",
   "tags": [
     "gameplay",
     "interface",
+    "utility",
     "offline",
-    "cheat"
+    "practice"
   ],
   "dependencies": {
     "geode.node-ids": ">=v1.23.3"
   },
   "resources": {
     "files": [
-      "resources/click.mp3"
+      "resources/click.mp3",
+      "logo.png"
     ]
   },
   "settings": {
@@ -268,5 +270,6 @@
       "min": -0.1,
       "max": 0.1
     }
-  }
+  },
+  "repository": "https://github.com/MxrGH/Universe"
 }

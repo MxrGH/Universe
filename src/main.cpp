@@ -1,10 +1,12 @@
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <fstream>
 #include <limits>
 #include <sstream>
 #include <vector>
 #include <Geode/Geode.hpp>
+#include <Geode/utils/web.hpp>
 #include <Geode/loader/GameEvent.hpp>
 #include <Geode/loader/SettingV3.hpp>
 #include <Geode/modify/MenuLayer.hpp>
@@ -182,7 +184,7 @@ namespace {
     }
 
     enum class Page {
-        Player, Practice, Level, Visuals, Recorder, Keybinds, Settings, Drafts
+        Player, Practice, Level, Visuals, Recorder, Keybinds, Settings, AI
     };
 
     void playUniverseClick() {
@@ -211,7 +213,7 @@ namespace {
             case Page::Recorder: return "Recorder";
             case Page::Keybinds: return "Keybinds";
             case Page::Settings: return "Settings";
-            case Page::Drafts: return "Drafts";
+            case Page::AI: return "AI";
         }
         return "Universe";
     }
@@ -237,10 +239,13 @@ public:
     }
 };
 
-class UniversePanel : public CCLayer {
+class UniversePanel : public CCLayer, public TextInputDelegate {
 protected:
     Page m_page = Page::Player;
-    CCTextInputNode* m_draftPrompt = nullptr;
+    CCTextInputNode* m_aiPrompt = nullptr;
+    CCTextInputNode* m_aiModelInput = nullptr;
+    CCTextInputNode* m_aiBaseUrlInput = nullptr;
+    async::TaskHolder<web::WebResponse> m_aiTask;
     CCMenu* m_menu = nullptr;
     CCLayerColor* m_panelBackground = nullptr;
     CCLayerColor* m_dimBackground = nullptr;
@@ -455,7 +460,7 @@ protected:
                 if (layer) addAction("RESTART ATTEMPT", 133, {0.f, -135.f});
                 addText("These tools do not fake coins, records, or leaderboard results.", {-245.f, -175.f}, 0.29f);
                 addText("Draft generator: scripts/level_maker.py", {-245.f, -165.f}, 0.29f);
-                addText("Use --offline for templates or configure an Offline API key.", {-245.f, -200.f}, 0.27f);
+                addText("Use --offline for templates or configure an AI API key.", {-245.f, -200.f}, 0.27f);
                 addText("Output is a JSON blueprint, not an import-ready level.", {-245.f, -235.f}, 0.27f);
                 break;
             }
@@ -507,22 +512,39 @@ protected:
                 addText("F7  Play saved replay", {-245.f, -260.f}, 0.34f);
                 addText("J  Toggle path trail     K  Toggle movement projection", {-245.f, -300.f}, 0.31f);
                 break;
-            case Page::Drafts: {
-                addText("Offline level design planner", {-245.f, 105.f});
-                addText("Level concept", {-245.f, 72.f}, 0.31f);
-                m_draftPrompt = CCTextInputNode::create(430.f, 42.f, "Paste or type your level concept...", "bigFont.fnt");
-                if (m_draftPrompt) {
-                    m_draftPrompt->setPosition({55.f, 42.f});
-                    m_content->addChild(m_draftPrompt, 4);
+            case Page::AI: {
+                addText("Optional level idea helper", {-245.f, 105.f});
+                addText("Level idea", {-245.f, 72.f}, 0.31f);
+                m_aiPrompt = CCTextInputNode::create(430.f, 42.f, "Paste or type your full level prompt here...", "bigFont.fnt");
+                if (m_aiPrompt) {
+                    m_aiPrompt->setDelegate(this);
+                    m_aiPrompt->setPosition({55.f, 42.f});
+                    m_content->addChild(m_aiPrompt, 4);
                 }
-                addAction("SAVE PROMPT", 141, {-175.f, -35.f});
-                addAction("LOAD SAVED", 143, {0.f, -35.f});
-                addAction("CLEAR", 142, {175.f, -35.f});
-                addAction("GENERATE OFFLINE DRAFT", 145, {0.f, -100.f});
-                addText("Creates a local procedural JSON design blueprint.", {-245.f, -155.f}, 0.30f);
-                addText("No account, API key, internet, or Offline model is used.", {-245.f, -190.f}, 0.30f);
-                addText("The blueprint is a planning aid, not an importable level.", {-245.f, -225.f}, 0.28f);
-                addText("Saved files stay in the Universe mod folder.", {-245.f, -260.f}, 0.28f);
+                addText("Model", {-245.f, -5.f}, 0.31f);
+                m_aiModelInput = CCTextInputNode::create(340.f, 30.f, "claude-sonnet-4-6", "bigFont.fnt");
+                if (m_aiModelInput) {
+                    m_aiModelInput->setDelegate(this);
+                    m_aiModelInput->setString(Mod::get()->getSettingValue<std::string>("ai-model").c_str());
+                    m_aiModelInput->setPosition({55.f, -35.f});
+                    m_content->addChild(m_aiModelInput, 4);
+                }
+                addText("API base URL", {-245.f, -75.f}, 0.31f);
+                m_aiBaseUrlInput = CCTextInputNode::create(340.f, 30.f, "https://api.anthropic.com", "bigFont.fnt");
+                if (m_aiBaseUrlInput) {
+                    m_aiBaseUrlInput->setDelegate(this);
+                    m_aiBaseUrlInput->setString(Mod::get()->getSettingValue<std::string>("ai-base-url").c_str());
+                    m_aiBaseUrlInput->setPosition({55.f, -105.f});
+                    m_content->addChild(m_aiBaseUrlInput, 4);
+                }
+                addAction("SAVE PROMPT", 141, {-175.f, -155.f});
+                addAction("LOAD SAVED", 143, {0.f, -155.f});
+                addAction("CLEAR", 142, {175.f, -155.f});
+                addAction("GENERATE ONLINE", 126, {-115.f, -205.f});
+                addAction("OFFLINE DRAFT", 145, {125.f, -205.f});
+                addText("Paste a prompt, then choose online or offline generation.", {-245.f, -250.f}, 0.27f);
+                addText("Offline mode is procedural; it does not run a neural model.", {-245.f, -280.f}, 0.27f);
+                addText("Both modes save a JSON design blueprint, not a playable level.", {-245.f, -310.f}, 0.25f);
                 break;
             }
             case Page::Settings:
@@ -542,12 +564,21 @@ protected:
         }
     }
 
+    void textChanged(CCTextInputNode* input) override {
+        auto mod = Mod::get();
+        if (!mod || !input) return;
+        if (input == m_aiModelInput)
+            mod->setSettingValue<std::string>("ai-model", input->getString());
+        else if (input == m_aiBaseUrlInput)
+            mod->setSettingValue<std::string>("ai-base-url", input->getString());
+    }
+
     void generateOfflineDraft() {
-        if (!m_draftPrompt) {
-            FLAlertLayer::create("Universe Offline Draft", "The prompt field could not be created. Reopen the Drafts tab and try again.", "OK")->show();
+        if (!m_aiPrompt) {
+            FLAlertLayer::create("Universe Offline Draft", "The prompt field could not be created. Reopen the AI tab and try again.", "OK")->show();
             return;
         }
-        std::string prompt = m_draftPrompt->getString();
+        std::string prompt = m_aiPrompt->getString();
         if (prompt.empty()) {
             FLAlertLayer::create("Universe Offline Draft", "Enter a level idea first.", "OK")->show();
             return;
@@ -617,8 +648,113 @@ protected:
              << "}\n";
         file.close();
 
-        auto message = fmt::format("Offline draft saved to:\\n{}\\n\\nThis is a procedural blueprint, not a playable level.", path.string());
+        auto message = fmt::format("Offline draft saved to:\\n{}\\n\\nThis is a procedural blueprint, not neural AI or a playable level.", path.string());
         FLAlertLayer::create("Universe Offline Draft", message.c_str(), "OK")->show();
+    }
+
+    void generateAIDraft() {
+        if (!m_aiPrompt) {
+            FLAlertLayer::create("Universe AI", "The prompt field could not be created. Reopen the AI tab and try again.", "OK")->show();
+            return;
+        }
+
+        auto prompt = std::string(m_aiPrompt->getString());
+        if (prompt.empty()) {
+            FLAlertLayer::create("Universe AI", "Enter a level idea first.", "OK")->show();
+            return;
+        }
+        if (prompt.size() > 4000) {
+            FLAlertLayer::create("Universe AI", "Please keep the prompt under 4000 characters.", "OK")->show();
+            return;
+        }
+
+        auto key = std::getenv("ANTHROPIC_API_KEY");
+        if (!key || std::string_view(key).empty()) {
+            FLAlertLayer::create(
+                "Universe AI",
+                "ANTHROPIC_API_KEY was not found. Set it in your operating system environment, then restart Geometry Dash. Do not paste your API key into chat or the mod source.",
+                "OK"
+            )->show();
+            return;
+        }
+
+        matjson::Value payload = matjson::Value::object();
+        payload["model"] = "claude-sonnet-4-6";
+        payload["max_tokens"] = 4096;
+        matjson::Value messages = matjson::Value::array();
+        matjson::Value userMessage = matjson::Value::object();
+        userMessage["role"] = "user";
+        userMessage["content"] =
+            "You are a Geometry Dash level-design assistant. Create a useful level design blueprint from the user's idea. "
+            "Return ONLY a valid JSON object with keys: level_name, theme, difficulty, song_mood, gameplay_sections, "
+            "visual_style, decoration_notes, and build_notes. gameplay_sections must be an array of objects with "
+            "section_name, gameplay, and duration_hint. Do not claim to create or import a playable level. "
+            "User idea: " + prompt;
+        messages.push(userMessage);
+        payload["messages"] = messages;
+
+        auto model = Mod::get()->getSettingValue<std::string>("ai-model");
+        auto baseUrl = Mod::get()->getSettingValue<std::string>("ai-base-url");
+        if (model.empty()) model = "claude-sonnet-4-6";
+        if (baseUrl.empty()) baseUrl = "https://api.anthropic.com";
+        while (!baseUrl.empty() && baseUrl.back() == '/') baseUrl.pop_back();
+        payload["model"] = model;
+
+        auto request = web::WebRequest()
+            .header("x-api-key", key)
+            .header("anthropic-version", "2023-06-01")
+            .header("content-type", "application/json")
+            .timeout(std::chrono::seconds(90))
+            .bodyJSON(payload);
+
+        m_aiTask.spawn(
+            request.post(baseUrl + "/v1/messages"),
+            [this](web::WebResponse response) {
+                if (!response.ok()) {
+                    auto details = response.string().unwrapOr("No response details were provided.");
+                    if (details.size() > 500) details.resize(500);
+                    auto message = fmt::format("Anthropic request failed (HTTP {}). {}", response.code(), details);
+                    FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
+                    return;
+                }
+
+                auto parsed = response.json();
+                if (!parsed) {
+                    FLAlertLayer::create("Universe AI", "The API returned a response that could not be read as JSON.", "OK")->show();
+                    return;
+                }
+
+                std::string draft;
+                auto blocks = parsed.unwrap()["content"].asArray();
+                if (blocks) {
+                    for (auto const& block : blocks.unwrap()) {
+                        if (block["type"].asString().unwrapOr("") == "text")
+                            draft += block["text"].asString().unwrapOr("");
+                    }
+                }
+                if (draft.empty()) {
+                    FLAlertLayer::create("Universe AI", "The API response did not contain a text draft.", "OK")->show();
+                    return;
+                }
+
+                auto mod = Mod::get();
+                if (!mod) return;
+                auto path = mod->getSaveDir() / "universe-ai-draft.txt";
+                std::ofstream file(path.string(), std::ios::out | std::ios::trunc);
+                if (!file.is_open()) {
+                    FLAlertLayer::create("Universe AI", "The draft was generated, but Universe could not save the file.", "OK")->show();
+                    return;
+                }
+                file << draft;
+                file.close();
+
+                auto message = fmt::format(
+                    "Draft generated and saved to:\n{}\n\nOpen the file in your text editor to view the complete blueprint.",
+                    path.string()
+                );
+                FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
+            }
+        );
     }
 
     void onAction(CCObject* sender) {
@@ -633,6 +769,10 @@ protected:
         auto mod = Mod::get();
         if (!mod) return;
 
+        if (tag == 126) {
+            generateAIDraft();
+            return;
+        }
         if (tag == 134) {
             mod->setSettingValue<float>("speedhack-speed", 1.f);
             showPage(m_page);
@@ -646,37 +786,37 @@ protected:
             return;
         }
         if (tag == 141) {
-            if (!m_draftPrompt || std::string(m_draftPrompt->getString()).empty()) {
-                FLAlertLayer::create("Universe Drafts", "Write or paste a prompt before saving it.", "OK")->show();
+            if (!m_aiPrompt || std::string(m_aiPrompt->getString()).empty()) {
+                FLAlertLayer::create("Universe AI", "Write or paste a prompt before saving it.", "OK")->show();
                 return;
             }
-            auto path = mod->getSaveDir() / "universe-draft-prompt.txt";
+            auto path = mod->getSaveDir() / "universe-ai-prompt.txt";
             std::ofstream file(path.string(), std::ios::out | std::ios::trunc);
             if (!file.is_open()) {
-                FLAlertLayer::create("Universe Offline", "Universe could not save the prompt file.", "OK")->show();
+                FLAlertLayer::create("Universe AI", "Universe could not save the prompt file.", "OK")->show();
                 return;
             }
-            file << m_draftPrompt->getString();
+            file << m_aiPrompt->getString();
             file.close();
-            FLAlertLayer::create("Universe Offline", "Prompt saved in the Universe mod folder.", "OK")->show();
+            FLAlertLayer::create("Universe AI", "Prompt saved in the Universe mod folder.", "OK")->show();
             return;
         }
         if (tag == 142) {
-            if (m_draftPrompt) m_draftPrompt->setString("");
+            if (m_aiPrompt) m_aiPrompt->setString("");
             return;
         }
         if (tag == 143) {
-            if (!m_draftPrompt) return;
+            if (!m_aiPrompt) return;
             auto path = mod->getSaveDir() / "universe-ai-prompt.txt";
             std::ifstream file(path.string());
             if (!file.is_open()) {
-                FLAlertLayer::create("Universe Offline", "No saved prompt was found yet.", "OK")->show();
+                FLAlertLayer::create("Universe AI", "No saved prompt was found yet.", "OK")->show();
                 return;
             }
             std::string prompt((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
             if (prompt.size() > 4000) prompt.resize(4000);
-            m_draftPrompt->setString(prompt.c_str());
-            FLAlertLayer::create("Universe Offline", "Saved prompt loaded.", "OK")->show();
+            m_aiPrompt->setString(prompt.c_str());
+            FLAlertLayer::create("Universe AI", "Saved prompt loaded.", "OK")->show();
             return;
         }
         if (tag == 145) {
@@ -952,9 +1092,9 @@ public:
         float left = win.width * 0.16f;
         float tabY = win.height * 0.64f;
         Page pages[] = {Page::Player, Page::Practice, Page::Level, Page::Visuals,
-                        Page::Recorder, Page::Keybinds, Page::Settings, Page::Drafts};
+                        Page::Recorder, Page::Keybinds, Page::Settings, Page::AI};
         int pageCount = 7;
-        if (Mod::get()->getSettingValue<bool>("drafts-tab-enabled")) pageCount = 8;
+        if (Mod::get()->getSettingValue<bool>("ai-tab-enabled")) pageCount = 8;
         for (int i = 0; i < pageCount; ++i) {
             auto label = CCLabelBMFont::create(pageName(pages[i]), "bigFont.fnt");
             label->setScale(0.34f);
@@ -977,7 +1117,7 @@ public:
     void onTab(CCObject* sender) {
         int index = static_cast<CCNode*>(sender)->getTag() - 200;
         if (index < 0 || index > 7) return;
-        if (index == 7 && !Mod::get()->getSettingValue<bool>("drafts-tab-enabled")) return;
+        if (index == 7 && !Mod::get()->getSettingValue<bool>("ai-tab-enabled")) return;
         showPage(static_cast<Page>(index));
     }
 };

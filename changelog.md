@@ -1,41 +1,13 @@
 # Changelog
 
-## v1.1.0 — Display/build label 1.1.0.1
-- Fix the panel page animation compile error blocking Windows and Android builds.
-- Add in-game offline procedural draft generation and saved-prompt loading.
-- Add bounded, validated practice replay loading and stable event ordering.
-- Restrict Noclip and Speedhack effects to Practice Mode; Safe Mode switches a requested modified attempt into Practice before applying it.
-- Add custom panel and floating-button labels, live theme changes, saved panel placement, and a reset action.
-- Add one-tap speed reset and quick FPS presets.
+## Universe 1 — Snapshot 26.1
+- Restore and retain the in-game AI Level Maker alongside offline procedural drafting and prompt save/load.
+- Brand the first Universe 1 release with a new logo and Geode metadata.
+- Add MIT licensing and a concise Geode-facing description.
+- Build Windows x64, Android ARM64, and Android ARMv7 as one combined .geode.
+- Inspect the final archive for all three binaries and required resources before release.
+- Publish Snapshot 26.1 only after the complete multi-platform package passes verification.
+- Retain Practice Mode-only gameplay modifiers, replay safeguards, animated UI, live themes, custom labels, and saved panel placement.
 
-
-## v0.1.0
-- Initial Geode project scaffold.
-- Added Universe entry button and starter popup.
-- Added initial settings for click audio, Safe Mode, noclip, icon preview, and practice tools.
-
-## v0.8.0
-- Add a cube icon preview with a local ID selector.
-- Replace the fixed floating menu button with a touch layer that can be dragged and remembers its position.
-- Allow the main panel to be moved by dragging its title bar.
-- Replace the straight-line path estimate with a short projection based on recent velocity and acceleration.
-- Add a level-draft tool with offline templates and optional AI-assisted generation through an OpenAI-compatible API.
-- Add an FFmpeg helper for converting existing gameplay recordings to MP4.
-- Expand build checks to compile the Python tools and run a level-generator smoke test.
-
-## v0.7.0
-- Release held inputs when a practice replay ends or is stopped.
-- Show live player mode, position, and local speed in the Player tab.
-- Let the floating touch button be enabled or disabled from the in-game Settings tab.
-- Handle missing or stale active StartPos references without using an invalid array index.
-- Add a short straight-line movement projection with a separate toggle and keybind.
-- Add a dependency-free metadata check to the build workflow.
-- Reworked project documentation to describe current behavior and limitations in plain language.
-- Clarified Safe Mode and icon preview settings.
-
-## v0.6.0
-- Added Practice Mode-only Noclip source hooks and independently switchable Safe Mode.
-- Added Speedhack controls, configurable keybinds, FPS override, hitbox overlay, StartPos Switcher, and practice input recording/replay.
-- Added Smart StartPos selection.
-- Announced the upcoming AI Level Maker.
-- Added an Eclipse-inspired panel expansion roadmap.
+## Previous development
+See the repository history for the feature work leading to Universe 1.

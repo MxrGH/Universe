@@ -37,8 +37,10 @@ if not re.fullmatch(r"v?\d+\.\d+\.\d+", version):
 
 readme_path = ROOT / "README.md"
 readme_text = readme_path.read_text(encoding="utf-8") if readme_path.is_file() else ""
-if "**Display/build label:** `1.1.0.1`" not in readme_text:
-    fail("README must document the requested x.x.x.x display/build label")
+if "**Release:** Universe 1 — Snapshot 26.1" not in readme_text:
+    fail("README must document Universe 1 — Snapshot 26.1")
+if mod.get("name") != "Universe 1" or mod.get("version") != "v1.0.0":
+    fail("release metadata must identify Universe 1 v1.0.0")
 
 settings = mod.get("settings")
 if not isinstance(settings, dict):
@@ -77,6 +79,9 @@ for feature_marker in (
     "addAction(\"RESET PANEL POSITION\", 146",
     "panel-title",
     "floating-button-label",
+    "void generateAIDraft()",
+    "Page::AI",
+    "ANTHROPIC_API_KEY",
 ):
     if feature_marker not in source:
         fail("missing 1.0 feature implementation: " + feature_marker)
@@ -93,12 +98,20 @@ for key, setting in settings.items():
             fail(f"duplicate default keybind {default!r}: {defaults[default]} and {key}")
         defaults[default] = key
 
-for required in ("README.md", "about.md", "changelog.md", "AI_LEVEL_MAKER.md", "VIDEO_EXPORT.md"):
+for required in ("README.md", "about.md", "changelog.md", "AI_LEVEL_MAKER.md", "VIDEO_EXPORT.md", "LICENSE", "logo.png"):
     if not (ROOT / required).is_file():
         fail(f"missing project document: {required}")
 
 for required in ("scripts/level_maker.py", "scripts/export_video.py"):
     if not (ROOT / required).is_file():
         fail(f"missing tool script: {required}")
+
+logo_path = ROOT / "logo.png"
+if logo_path.read_bytes()[:8] != b"\x89PNG\r\n\x1a\n":
+    fail("logo.png is not a valid PNG file")
+if "MIT License" not in (ROOT / "LICENSE").read_text(encoding="utf-8"):
+    fail("LICENSE must contain the MIT License")
+if "Snapshot 26.1" not in (ROOT / ".github" / "workflows" / "build.yml").read_text(encoding="utf-8"):
+    fail("build workflow must define the Snapshot 26.1 release")
 
 print(f"Universe {mod.get('version', '(unknown version)')}: metadata checks passed.")

@@ -1,121 +1,114 @@
-# Universe
+# Universe 1
 
-Universe is a Geometry Dash 2.2091 Geode mod by **MxrGH**. It puts practice controls, visual helpers, replay tools, and a polished animated interface in one in-game panel.
+**Snapshot 26.1** · Geometry Dash **2.2091** · Geode · by **MxrGH**
 
-- **Geode package version:** `v1.1.0`
-- **Display/build label:** `1.1.0.1`
-- **Game version:** Geometry Dash `2.2091`
+Universe 1 is a feature-rich Geometry Dash toolkit with a custom animated interface, practice utilities, visual overlays, local replay tools, and an optional AI level-design assistant.
 
-The project display/build label uses the four-part `x.x.x.x` format. The Geode package version in `mod.json` remains standard three-part semantic versioning (`v1.1.0`) because Geode expects a SemVer version.
+- **Release:** Universe 1 — Snapshot 26.1
+- **Geode package version:** `v1.0.0` (standard SemVer required by Geode)
+- **Mod ID:** `mxrmc.universe`
+- **Supported game version:** Geometry Dash `2.2091`
+- **Targets:** Windows x64, Android ARM64, Android ARMv7
+- **Package:** one combined, universal `.geode` containing all three platform binaries
 
-## What you can do
+## Features
 
-### Practice
-- Use Practice Mode-only Noclip and a local speed multiplier; both modifiers are inactive in Normal Mode.
-- Use Safe Mode to switch a modified attempt to Practice Mode.
-- Pick the next StartPos in front of you, or move to the previous/next StartPos.
-- Restart the current attempt from the panel.
+### Practice and gameplay tools
+- Practice Mode-only Noclip and configurable Speedhack.
+- Safe Mode moves an attempt to Practice before applying a requested gameplay modifier.
+- StartPos navigation, nearest-ahead StartPos selection, and quick attempt restart.
+- One-tap Practice, Visuals, and Clean Run presets.
+- Local input recording and replay for Practice Mode.
 
-### Visuals
-- Draw object hitboxes.
-- Follow your recent movement with a short trail.
-- Preview a short movement projection based on recent movement.
-- Change the render frame interval with FPS Bypass. This does not change the game's physics tick.
+### Visual tools
+- Live object hitbox overlay.
+- Recent movement trail and short movement projection.
+- Render FPS interval override with 120/240/360 quick presets.
+- Current player mode, position, and speed information.
 
-### Recording
-- Record input events during a Practice Mode session.
-- Play back a saved local recording.
-- Stop or clear a recording from the panel.
-- Convert an existing screen recording to MP4 with the optional FFmpeg helper in `scripts/export_video.py`.
+### Interface and customization
+- Animated panel entrance, page transitions, and button feedback.
+- Draggable panel and floating touch button with remembered positions.
+- Custom panel title and floating-button label.
+- Live theme changes and position reset.
+- Touch-friendly Android controls and Windows mouse/keyboard support.
 
-### Player
-- Preview cube IDs and set the selected cube as your equipped cube.
-- This does not unlock icons, grant achievements, or change your account's unlock flags. Whether a selected ID appears on a synced profile depends on Geometry Dash's own save and server behavior.
+### Icon tools
+- Preview cube IDs and select an icon to equip through the game's own player settings.
+- Does not grant locked icons, achievements, or account unlock flags.
 
-### Interface and quality of life
-- Animated panel entrance and page transitions.
-- Animated button feedback and cleaner navigation.
-- Custom panel and floating-button labels through Geode settings.
-- Live theme switching without reopening the panel.
-- Persistent draggable panel position, with a one-tap reset.
-- Paste or type longer prompts; save, reload, or clear them without generating.
-- Generate an offline procedural level blueprint directly in the game on desktop or Android without an API key or network request.
-- Reset the speed multiplier to 1.00x with one tap.
-- Set FPS targets to 120, 240, or 360 from quick controls.
+### AI Level Maker
+**The AI assistant is included in Universe 1. It has not been removed.**
 
-### Quick setups
-The Settings page includes three one-tap setups:
-- **Practice** turns on Safe Mode and leaves Noclip and Speedhack off.
-- **Visuals** turns on the hitbox, trail, and movement projection helpers.
-- **Clean Run** turns off practice modifications and visual overlays.
+- **Online AI:** send a prompt to the configured Anthropic-compatible Messages API and save the generated level-design outline.
+- **Offline Draft:** generate a deterministic local JSON blueprint without internet, an API key, or a model.
+- **Prompt tools:** paste, edit, save, reload, and clear prompts.
+- **Configurable model and API base URL** through Geode settings.
 
-### Optional level idea helper
-The AI page is optional. Online mode can send a pasted prompt to an Anthropic Messages API-compatible endpoint and save the returned design outline as `universe-ai-draft.txt`. Prompts can also be saved locally as `universe-ai-prompt.txt`. It does not create a playable level or import a level into Geometry Dash.
+Online AI reads `ANTHROPIC_API_KEY` from the Geometry Dash process environment. The key is not stored in mod settings or source. Requests can incur provider charges; use a paid API account only with a parent or guardian's permission. Never put keys in chat, source files, commits, or screenshots.
 
-**Offline generation status:** the in-game Offline Draft action and the Python `--offline` option use deterministic procedural generation. They work without a network request or API key, including on Android, but they are not neural AI. A true offline neural model still needs a bundled model and a mobile inference runtime; that is not implemented or claimed as complete.
+Offline Draft is procedural generation, not neural inference. Both online and offline outputs are design blueprints, **not native/importable Geometry Dash levels**.
 
-If you do not want to use an online AI service, choose **OFFLINE DRAFT** in the in-game AI tab, or use the standalone generator:
+### Extra tools
+- Standalone Python level-design blueprint generator.
+- FFmpeg helper to convert an existing gameplay recording to MP4; it does not capture gameplay.
 
-```bash
-python scripts/level_maker.py --offline --prompt "Neon city with fast ship sections" --difficulty insane --length 80 --style ship --output draft.json
-```
+## Default controls
 
-Online requests require an API key in the `ANTHROPIC_API_KEY` environment variable. The key is read from the game's process environment and is not stored in Geode settings. Check API pricing with a parent or guardian before enabling paid usage. Never put a key in source code, commits, screenshots, or chat.
-
-## Controls
-
-| Action | Default |
-| --- | --- |
-| Open or close Universe | `Ctrl + U` |
-| Toggle Noclip | `N` |
-| Toggle Speedhack | `M` |
-| Toggle Safe Mode | `Ctrl + Shift + S` |
-| Toggle hitboxes | `H` |
-| Toggle movement trail | `J` |
-| Toggle movement projection | `K` |
-| Toggle FPS Bypass | `F8` |
-| Start or stop recording | `F6` |
+| Action | Key |
+|---|---|
+| Open/close Universe | `Ctrl + U` |
+| Noclip | `N` |
+| Speedhack | `M` |
+| Safe Mode | `Ctrl + Shift + S` |
+| Hitboxes | `H` |
+| Movement trail | `J` |
+| Movement projection | `K` |
+| FPS Bypass | `F8` |
+| Start/stop recorder | `F6` |
 | Play saved replay | `F7` |
 
-You can change keybinds in Geode's mod settings. On touch devices, open the panel with the floating **UNIV** button. Drag it to move it. The panel can also be moved by its title area.
+Keybinds can be changed in Geode settings. On Android, use the floating **UNIV** button.
 
-## Build and install
+## Install
 
-Universe uses the Geode SDK and the Geode CMake build workflow. The GitHub Actions workflow builds these targets:
+1. Install the matching Geode version for Geometry Dash 2.2091.
+2. Download `Universe-1-Snapshot-26.1.geode` from the GitHub release.
+3. Open the `.geode` file with Geode, or place it in the Geode mods folder.
+4. Enable Universe in Geode and restart the game if requested.
 
-- Windows x64
-- Android ARM64
-- Android ARMv7
+The release package contains Windows x64, Android ARM64, and Android ARMv7 binaries.
 
-A successful run uploads a combined `.geode` package as a workflow artifact. Check the run's artifacts section for the download. A CI build confirms that the package was produced; it does not replace testing in Geometry Dash on each device.
+## Build and release verification
 
-## Project files
+GitHub Actions builds all three targets independently, combines them, inspects the resulting `.geode` archive, verifies all three binaries and required resources, and only then creates the Snapshot 26.1 prerelease.
+
+A successful CI build confirms packaging. It does not replace gameplay testing on actual Windows and Android devices. Replay timing and performance can vary by device and game build.
+
+## Project structure
 
 | Path | Purpose |
-| --- | --- |
-| `src/main.cpp` | In-game panel, practice tools, visual helpers, and replay code |
+|---|---|
+| `src/main.cpp` | In-game interface, practice tools, visual helpers, AI interface, and replay code |
 | `mod.json` | Geode metadata, settings, and keybinds |
-| `scripts/level_maker.py` | Offline procedural and optional online level-design outline generator |
+| `logo.png` | Universe 1 release logo |
+| `scripts/level_maker.py` | Offline and AI-assisted blueprint generator |
 | `scripts/export_video.py` | FFmpeg conversion helper |
-| `.github/workflows/build.yml` | Cross-platform build and package checks |
-| `CHANGELOG.md` | Release history |
+| `.github/workflows/build.yml` | Multi-platform build, package verification, and release |
+| `LICENSE` | MIT License |
 
-## Important limits
+## Important limitations
 
-- Noclip and Speedhack are restricted to Practice Mode. Other local visual tools can be used while playing.
-- Safe Mode is a local safeguard. It cannot guarantee how an online service or leaderboard treats a run.
-- The movement projection is an estimate. It does not simulate portals, gravity changes, collisions, or future triggers.
-- Replay playback can vary with game version, level, physics, and device timing.
-- The AI helper returns a design outline, not a native `.gmd` file.
-- The cube selector does not award unlocks or achievements.
-- Windows and Android builds still need real-device testing.
-
-## Security
-
-Keep API keys private. If a key is exposed, revoke it with its provider; removing a file or commit does not invalidate the key. Before making the repository public, review the current files, all branches and tags, commit history, releases, and CI logs for secrets.
+- Safe Mode is a local safeguard, not a server-side leaderboard guarantee.
+- Noclip and Speedhack are restricted to Practice Mode.
+- Movement projection is an estimate, not full Geometry Dash physics.
+- Replay playback may vary with timing, level state, game version, and device.
+- AI outputs are design blueprints, not native `.gmd` files.
+- The icon selector cannot unlock content or award achievements.
+- CI cannot prove bug-free gameplay; report reproducible issues with device, OS, Geode, and game versions.
 
 ## Credits
 
-- **MxrGH** — project author
+- **MxrGH** — Universe 1
 - **Geode SDK** — mod framework
 - **RobTop Games** — Geometry Dash
