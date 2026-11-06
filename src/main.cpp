@@ -199,6 +199,7 @@ namespace {
         auto layer = PlayLayer::get();
         return mod
             && layer
+            && layer->m_isPracticeMode
             && mod->getSettingValue<bool>("practice-tools")
             && mod->getSettingValue<bool>("noclip");
     }
@@ -420,7 +421,7 @@ protected:
                 addText("Practice tools", {-245.f, 105.f});
                 addText("Try these settings in Practice Mode before using them in a run.", {-245.f, 65.f}, 0.34f);
                 addToggle("Practice tools", "practice-tools", 102, 35.f);
-                addToggle("Noclip (all modes)", "noclip", 103, -15.f);
+                addToggle("Practice-only noclip", "noclip", 103, -15.f);
                 addToggle("Speedhack", "speedhack-enabled", 106, -65.f);
                 auto speed = mod->getSettingValue<float>("speedhack-speed");
                 auto speedText = fmt::format("Speed: {:.2f}x", speed);
@@ -1391,9 +1392,11 @@ class $modify(UniversePlayLayer, PlayLayer) {
         updateMacroPlayback(this, dt);
 
         if (mod) {
-            bool noclipActive = mod->getSettingValue<bool>("practice-tools")
+            bool noclipActive = this->m_isPracticeMode
+                && mod->getSettingValue<bool>("practice-tools")
                 && mod->getSettingValue<bool>("noclip");
-            bool speedhackActive = mod->getSettingValue<bool>("speedhack-enabled");
+            bool speedhackActive = this->m_isPracticeMode
+                && mod->getSettingValue<bool>("speedhack-enabled");
             if (noclipActive || speedhackActive || g_macroPlayingBack)
                 attemptUsedCheat = true;
 
