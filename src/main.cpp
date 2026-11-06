@@ -247,6 +247,7 @@ protected:
     CCTextInputNode* m_aiBaseUrlInput = nullptr;
     async::TaskHolder<web::WebResponse> m_aiTask;
     CCMenu* m_menu = nullptr;
+    CCLayerColor* m_panelBackground = nullptr;
     CCLabelBMFont* m_pageTitle = nullptr;
     CCLayer* m_content = nullptr;
     bool m_isDragging = false;
@@ -312,6 +313,10 @@ protected:
             : next == 1 ? ccColor4B{38, 18, 58, 255}
             : ccColor4B{12, 42, 48, 255};
         mod->setSettingValue<ccColor4B>("panel-color", color);
+        if (m_panelBackground) {
+            m_panelBackground->setColor({color.r, color.g, color.b});
+            m_panelBackground->setOpacity(color.a);
+        }
     }
 
     void smartStartPos() {
@@ -553,6 +558,7 @@ protected:
                 addAction("VISUALS", 131, {0.f, -205.f});
                 addAction("CLEAN RUN", 132, {155.f, -205.f});
                 addText("Choose a setup to change several options at once.", {-245.f, -245.f}, 0.27f);
+                addAction("RESET PANEL POSITION", 146, {0.f, -285.f});
                 break;
         }
     }
@@ -816,6 +822,13 @@ protected:
             generateOfflineDraft();
             return;
         }
+        if (tag == 146) {
+            auto win = CCDirector::sharedDirector()->getWinSize();
+            setPosition({0.f, 0.f});
+            mod->setSettingValue<float>("panel-offset-x", 0.f);
+            mod->setSettingValue<float>("panel-offset-y", 0.f);
+            return;
+        }
         if (tag == 133) {
             if (auto layer = PlayLayer::get()) {
                 layer->resetLevel();
@@ -1008,6 +1021,12 @@ public:
 
     void ccTouchEnded(CCTouch*, CCEvent*) override {
         m_isDragging = false;
+        auto mod = Mod::get();
+        auto win = CCDirector::sharedDirector()->getWinSize();
+        if (mod && win.width > 0.f && win.height > 0.f) {
+            mod->setSettingValue<float>("panel-offset-x", getPositionX() / win.width);
+            mod->setSettingValue<float>("panel-offset-y", getPositionY() / win.height);
+        }
     }
 
     void ccTouchCancelled(CCTouch*, CCEvent*) override {
@@ -1029,6 +1048,10 @@ public:
 
         auto win = CCDirector::sharedDirector()->getWinSize();
         setContentSize(win);
+        setPosition({
+            mod->getSettingValue<float>("panel-offset-x") * win.width,
+            mod->getSettingValue<float>("panel-offset-y") * win.height
+        });
         setTouchEnabled(true);
         auto dim = CCLayerColor::create({8, 10, 22, 225});
         dim->setContentSize(win);
@@ -1039,13 +1062,16 @@ public:
 
         auto themeColor = Mod::get()->getSettingValue<ccColor4B>("panel-color");
         auto panel = CCLayerColor::create(themeColor);
+        m_panelBackground = panel;
         panel->setContentSize({win.width * 0.82f, win.height * 0.78f});
         panel->setPosition({win.width * 0.09f, win.height * 0.11f});
         panel->setScale(0.94f);
         panel->runAction(CCEaseBackOut::create(CCScaleTo::create(0.22f, 1.f)));
         this->addChild(panel, 1);
 
-        auto title = CCLabelBMFont::create("UNIVERSE", "bigFont.fnt");
+        auto panelTitle = Mod::get()->getSettingValue<std::string>("panel-title");
+        if (panelTitle.empty()) panelTitle = "UNIVERSE";
+        auto title = CCLabelBMFont::create(panelTitle.c_str(), "bigFont.fnt");
         title->setScale(0.72f);
         title->setPosition({win.width * 0.5f, win.height * 0.81f});
         this->addChild(title, 2);
@@ -1159,7 +1185,9 @@ public:
         setTouchEnabled(true);
         auto background = CCLayerColor::create({28, 32, 58, 220}, 76.f, 52.f);
         if (background) this->addChild(background);
-        auto label = CCLabelBMFont::create("UNIV", "goldFont.fnt");
+        auto buttonText = Mod::get()->getSettingValue<std::string>("floating-button-label");
+        if (buttonText.empty()) buttonText = "UNIV";
+        auto label = CCLabelBMFont::create(buttonText.c_str(), "goldFont.fnt");
         if (label) {
             label->setScale(0.62f);
             label->setPosition({38.f, 26.f});
