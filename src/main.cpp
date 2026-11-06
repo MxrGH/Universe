@@ -43,6 +43,7 @@ namespace {
 
     void stopMacroRecording() {
         g_macroRecording = false;
+        g_macroRecordingLayer = nullptr;
         auto path = macroFilePath();
         if (path.empty()) return;
         std::ofstream file(path, std::ios::out | std::ios::trunc);
@@ -60,7 +61,7 @@ namespace {
 
     bool startMacroRecording() {
         auto layer = PlayLayer::get();
-        if (!layer || !layer->m_isPracticeMode || g_macroPlayingBack)
+        if (!layer || !layer->m_isPracticeMode || !layer->m_player1 || g_macroPlayingBack)
             return false;
         g_macroEvents.clear();
         g_macroTime = 0.f;
@@ -71,7 +72,7 @@ namespace {
 
     bool startMacroPlayback() {
         auto layer = PlayLayer::get();
-        if (!layer || g_macroRecording)
+        if (!layer || !layer->m_isPracticeMode || !layer->m_player1 || g_macroRecording)
             return false;
         auto path = macroFilePath();
         if (path.empty()) return false;
@@ -80,7 +81,10 @@ namespace {
 
         std::vector<MacroEvent> loaded;
         std::string line;
+        float previousTime = -1.f;
         while (std::getline(file, line)) {
+            if (line.size() > 128 || loaded.size() >= 100000)
+                return false;
             std::stringstream row(line);
             MacroEvent event;
             char comma1 = 0;
@@ -91,23 +95,24 @@ namespace {
                 && comma1 == ',' && comma2 == ','
                 && std::isfinite(event.time) && event.time >= 0.f
                 && event.button >= 0 && event.button <= 32
-                && (down == 0 || down == 1)) {
+                && (down == 0 || down == 1)
+                && event.time >= previousTime && event.time <= 3600.f) {
+                row >> std::ws;
+                if (!row.eof()) return false;
                 event.down = down != 0;
+                previousTime = event.time;
                 loaded.push_back(event);
+            } else {
+                return false;
             }
         }
         if (loaded.empty()) return false;
-
-        std::stable_sort(loaded.begin(), loaded.end(),
-            [](MacroEvent const& a, MacroEvent const& b) { return a.time < b.time; });
         g_macroEvents = std::move(loaded);
         g_macroPlaybackIndex = 0;
         g_macroPlaybackTime = 0.f;
         g_macroHeldButtons.clear();
         g_macroPlaybackLayer = layer;
         g_macroPlayingBack = true;
-        // Macro playback is always a local practice action.
-        layer->m_isPracticeMode = true;
         return true;
     }
 
@@ -698,11 +703,12 @@ protected:
         matjson::Value userMessage = matjson::Value::object();
         userMessage["role"] = "user";
         userMessage["content"] =
-            "You are a Geometry Dash level-design assistant. Create a useful level design blueprint from the user's idea. "
-            "Return ONLY a valid JSON object with keys: level_name, theme, difficulty, song_mood, gameplay_sections, "
-            "visual_style, decoration_notes, and build_notes. gameplay_sections must be an array of objects with "
-            "section_name, gameplay, and duration_hint. Do not claim to create or import a playable level. "
-            "User idea: " + prompt;
+            "You are a Geometry Dash level-design assistant. Return ONLY one valid JSON object matching "
+            "the Universe Level Draft schema. Required top-level keys: title, prompt, difficulty, style, sections, notes. "
+            "sections is an array of up to 100 objects with name, gameplay, and events. Each event has numeric x and y, "
+            "type (block, spike, saw, orb, pad, or deco), and a short note. Keep x coordinates non-decreasing, finite, "
+            "within +/-10000000, and the total event count below 5000. Do not include Markdown fences. "
+            "This is a design blueprint, not a playable or import-ready .gmd level. User idea: " + prompt;
         messages.push(userMessage);
         payload["messages"] = messages;
 
@@ -760,7 +766,7 @@ protected:
 
                 auto mod = Mod::get();
                 if (!mod) return;
-                auto path = mod->getSaveDir() / "universe-ai-draft.txt";
+                auto path = mod->getSaveDir() / "universe-ai-draft.json";
                 std::ofstream file(path.string(), std::ios::out | std::ios::trunc);
                 if (!file.is_open()) {
                     FLAlertLayer::create("Universe AI", "The draft was generated, but Universe could not save the file.", "OK")->show();
@@ -770,7 +776,7 @@ protected:
                 file.close();
 
                 auto message = fmt::format(
-                    "Draft generated and saved to:\n{}\n\nOpen the file in your text editor to view the complete blueprint.",
+                    "JSON blueprint generated and saved to:\n{}\n\nUse scripts/level_maker.py --input to validate or export it.",
                     path.string()
                 );
                 FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
