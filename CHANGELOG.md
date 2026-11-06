@@ -1,13 +1,17 @@
 # Changelog
 
-## Universe 1 — Snapshot 26.2
-- Restore and retain the in-game AI Level Maker alongside offline procedural drafting and prompt save/load.
-- Brand the first Universe 1 release with a new logo and Geode metadata.
-- Add MIT licensing and a concise Geode-facing description.
-- Build Windows x64, Android ARM64, and Android ARMv7 as one combined .geode.
-- Inspect the final archive for all three binaries and required resources before release.
-- Publish Snapshot 26.2 only after the complete multi-platform package passes verification.
-- Retain Practice Mode-only gameplay modifiers, replay safeguards, animated UI, live themes, custom labels, and saved panel placement.
+## Universe 1 — Snapshot 26.3
 
-## Previous development
-See the repository history for the feature work leading to Universe 1.
+- Harden Practice Mode replay: require an active player, require Practice Mode for playback, and reject malformed, oversized, unsorted, or overlong replay files.
+- Clear replay state safely when the player or active level scene disappears.
+- Standardize in-game online AI output around the Level Maker JSON blueprint schema.
+- Save online AI results as `universe-ai-draft.json`.
+- Add JSON blueprint import/validation and CSV/Markdown export to the standalone Level Maker.
+- Expand regression tests for invalid gameplay/sections and all supported export formats.
+- Require HTTPS for AI API endpoints to protect API keys in transit.
+- Retain the existing Practice Mode tools, overlays, customization, mobile controls, and AI assistant.
+
+## Previous releases
+
+- Snapshot 26.2 — replay/UI hardening and AI blueprint validation.
+- Snapshot 26.1 — initial Universe 1 release.
