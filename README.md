@@ -1,6 +1,6 @@
 # Universe
 
-Universe is a Geometry Dash 2.2091 Geode mod by **MxrMC**. It puts practice controls, visual helpers, replay tools, and a few quality-of-life shortcuts in one in-game panel.
+Universe is a Geometry Dash 2.2091 Geode mod by **MxrGH**. It puts practice controls, visual helpers, replay tools, and a few quality-of-life shortcuts in one in-game panel.
 
 - **Geode package version:** `v1.0.0`
 - **Display/build label:** `1.00.0.00`
@@ -103,6 +103,6 @@ Keep API keys private. If a key is exposed, revoke it with its provider; removin
 
 ## Credits
 
-- **MxrMC** — project author
+- **MxrGH** — project author
 - **Geode SDK** — mod framework
 - **RobTop Games** — Geometry Dash
