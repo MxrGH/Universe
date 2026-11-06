@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.1.0 — Display label 1.01.0.00
+## v1.1.0 — Display label 1.1.0.1
 
 ### Added
 - Animated panel entrance, dim-layer fade, page transitions, and button feedback.
