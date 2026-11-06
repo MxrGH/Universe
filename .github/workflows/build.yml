@@ -4,7 +4,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: universe-release-\${{ github.ref }}
+  group: universe-release-${{ github.ref }}
   cancel-in-progress: true
 
 on:
@@ -14,7 +14,7 @@ on:
 
 jobs:
   build:
-    name: Build \${{ matrix.platform.name }}
+    name: Build ${{ matrix.platform.name }}
     strategy:
       fail-fast: false
       matrix:
@@ -28,7 +28,7 @@ jobs:
           - name: Android ARMv7
             os: ubuntu-latest
             target: Android32
-    runs-on: \${{ matrix.platform.os }}
+    runs-on: ${{ matrix.platform.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -53,7 +53,7 @@ jobs:
         with:
           sdk: given
           cli: latest
-          target: \${{ matrix.platform.target }}
+          target: ${{ matrix.platform.target }}
           combine: true
 
   package:
@@ -67,7 +67,7 @@ jobs:
 
       - name: Inspect universal .geode contents
         env:
-          PACKAGE_DIR: \${{ steps.combine.outputs.build-output }}
+          PACKAGE_DIR: ${{ steps.combine.outputs.build-output }}
         run: |
           python - <<'PY'
           import json
@@ -100,11 +100,24 @@ jobs:
           print(f"Validated {package.name}: Windows x64 + Android ARM64 + Android ARMv7 + logo")
           PY
 
+      - name: Give the release package its stable filename
+        env:
+          PACKAGE_DIR: ${{ steps.combine.outputs.build-output }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          folder = Path(os.environ["PACKAGE_DIR"])
+          packages = list(folder.glob("*.geode"))
+          assert len(packages) == 1, f"Expected one .geode, found {len(packages)}"
+          packages[0].rename(folder / "Universe-1-Snapshot-26.1.geode")
+          PY
+
       - name: Upload verified universal package
         uses: actions/upload-artifact@v4
         with:
           name: Universe-1-Snapshot-26.1
-          path: \${{ steps.combine.outputs.build-output }}/*.geode
+          path: ${{ steps.combine.outputs.build-output }}/*.geode
           if-no-files-found: error
           retention-days: 30
 
@@ -127,7 +140,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: snapshot-26.1
-          target_commitish: \${{ github.sha }}
+          target_commitish: ${{ github.sha }}
           name: Universe 1 — Snapshot 26.1
           prerelease: true
           draft: false
@@ -151,4 +164,4 @@ jobs:
             release-assets/*.geode
             logo.png
         env:
-          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
