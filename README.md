@@ -1,9 +1,9 @@
 # Universe
 
-Universe is a Geometry Dash 2.2091 Geode mod by **MxrGH**. It puts practice controls, visual helpers, replay tools, and a few quality-of-life shortcuts in one in-game panel.
+Universe is a Geometry Dash 2.2091 Geode mod by **MxrGH**. It puts practice controls, visual helpers, replay tools, and a polished animated interface in one in-game panel.
 
-- **Geode package version:** `v1.0.0`
-- **Display/build label:** `1.00.0.00`
+- **Geode package version:** `v1.1.0`
+- **Display/build label:** `1.01.0.00`
 - **Game version:** Geometry Dash `2.2091`
 
 The four-part display label is for the project and release notes. The actual `mod.json` version stays on standard three-part semantic versioning because Geode expects a semantic version.
@@ -32,6 +32,13 @@ The four-part display label is for the project and release notes. The actual `mo
 - Preview cube IDs and set the selected cube as your equipped cube.
 - This does not unlock icons, grant achievements, or change your account's unlock flags. Whether a selected ID appears on a synced profile depends on Geometry Dash's own save and server behavior.
 
+### Interface and quality of life
+- Animated panel entrance and page transitions.
+- Animated button feedback and cleaner navigation.
+- Paste or type longer prompts; save or clear them without generating.
+- Reset the speed multiplier to 1.00x with one tap.
+- Set FPS targets to 120, 240, or 360 from quick controls.
+
 ### Quick setups
 The Settings page includes three one-tap setups:
 - **Practice** turns on Safe Mode and leaves Noclip and Speedhack off.
@@ -39,7 +46,9 @@ The Settings page includes three one-tap setups:
 - **Clean Run** turns off practice modifications and visual overlays.
 
 ### Optional level idea helper
-The AI page is optional. It can send a level idea to an Anthropic Messages API-compatible endpoint and save the returned design outline as `universe-ai-draft.txt`. It does not create a playable level or import a level into Geometry Dash.
+The AI page is optional. Online mode can send a pasted prompt to an Anthropic Messages API-compatible endpoint and save the returned design outline as `universe-ai-draft.txt`. Prompts can also be saved locally as `universe-ai-prompt.txt`. It does not create a playable level or import a level into Geometry Dash.
+
+**Offline AI status:** the current in-game build does not yet include a neural model runtime. The standalone Python `--offline` mode is a deterministic template generator, not an AI model. Android offline model inference needs a runtime plus a local model file; it is not being presented as complete.
 
 If you do not want to use an online AI service, use the offline generator instead:
 
