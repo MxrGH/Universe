@@ -239,6 +239,34 @@
       "description": "Base URL for an Anthropic-compatible Messages API. The API key remains in ANTHROPIC_API_KEY.",
       "type": "string",
       "default": "https://api.anthropic.com"
+    },
+    "panel-title": {
+      "name": "Panel title",
+      "description": "Custom title displayed at the top of the Universe overlay.",
+      "type": "string",
+      "default": "UNIVERSE"
+    },
+    "floating-button-label": {
+      "name": "Floating button label",
+      "description": "Custom text shown on the draggable in-game button.",
+      "type": "string",
+      "default": "UNIV"
+    },
+    "panel-offset-x": {
+      "name": "Panel horizontal offset",
+      "description": "Saved horizontal overlay offset, relative to screen width.",
+      "type": "float",
+      "default": 0,
+      "min": -0.08,
+      "max": 0.08
+    },
+    "panel-offset-y": {
+      "name": "Panel vertical offset",
+      "description": "Saved vertical overlay offset, relative to screen height.",
+      "type": "float",
+      "default": 0,
+      "min": -0.1,
+      "max": 0.1
     }
   }
 }
