@@ -1,28 +1,27 @@
 # Universe AI Level Editor
 
-Snapshot 26.5 keeps the AI workflow inside the currently open Geometry Dash editor. It does not require GDShare or a generated .gmd file.
+Snapshot 26.5 keeps AI editing inside the currently open Geometry Dash editor. It does not require GDShare or a generated .gmd file.
 
 ## In-game workflow
 
 1. Open the target level in the Geometry Dash editor.
-2. Select the existing objects you want the AI to change, if any.
+2. Select objects if you want to use selection-based editing.
 3. Open Universe → AI and describe the task.
-4. Choose GENERATE ONLINE (configured model) or OFFLINE DRAFT (procedural template).
+4. Choose GENERATE ONLINE or OFFLINE DRAFT.
 5. Choose APPLY DRAFT TO OPEN EDITOR.
-6. Use the editor Undo control to revert the inserted or changed objects.
+6. Use the editor Undo control to revert inserted or changed objects.
 
-Before online generation, Universe includes a compact live context summary: total object count and the selected objects' IDs, positions, and rotations. Each new request reads the current editor state, so follow-up instructions can be based on the latest selection.
+Before online generation, Universe sends a bounded live summary: total object count, up to 120 existing objects with unique IDs, object IDs, positions and rotations, plus up to 30 selected-object details. A new request reads the current editor state, supporting follow-up instructions.
 
 ## Supported editor operations
 
 - Add: insert supported blocks, spikes, saws, orbs, and pads at generated coordinates.
-- Move selected: move the current selection by an AI-proposed offset.
-- Rotate selected: rotate the current selection by an AI-proposed amount.
-- Delete selected: remove the current selection.
+- Move selected / rotate selected / delete selected: operate on the current selection.
+- Move object / rotate object / delete object: operate on one existing object using its exact unique ID from the live editor summary.
 
-Move, rotate, and delete actions are restricted to the current selection. Select the intended objects first. The AI does not identify or modify arbitrary unselected objects by guessing. The editor Undo control is the recovery path.
+Object-specific actions are accepted only when the target unique ID still exists in the open level at apply time. The AI is instructed not to invent IDs. Transforms are serialized and pasted through the editor integration; deletions use the editor's object-removal path. Use the editor Undo control to revert changes.
 
-The apply routine limits one operation batch to 1,000 supported objects and bounds coordinates and offsets before conversion to editor data.
+The apply routine limits a batch to 1,000 supported operations, caps selected-object processing, and bounds coordinates and offsets before converting them to editor data.
 
 ## Online AI configuration
 
