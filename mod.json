@@ -149,13 +149,13 @@
     },
     "noclip": {
       "name": "Noclip",
-      "description": "Bypass object and slope collisions in Normal or Practice Mode. Safe Mode can switch the current attempt to Practice Mode.",
+      "description": "Bypass object and slope collisions only in Practice Mode. This setting has no effect in Normal Mode.",
       "type": "bool",
       "default": false
     },
     "speedhack-enabled": {
       "name": "Speedhack",
-      "description": "Change local gameplay speed. This modifies the PlayLayer update delta and may affect physics or timing.",
+      "description": "Change local gameplay speed only in Practice Mode. This modifies PlayLayer update delta and may affect physics or timing.",
       "type": "bool",
       "default": false
     },
