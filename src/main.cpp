@@ -55,7 +55,11 @@ namespace {
             [](MacroEvent const& a, MacroEvent const& b) { return a.time < b.time; });
         for (auto const& event : g_macroEvents)
             file << event.time << ',' << event.button << ',' << (event.down ? 1 : 0) << '\n';
-        g_macroRecordingLayer = nullptr;
+        file.flush();
+        if (!file.good()) {
+            log::error("Universe encountered an error while writing the practice replay.");
+            return;
+        }
         log::info("Universe saved {} practice replay events.", g_macroEvents.size());
     }
 
@@ -90,7 +94,6 @@ namespace {
             char comma1 = 0;
             char comma2 = 0;
             int down = 0;
-            if (loaded.size() >= 100000) break;
             if (row >> event.time >> comma1 >> event.button >> comma2 >> down
                 && comma1 == ',' && comma2 == ','
                 && std::isfinite(event.time) && event.time >= 0.f
@@ -1200,8 +1203,8 @@ public:
     }
 };
 
-// Noclip works in Normal and Practice Mode. With Safe Mode enabled, the
-// PlayLayer hook below marks the run as Practice Mode before gameplay updates.
+// Noclip and Speedhack are local Practice Mode tools. Safe Mode converts an
+// attempt to Practice Mode before a requested modifier is applied.
 class $modify(UniversePlayerObject, PlayerObject) {
     bool pushButton(PlayerButton button) {
         auto layer = PlayLayer::get();
@@ -1521,7 +1524,6 @@ class $modify(UniversePlayLayer, PlayLayer) {
 
             // Modifiers have no effect in Normal Mode. Safe Mode above can
             // move the attempt to Practice before any modified frame runs.
-            bool noclipActive = this->m_isPracticeMode && noclipRequested;
             bool speedhackActive = this->m_isPracticeMode && speedhackRequested;
             if (speedhackActive) {
                 float speed = mod->getSettingValue<float>("speedhack-speed");
