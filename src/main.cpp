@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <limits>
+#include <regex>
 #include <sstream>
 #include <vector>
 #include <Geode/Geode.hpp>
@@ -209,11 +210,7 @@ namespace {
     bool isUniverseNoclipActive() {
         auto mod = Mod::get();
         auto layer = PlayLayer::get();
-        return mod
-            && layer
-            && layer->m_isPracticeMode
-            && mod->getSettingValue<bool>("practice-tools")
-            && mod->getSettingValue<bool>("noclip");
+        return mod && layer && mod->getSettingValue<bool>("noclip");
     }
 
     const char* pageName(Page page) {
@@ -456,19 +453,19 @@ protected:
                 break;
             case Page::Practice: {
                 auto mod = Mod::get();
-                addText("Practice tools", {-245.f, 105.f});
-                addText("Try these settings in Practice Mode before using them in a run.", {-245.f, 65.f}, 0.34f);
-                addToggle("Practice tools", "practice-tools", 102, 35.f);
-                addToggle("Practice-only noclip", "noclip", 103, -15.f);
-                addToggle("Speedhack", "speedhack-enabled", 106, -65.f);
+                addText("Gameplay hacks", {-245.f, 105.f});
+                addText("Noclip and Speedhack work in Normal Mode when Safe Mode is OFF.", {-245.f, 65.f}, 0.30f);
+                addToggle("Noclip", "noclip", 103, 25.f);
+                addToggle("Speedhack", "speedhack-enabled", 106, -25.f);
                 auto speed = mod ? std::clamp(mod->getSettingValue<float>("speedhack-speed"), 0.25f, 3.f) : 1.f;
                 auto speedText = fmt::format("Speed: {:.2f}x", speed);
                 addText(speedText.c_str(), {-245.f, -110.f}, 0.36f);
                 addAction("-", 107, {125.f, -110.f});
                 addAction("+", 108, {205.f, -110.f});
                 addAction("RESET TO 1.00x", 134, {0.f, -205.f});
-                addText("Speedhack changes local gameplay timing.", {-245.f, -145.f}, 0.28f);
-                addText("Safe Mode ON marks modified runs as Practice Mode.", {-245.f, -175.f}, 0.28f);
+                addText("Speedhack changes local gameplay timing.", {-245.f, -100.f}, 0.28f);
+                addText("Safe Mode ON switches modified attempts to Practice Mode.", {-245.f, -135.f}, 0.28f);
+                addText("Safe Mode OFF leaves the selected hacks active in Normal Mode.", {-245.f, -170.f}, 0.27f);
                 break;
             }
             case Page::Level: {
@@ -1507,8 +1504,7 @@ class $modify(UniversePlayLayer, PlayLayer) {
         updateMacroPlayback(this, dt);
 
         if (mod) {
-            bool noclipRequested = mod->getSettingValue<bool>("practice-tools")
-                && mod->getSettingValue<bool>("noclip");
+            bool noclipRequested = mod->getSettingValue<bool>("noclip");
             bool speedhackRequested = mod->getSettingValue<bool>("speedhack-enabled");
 
             // With Safe Mode enabled, requesting a gameplay modifier in a
@@ -1522,9 +1518,9 @@ class $modify(UniversePlayLayer, PlayLayer) {
             if (noclipRequested || speedhackRequested || g_macroPlayingBack)
                 attemptUsedCheat = true;
 
-            // Modifiers have no effect in Normal Mode. Safe Mode above can
-            // move the attempt to Practice before any modified frame runs.
-            bool speedhackActive = this->m_isPracticeMode && speedhackRequested;
+            // With Safe Mode disabled, modifiers remain active in Normal Mode.
+            // With Safe Mode enabled, the attempt is marked Practice first.
+            bool speedhackActive = speedhackRequested;
             if (speedhackActive) {
                 float speed = mod->getSettingValue<float>("speedhack-speed");
                 dt *= std::clamp(speed, 0.25f, 3.0f);
@@ -1589,7 +1585,10 @@ $on_game(Loaded) {
         if (!mod) return;
         bool enabled = !mod->getSettingValue<bool>("noclip");
         mod->setSettingValue<bool>("noclip", enabled);
-        if (enabled) mod->setSettingValue<bool>("practice-tools", true);
+        if (enabled && mod->getSettingValue<bool>("safe-mode")) {
+            if (auto layer = PlayLayer::get(); layer && !layer->m_isPracticeMode)
+                layer->m_isPracticeMode = true;
+        }
     });
 
     listenForKeybindSettingPresses("keybind-speedhack", [](Keybind const&, bool down, bool repeat, double) {
