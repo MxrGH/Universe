@@ -248,6 +248,7 @@ protected:
     async::TaskHolder<web::WebResponse> m_aiTask;
     CCMenu* m_menu = nullptr;
     CCLayerColor* m_panelBackground = nullptr;
+    CCLayerColor* m_dimBackground = nullptr;
     CCLabelBMFont* m_pageTitle = nullptr;
     CCLayer* m_content = nullptr;
     bool m_isDragging = false;
@@ -823,8 +824,8 @@ protected:
             return;
         }
         if (tag == 146) {
-            auto win = CCDirector::sharedDirector()->getWinSize();
             setPosition({0.f, 0.f});
+            if (m_dimBackground) m_dimBackground->setPosition({0.f, 0.f});
             mod->setSettingValue<float>("panel-offset-x", 0.f);
             mod->setSettingValue<float>("panel-offset-y", 0.f);
             return;
@@ -1017,6 +1018,8 @@ public:
             std::clamp(next.x, -win.width * 0.08f, win.width * 0.08f),
             std::clamp(next.y, -win.height * 0.10f, win.height * 0.10f)
         });
+        if (m_dimBackground)
+            m_dimBackground->setPosition({-getPositionX(), -getPositionY()});
     }
 
     void ccTouchEnded(CCTouch*, CCEvent*) override {
@@ -1054,8 +1057,9 @@ public:
         });
         setTouchEnabled(true);
         auto dim = CCLayerColor::create({8, 10, 22, 225});
+        m_dimBackground = dim;
         dim->setContentSize(win);
-        dim->setPosition({0.f, 0.f});
+        dim->setPosition({-getPositionX(), -getPositionY()});
         dim->setOpacity(0);
         dim->runAction(CCFadeTo::create(0.18f, 225));
         this->addChild(dim, 0);
