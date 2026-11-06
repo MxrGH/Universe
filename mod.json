@@ -202,7 +202,7 @@
     },
     "preview-icon-id": {
       "name": "Cube icon ID",
-      "description": "Choose the cube ID shown in the preview and used by EQUIP SELECTED. This does not grant the icon's unlock or achievements.",
+      "description": "Icon ID in the selected category. Locked IDs can be previewed locally but cannot be equipped.",
       "type": "int",
       "default": 1,
       "min": 1,
@@ -269,6 +269,14 @@
       "default": 0,
       "min": -0.1,
       "max": 0.1
+    },
+    "preview-icon-type": {
+      "name": "Icon preview category",
+      "description": "Select which icon category to preview and equip when the selected icon is already unlocked.",
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 8
     }
   },
   "repository": "https://github.com/MxrGH/Universe"
