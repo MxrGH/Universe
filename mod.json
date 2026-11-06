@@ -227,6 +227,18 @@
       "description": "Show the in-game AI level-draft prompt interface.",
       "type": "bool",
       "default": true
+    },
+    "ai-model": {
+      "name": "AI model",
+      "description": "Model name sent to the Anthropic Messages API. The AI tab can edit this value.",
+      "type": "string",
+      "default": "claude-sonnet-4-6"
+    },
+    "ai-base-url": {
+      "name": "AI API base URL",
+      "description": "Base URL for an Anthropic-compatible Messages API. The API key remains in ANTHROPIC_API_KEY.",
+      "type": "string",
+      "default": "https://api.anthropic.com"
     }
   }
 }
