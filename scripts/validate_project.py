@@ -67,7 +67,7 @@ for feature_marker in (
     'addAction("CLEAR", 142',
     "prompt.size() > 4000",
     "void generateOfflineDraft()",
-    \'addAction("OFFLINE DRAFT", 145',
+    'addAction("OFFLINE DRAFT", 145',
     'addAction("LOAD SAVED", 143',
     "loaded.size() >= 100000",
     "layer->m_isPracticeMode",
