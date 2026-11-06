@@ -727,7 +727,17 @@ protected:
             "Editor state: {} objects in the open level; {} currently selected. ",
             objects ? objects->count() : 0, selectedCount
         );
-        context += "Selected object details (maximum 30): ";
+        context += "Existing objects in editor order (maximum 120; uid is the exact uniqueID target): ";
+        if (objects) {
+            for (unsigned int i = 0; i < objects->count() && i < 120; ++i) {
+                auto object = static_cast<GameObject*>(objects->objectAtIndex(i));
+                if (!object) continue;
+                auto p = object->getPosition();
+                context += fmt::format("[uid={}, id={}, x={:.1f}, y={:.1f}, rotation={:.1f}] ",
+                    object->m_uniqueID, object->m_objectID, p.x, p.y, object->getRotation());
+            }
+        }
+        context += " Selected object details (maximum 30): ";
         size_t shown = 0;
         if (selected && selected->count() > 0) {
             for (unsigned int i = 0; i < selected->count() && shown < 30; ++i) {
@@ -789,12 +799,12 @@ protected:
             "You are a Geometry Dash editor assistant. Return ONLY one valid JSON object matching the "
             "Universe Level Draft schema: title, prompt, difficulty, style, sections, notes. "
             "Each section has name, gameplay, and events. Events may use action add, move_selected, rotate_selected, "
-            "or delete_selected. For add, include numeric x/y and type block, spike, saw, orb, pad, or deco. "
-            "For move_selected include finite dx/dy; for rotate_selected include finite degrees; delete_selected needs no coordinates. "
-            "Only request selected-object operations when the user's instruction clearly asks to edit current selections and "
-            "the editor context confirms selected objects exist. Never guess object identities or modify unselected objects. "
+            "delete_selected, move_object, rotate_object, or delete_object. For add, include numeric x/y and type block, spike, saw, orb, pad, or deco. "
+            "For move_selected include finite dx/dy; for rotate_selected include finite degrees. For move_object, rotate_object, and delete_object, "
+            "include target equal to an exact uid listed in the live editor context; move_object also needs dx/dy and rotate_object needs degrees. "
+            "Only use selected-object actions when the selection exists. Never invent a uid or target an object absent from the supplied context. "
             "Keep coordinates and offsets within +/-10000000, total events below 5000, and output valid JSON without Markdown. "
-            "New objects are pasted into the currently open editor; selected-object transforms/deletions are undoable editor operations. "
+            "New objects are pasted into the currently open editor; object transforms/deletions use editor history so they can be undone. "
             "If the user asks a follow-up edit, use the supplied live editor context. User idea: " + prompt +
             "\n\nLive editor context: " + buildEditorContext();
         messages.push(userMessage);
@@ -900,6 +910,7 @@ protected:
         static const std::regex dxPattern(R"("dx"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
         static const std::regex dyPattern(R"("dy"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
         static const std::regex degreesPattern(R"("degrees"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
+        static const std::regex targetPattern(R"("target"\s*:\s*([0-9]+))");
         std::string serialized;
         size_t added = 0;
         size_t changed = 0;
@@ -914,11 +925,11 @@ protected:
             selectedObjects->addObject(ui->m_selectedObject);
         }
 
-        auto replaceSelectedWithTransform = [&](float dx, float dy, float degrees) {
-            if (selectedObjects->count() == 0) return false;
+        auto replaceObjectsWithTransform = [&](CCArray* targets, float dx, float dy, float degrees) {
+            if (!targets || targets->count() == 0) return false;
             std::string replacements;
-            for (unsigned int i = 0; i < selectedObjects->count(); ++i) {
-                auto object = static_cast<GameObject*>(selectedObjects->objectAtIndex(i));
+            for (unsigned int i = 0; i < targets->count(); ++i) {
+                auto object = static_cast<GameObject*>(targets->objectAtIndex(i));
                 if (!object) continue;
                 auto oldPosition = object->getPosition();
                 auto oldRotation = object->getRotation();
@@ -929,10 +940,9 @@ protected:
                 object->setRotation(oldRotation);
             }
             if (replacements.empty()) return false;
-            for (unsigned int i = 0; i < selectedObjects->count(); ++i)
-                ui->deleteObject(static_cast<GameObject*>(selectedObjects->objectAtIndex(i)), false);
+            for (unsigned int i = 0; i < targets->count(); ++i)
+                ui->deleteObject(static_cast<GameObject*>(targets->objectAtIndex(i)), false);
             ui->pasteObjects(replacements, false, false);
-            selectedObjects->removeAllObjects();
             ui->updateButtons();
             ui->updateObjectInfoLabel();
             return true;
@@ -945,6 +955,52 @@ protected:
             std::string action = "add";
             if (std::regex_search(event, actionMatch, actionPattern))
                 action = actionMatch[1].str();
+
+            if (action == "delete_object" || action == "move_object" || action == "rotate_object") {
+                std::smatch targetMatch;
+                if (!std::regex_search(event, targetMatch, targetPattern)) continue;
+                int targetID = 0;
+                try { targetID = std::stoi(targetMatch[1].str()); } catch (...) { continue; }
+                GameObject* target = nullptr;
+                auto allObjects = editor->getAllObjects();
+                if (allObjects) {
+                    for (unsigned int i = 0; i < allObjects->count(); ++i) {
+                        auto candidate = static_cast<GameObject*>(allObjects->objectAtIndex(i));
+                        if (candidate && candidate->m_uniqueID == targetID) {
+                            target = candidate;
+                            break;
+                        }
+                    }
+                }
+                if (!target) continue;
+                if (action == "delete_object") {
+                    ui->deleteObject(target, false);
+                    ++deleted;
+                    ui->updateButtons();
+                    ui->updateObjectInfoLabel();
+                    continue;
+                }
+                auto targets = CCArray::create();
+                targets->addObject(target);
+                float dx = 0.f, dy = 0.f, degrees = 0.f;
+                try {
+                    if (action == "move_object") {
+                        if (!std::regex_search(event, dxMatch, dxPattern)
+                            || !std::regex_search(event, dyMatch, dyPattern)) continue;
+                        dx = std::stof(dxMatch[1].str());
+                        dy = std::stof(dyMatch[1].str());
+                    } else {
+                        if (!std::regex_search(event, degreesMatch, degreesPattern)) continue;
+                        degrees = std::stof(degreesMatch[1].str());
+                    }
+                } catch (...) { continue; }
+                if (!std::isfinite(dx) || !std::isfinite(dy) || !std::isfinite(degrees)) continue;
+                dx = std::clamp(dx, -100000.f, 100000.f);
+                dy = std::clamp(dy, -100000.f, 100000.f);
+                degrees = std::clamp(degrees, -3600.f, 3600.f);
+                if (replaceObjectsWithTransform(targets, dx, dy, degrees)) ++changed;
+                continue;
+            }
 
             if (action == "delete_selected") {
                 if (selectedObjects->count() == 0) continue;
@@ -974,8 +1030,10 @@ protected:
                 dy = std::clamp(dy, -100000.f, 100000.f);
                 degrees = std::clamp(degrees, -3600.f, 3600.f);
                 auto selectedBeforeEdit = selectedObjects->count();
-                if (replaceSelectedWithTransform(dx, dy, degrees))
+                if (replaceObjectsWithTransform(selectedObjects, dx, dy, degrees)) {
                     changed += selectedBeforeEdit;
+                    selectedObjects->removeAllObjects();
+                }
                 continue;
             }
 
