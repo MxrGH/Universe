@@ -153,20 +153,20 @@ jobs:
           overwrite_files: true
           generate_release_notes: true
           body: |
-            # Universe 1 — Snapshot 26.5
+            # Universe 1 — Snapshot 26.5 (Final Planned Snapshot)
 
-            Snapshot 26.5 adds Normal Mode gameplay modifiers when Safe Mode is disabled, AI object placement directly in the open Geometry Dash editor, and the redesigned circular UNIV control with rounded animated UI.
+            Snapshot 26.5 completes the planned Universe 1 snapshot series for Geometry Dash 2.2091.
 
-            This is a prerelease build for Geometry Dash 2.2091. CI compiles Windows x64, Android ARM64, and Android ARMv7 before packaging the universal .geode asset.
+            AI Level Maker now receives live editor context and supports adding objects plus selection-scoped move, rotate, and delete operations. The existing StartPos switcher, Noclip and Speedhack toggles, Safe Mode, hitboxes, movement trail and projection, FPS controls, Practice Mode recorder/replay, icon previews, themes, presets, keybinds, global touch sound, and circular draggable UNIV button are retained.
 
-            **One universal Geode package** includes:
+            One universal Geode package includes:
             - Windows x64
             - Android ARM64
             - Android ARMv7
 
-            The package is published only after all three builds pass and the combined archive is inspected.
+            The package is published only after all three platform builds pass, project validation and regression tests pass, and the combined archive is inspected. CI compilation and package checks do not replace real in-game testing on physical devices.
 
-            AI Level Maker is included, with optional online generation and offline procedural drafts. Online AI requires a user-configured API key; no API key is bundled.
+            Online AI uses a user-configured HTTPS API key from the process environment; no key is bundled. Offline Draft is procedural and does not run a neural model. AI transforms and deletions only target the current editor selection.
           files: |
             release-assets/*.geode
             logo.png
