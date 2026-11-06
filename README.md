@@ -47,7 +47,7 @@ The AI tab is designed to modify the level currently open in Geometry Dash's edi
 4. Choose **APPLY DRAFT TO OPEN EDITOR**. Universe converts supported block, spike, saw, orb, and pad events into editor objects and pastes them into the current level.
 5. Use the editor's Undo control to revert the placement if needed.
 
-The 26.5 editor integration reads the live editor object count and current selection before generation. It can add supported objects, move or rotate the currently selected objects, and delete the current selection. Follow-up prompts use fresh editor context; select the objects you want changed before asking for a transform or deletion. Selected-object transforms are rebuilt through the editor's object serialization/paste path so the editor Undo control can revert them. It deliberately does not guess which unselected objects you mean. No GDShare or `.gmd` export is required.
+The 26.5 editor integration reads the live editor object count, a bounded list of existing object IDs/positions/rotations, and the current selection before generation. It can add supported objects, move or rotate selected objects, delete the selection, and move/rotate/delete a specific existing object by its exact unique ID from the live context. Follow-up prompts receive a fresh editor summary. Transforms are rebuilt through the editor's object serialization/paste path so the editor Undo control can revert them. The AI must use IDs from the supplied context rather than guessing. No GDShare or `.gmd` export is required.
 
 Online AI uses the Anthropic-compatible Messages API over HTTPS and reads `ANTHROPIC_API_KEY` from the Geometry Dash process environment. The key is not stored in mod settings or source. API calls may incur charges; use a paid API account only with a parent or guardian's permission. Never put keys in chat, source files, commits, or screenshots.
 
@@ -99,7 +99,7 @@ A successful CI build confirms compilation and packaging. It does not replace ga
 
 ## Important limitations
 
-- AI editing is selection-scoped for transforms and deletion; it does not infer arbitrary targets among unselected objects.
+- AI editing can target an exact existing object unique ID shown in its live editor context, or operate on the current selection. It does not guess IDs that are absent from that context.
 - Noclip and Speedhack can run in Normal Mode when Safe Mode is OFF. Modified attempts are not represented as legitimate server-verified completions.
 - Replay recording and playback are Practice Mode-only.
 - Movement projection estimates recent motion; it is not full Geometry Dash physics.
