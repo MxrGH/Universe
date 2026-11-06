@@ -853,7 +853,7 @@ protected:
         static const std::regex eventPattern(R"(\{[^{}]*\})");
         static const std::regex xPattern(R"("x"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
         static const std::regex yPattern(R"("y"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
-        static const std::regex typePattern(R"("type"\s*:\s*"([A-Za-z]+)")");
+        static const std::regex typePattern(R"rx("type"\s*:\s*"([A-Za-z]+)")rx");
         std::string serialized;
         size_t count = 0;
         for (std::sregex_iterator it(draft.begin(), draft.end(), eventPattern), end; it != end; ++it) {
@@ -1248,7 +1248,8 @@ public:
         auto panel = CCDrawNode::create();
         if (!panel) return false;
         m_panelBackground = panel;
-        m_panelSize = {win.width * 0.82f, win.height * 0.78f};
+        m_panelSize.width = win.width * 0.82f;
+        m_panelSize.height = win.height * 0.78f;
         panel->setContentSize(m_panelSize);
         panel->setPosition({win.width * 0.09f, win.height * 0.11f});
         drawRoundedPanel(panel, m_panelSize, themeColor);
