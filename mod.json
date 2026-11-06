@@ -6,9 +6,9 @@
   },
   "id": "mxrmc.universe",
   "name": "Universe",
-  "version": "v0.8.0",
+  "version": "v1.0.0",
   "developer": "MxrMC",
-  "description": "Geometry Dash 2.2091 practice tools, visual overlays, StartPos navigation, replay recording, cube selection, and AI level blueprints.",
+  "description": "A practical Geometry Dash toolkit with practice controls, visual helpers, replay tools, quick setups, and an optional level idea helper.",
   "tags": [
     "gameplay",
     "interface",
