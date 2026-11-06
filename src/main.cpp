@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <limits>
+#include <regex>
 #include <sstream>
 #include <vector>
 #include <Geode/Geode.hpp>
@@ -209,12 +210,40 @@ namespace {
     bool isUniverseNoclipActive() {
         auto mod = Mod::get();
         auto layer = PlayLayer::get();
-        return mod
-            && layer
-            && layer->m_isPracticeMode
-            && mod->getSettingValue<bool>("practice-tools")
-            && mod->getSettingValue<bool>("noclip");
+        return mod && layer && mod->getSettingValue<bool>("noclip");
     }
+
+    void drawRoundedPanel(CCDrawNode* node, CCSize size, ccColor4B color) {
+        if (!node || size.width <= 0.f || size.height <= 0.f) return;
+        node->clear();
+        float r = std::min(20.f, std::min(size.width, size.height) * 0.08f);
+        CCPoint points[] = {
+            {r, 0.f}, {size.width - r, 0.f},
+            {size.width - r * 0.29f, r * 0.29f}, {size.width, r},
+            {size.width, size.height - r},
+            {size.width - r * 0.29f, size.height - r * 0.29f},
+            {size.width - r, size.height}, {r, size.height},
+            {r * 0.29f, size.height - r * 0.29f}, {0.f, size.height - r},
+            {0.f, r}, {r * 0.29f, r * 0.29f}
+        };
+        auto fill = ccc4f(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
+        node->drawPolygon(points, sizeof(points) / sizeof(points[0]), fill, 0.f, fill);
+    }
+
+    void animateClosePanel(CCLayer* panel) {
+        if (!panel) return;
+        panel->stopAllActions();
+        panel->runAction(CCSequence::create(
+            CCSpawn::create(
+                CCFadeTo::create(0.16f, 0),
+                CCScaleTo::create(0.16f, 0.94f),
+                nullptr
+            ),
+            CCCallFunc::create(panel, callfunc_selector(CCNode::removeFromParent)),
+            nullptr
+        ));
+    }
+
 
     const char* pageName(Page page) {
         switch (page) {
@@ -260,7 +289,8 @@ protected:
     async::TaskHolder<web::WebResponse> m_aiTask;
     CCMenu* m_menu = nullptr;
     CCMenu* m_actionMenu = nullptr;
-    CCLayerColor* m_panelBackground = nullptr;
+    CCDrawNode* m_panelBackground = nullptr;
+    CCSize m_panelSize = {0.f, 0.f};
     CCLayerColor* m_dimBackground = nullptr;
     CCLabelBMFont* m_pageTitle = nullptr;
     CCLayer* m_content = nullptr;
@@ -326,10 +356,7 @@ protected:
             : next == 1 ? ccColor4B{38, 18, 58, 255}
             : ccColor4B{12, 42, 48, 255};
         mod->setSettingValue<ccColor4B>("panel-color", color);
-        if (m_panelBackground) {
-            m_panelBackground->setColor({color.r, color.g, color.b});
-            m_panelBackground->setOpacity(color.a);
-        }
+        if (m_panelBackground) drawRoundedPanel(m_panelBackground, m_panelSize, color);
     }
 
     void smartStartPos() {
@@ -456,19 +483,19 @@ protected:
                 break;
             case Page::Practice: {
                 auto mod = Mod::get();
-                addText("Practice tools", {-245.f, 105.f});
-                addText("Try these settings in Practice Mode before using them in a run.", {-245.f, 65.f}, 0.34f);
-                addToggle("Practice tools", "practice-tools", 102, 35.f);
-                addToggle("Practice-only noclip", "noclip", 103, -15.f);
-                addToggle("Speedhack", "speedhack-enabled", 106, -65.f);
+                addText("Gameplay hacks", {-245.f, 105.f});
+                addText("Noclip and Speedhack work in Normal Mode when Safe Mode is OFF.", {-245.f, 65.f}, 0.30f);
+                addToggle("Noclip", "noclip", 103, 25.f);
+                addToggle("Speedhack", "speedhack-enabled", 106, -25.f);
                 auto speed = mod ? std::clamp(mod->getSettingValue<float>("speedhack-speed"), 0.25f, 3.f) : 1.f;
                 auto speedText = fmt::format("Speed: {:.2f}x", speed);
                 addText(speedText.c_str(), {-245.f, -110.f}, 0.36f);
                 addAction("-", 107, {125.f, -110.f});
                 addAction("+", 108, {205.f, -110.f});
                 addAction("RESET TO 1.00x", 134, {0.f, -205.f});
-                addText("Speedhack changes local gameplay timing.", {-245.f, -145.f}, 0.28f);
-                addText("Safe Mode ON marks modified runs as Practice Mode.", {-245.f, -175.f}, 0.28f);
+                addText("Speedhack changes local gameplay timing.", {-245.f, -100.f}, 0.28f);
+                addText("Safe Mode ON switches modified attempts to Practice Mode.", {-245.f, -135.f}, 0.28f);
+                addText("Safe Mode OFF leaves the selected hacks active in Normal Mode.", {-245.f, -170.f}, 0.27f);
                 break;
             }
             case Page::Level: {
@@ -577,7 +604,9 @@ protected:
                 addAction("OFFLINE DRAFT", 145, {125.f, -205.f});
                 addText("Paste a prompt, then choose online or offline generation.", {-245.f, -250.f}, 0.27f);
                 addText("Offline mode is procedural; it does not run a neural model.", {-245.f, -280.f}, 0.27f);
-                addText("Both modes save a JSON design blueprint, not a playable level.", {-245.f, -310.f}, 0.25f);
+                addAction("APPLY DRAFT TO OPEN EDITOR", 149, {0.f, -250.f});
+                addText("Online AI designs the section; Apply places objects in your open editor.", {-245.f, -290.f}, 0.25f);
+                addText("No .gmd export or GDShare required.", {-245.f, -320.f}, 0.27f);
                 break;
             }
             case Page::Settings:
@@ -643,7 +672,7 @@ protected:
         static const char* objects[] = {"block", "spike", "orb", "saw", "pad", "deco"};
         auto mod = Mod::get();
         if (!mod) return;
-        auto path = mod->getSaveDir() / "universe-offline-draft.json";
+        auto path = mod->getSaveDir() / "universe-ai-draft.json";
         std::ofstream file(path.string(), std::ios::out | std::ios::trunc);
         if (!file.is_open()) {
             FLAlertLayer::create("Universe Offline Draft", "Universe could not create the draft file.", "OK")->show();
@@ -723,7 +752,9 @@ protected:
             "sections is an array of up to 100 objects with name, gameplay, and events. Each event has numeric x and y, "
             "type (block, spike, saw, orb, pad, or deco), and a short note. Keep x coordinates non-decreasing, finite, "
             "within +/-10000000, and the total event count below 5000. Do not include Markdown fences. "
-            "This is a design blueprint, not a playable or import-ready .gmd level. User idea: " + prompt;
+            "The user will apply this result directly inside the currently open Geometry Dash editor. "
+            "Create a coherent sequence of objects with playable spacing and clear transitions. "
+            "This result will be converted into actual editor objects; do not describe it as a .gmd file. User idea: " + prompt;
         messages.push(userMessage);
         payload["messages"] = messages;
 
@@ -791,12 +822,75 @@ protected:
                 file.close();
 
                 auto message = fmt::format(
-                    "JSON blueprint generated and saved to:\n{}\n\nUse scripts/level_maker.py --input to validate or export it.",
+                    "AI draft generated. Open the level editor and click APPLY DRAFT TO OPEN EDITOR.\n\nDraft: {}",
                     path.string()
                 );
                 FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
             }
         );
+    }
+
+    void applySavedDraftToEditor() {
+        auto mod = Mod::get();
+        auto editor = LevelEditorLayer::get();
+        if (!mod || !editor || !editor->m_editorUI) {
+            FLAlertLayer::create("Universe AI", "Open a Geometry Dash level in the editor first, then apply the generated draft.", "OK")->show();
+            return;
+        }
+
+        auto path = mod->getSaveDir() / "universe-ai-draft.json";
+        std::ifstream file(path.string(), std::ios::in);
+        if (!file.is_open()) {
+            FLAlertLayer::create("Universe AI", "No generated draft was found. Generate an online AI draft first.", "OK")->show();
+            return;
+        }
+        std::string draft((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        if (draft.empty() || draft.size() > 2'000'000) {
+            FLAlertLayer::create("Universe AI", "The saved draft is empty or exceeds the 2 MB safety limit.", "OK")->show();
+            return;
+        }
+
+        static const std::regex eventPattern(
+            R"(\{\s*"x"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)\s*,\s*"y"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)\s*,\s*"type"\s*:\s*"([A-Za-z]+)")"
+        );
+        std::string serialized;
+        size_t count = 0;
+        for (std::sregex_iterator it(draft.begin(), draft.end(), eventPattern), end; it != end; ++it) {
+            if (count >= 1000) break;
+            float x = 0.f;
+            float y = 0.f;
+            try {
+                x = std::stof((*it)[1].str());
+                y = std::stof((*it)[2].str());
+            } catch (...) {
+                continue;
+            }
+            if (!std::isfinite(x) || !std::isfinite(y)) continue;
+            x = std::clamp(x, -10000000.f, 10000000.f);
+            y = std::clamp(y, -10000000.f, 10000000.f);
+
+            auto type = (*it)[3].str();
+            int objectID = 1;
+            if (type == "spike") objectID = 8;
+            else if (type == "saw") objectID = 39;
+            else if (type == "orb") objectID = 36;
+            else if (type == "pad") objectID = 35;
+            else if (type != "block" && type != "deco") continue;
+
+            serialized += fmt::format("1,{},2,{:.0f},3,{:.0f};", objectID, x, y);
+            ++count;
+        }
+
+        if (serialized.empty()) {
+            FLAlertLayer::create("Universe AI", "The draft contained no supported objects to place.", "OK")->show();
+            return;
+        }
+
+        editor->m_editorUI->pasteObjects(serialized, false, false);
+        editor->m_editorUI->updateButtons();
+        editor->m_editorUI->updateObjectInfoLabel();
+        auto message = fmt::format("Placed {} AI-generated objects into the open level. Use the editor Undo button if you want to revert the placement.", count);
+        FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
     }
 
     void onAction(CCObject* sender) {
@@ -813,6 +907,10 @@ protected:
 
         if (tag == 126) {
             generateAIDraft();
+            return;
+        }
+        if (tag == 149) {
+            applySavedDraftToEditor();
             return;
         }
         if (tag == 134) {
@@ -1061,7 +1159,7 @@ protected:
     }
 
     void closePanel(CCObject*) {
-        this->removeFromParentAndCleanup(true);
+        animateClosePanel(this);
     }
 
 public:
@@ -1140,10 +1238,13 @@ public:
         this->addChild(dim, 0);
 
         auto themeColor = mod->getSettingValue<ccColor4B>("panel-color");
-        auto panel = CCLayerColor::create(themeColor);
+        auto panel = CCDrawNode::create();
+        if (!panel) return false;
         m_panelBackground = panel;
-        panel->setContentSize({win.width * 0.82f, win.height * 0.78f});
+        m_panelSize = {win.width * 0.82f, win.height * 0.78f};
+        panel->setContentSize(m_panelSize);
         panel->setPosition({win.width * 0.09f, win.height * 0.11f});
+        drawRoundedPanel(panel, m_panelSize, themeColor);
         panel->setScale(0.94f);
         panel->runAction(CCEaseBackOut::create(CCScaleTo::create(0.22f, 1.f)));
         this->addChild(panel, 1);
@@ -1243,7 +1344,7 @@ class UniverseFloatingButton : public CCLayer {
         auto scene = CCDirector::sharedDirector()->getRunningScene();
         if (!scene) return;
         if (auto existing = scene->getChildByID("universe-panel"_spr)) {
-            existing->removeFromParentAndCleanup(true);
+            animateClosePanel(static_cast<CCLayer*>(existing));
             return;
         }
         auto panel = UniversePanel::create();
@@ -1266,19 +1367,31 @@ public:
 
     bool init() override {
         if (!CCLayer::init()) return false;
-        setContentSize({76.f, 52.f});
+        setContentSize({68.f, 68.f});
         setTouchEnabled(true);
-        auto background = CCLayerColor::create({28, 32, 58, 220}, 76.f, 52.f);
-        if (background) this->addChild(background);
+        auto background = CCDrawNode::create();
+        if (background) {
+            background->drawDot({34.f, 34.f}, 34.f, ccc4f(0.20f, 0.16f, 0.38f, 0.96f));
+            this->addChild(background);
+        }
         auto mod = Mod::get();
         if (!mod) return false;
+        auto logoPath = (mod->getResourcesDir() / "logo.png").string();
+        auto logo = CCSprite::create(logoPath.c_str());
+        if (logo) {
+            auto size = logo->getContentSize();
+            if (size.width > 0.f && size.height > 0.f)
+                logo->setScale(std::min(38.f / size.width, 38.f / size.height));
+            logo->setPosition({34.f, 42.f});
+            this->addChild(logo, 1);
+        }
         auto buttonText = mod->getSettingValue<std::string>("floating-button-label");
         if (buttonText.empty()) buttonText = "UNIV";
         auto label = CCLabelBMFont::create(buttonText.c_str(), "goldFont.fnt");
         if (label) {
-            label->setScale(0.62f);
-            label->setPosition({38.f, 26.f});
-            this->addChild(label, 1);
+            label->setScale(0.24f);
+            label->setPosition({34.f, 13.f});
+            this->addChild(label, 2);
         }
         return true;
     }
@@ -1306,9 +1419,22 @@ public:
         auto parent = getParent();
         auto local = parent ? parent->convertToNodeSpace(current) : current;
         auto win = CCDirector::sharedDirector()->getWinSize();
+        if (parent && ccpDistance(getPosition(), local) > 4.f) {
+            auto ghost = CCDrawNode::create();
+            if (ghost) {
+                ghost->drawDot({34.f, 34.f}, 31.f, ccc4f(0.48f, 0.36f, 0.92f, 0.42f));
+                ghost->setPosition(getPosition());
+                parent->addChild(ghost, getZOrder() - 1);
+                ghost->runAction(CCSequence::create(
+                    CCFadeTo::create(0.20f, 0),
+                    CCCallFunc::create(ghost, callfunc_selector(CCNode::removeFromParent)),
+                    nullptr
+                ));
+            }
+        }
         setPosition({
-            std::clamp(local.x, 38.f, win.width - 38.f),
-            std::clamp(local.y, 26.f, win.height - 26.f)
+            std::clamp(local.x, 34.f, win.width - 34.f),
+            std::clamp(local.y, 34.f, win.height - 34.f)
         });
     }
 
@@ -1344,7 +1470,7 @@ class $modify(UniversePlayLayer, PlayLayer) {
         auto scene = CCDirector::sharedDirector()->getRunningScene();
         if (!scene) return;
         if (auto existing = scene->getChildByID("universe-panel"_spr)) {
-            existing->removeFromParentAndCleanup(true);
+            animateClosePanel(static_cast<CCLayer*>(existing));
             return;
         }
         auto panel = UniversePanel::create();
@@ -1507,8 +1633,7 @@ class $modify(UniversePlayLayer, PlayLayer) {
         updateMacroPlayback(this, dt);
 
         if (mod) {
-            bool noclipRequested = mod->getSettingValue<bool>("practice-tools")
-                && mod->getSettingValue<bool>("noclip");
+            bool noclipRequested = mod->getSettingValue<bool>("noclip");
             bool speedhackRequested = mod->getSettingValue<bool>("speedhack-enabled");
 
             // With Safe Mode enabled, requesting a gameplay modifier in a
@@ -1522,9 +1647,9 @@ class $modify(UniversePlayLayer, PlayLayer) {
             if (noclipRequested || speedhackRequested || g_macroPlayingBack)
                 attemptUsedCheat = true;
 
-            // Modifiers have no effect in Normal Mode. Safe Mode above can
-            // move the attempt to Practice before any modified frame runs.
-            bool speedhackActive = this->m_isPracticeMode && speedhackRequested;
+            // With Safe Mode disabled, modifiers remain active in Normal Mode.
+            // With Safe Mode enabled, the attempt is marked Practice first.
+            bool speedhackActive = speedhackRequested;
             if (speedhackActive) {
                 float speed = mod->getSettingValue<float>("speedhack-speed");
                 dt *= std::clamp(speed, 0.25f, 3.0f);
@@ -1556,7 +1681,7 @@ class $modify(UniverseMenuLayer, MenuLayer) {
         auto scene = CCDirector::sharedDirector()->getRunningScene();
         if (!scene) return;
         if (auto existing = scene->getChildByID("universe-panel"_spr)) {
-            existing->removeFromParentAndCleanup(true);
+            animateClosePanel(static_cast<CCLayer*>(existing));
             return;
         }
         auto panel = UniversePanel::create();
@@ -1573,7 +1698,7 @@ $on_game(Loaded) {
         auto scene = CCDirector::sharedDirector()->getRunningScene();
         if (!scene) return;
         if (auto existing = scene->getChildByID("universe-panel"_spr)) {
-            existing->removeFromParentAndCleanup(true);
+            animateClosePanel(static_cast<CCLayer*>(existing));
             return;
         }
         auto panel = UniversePanel::create();
@@ -1589,7 +1714,10 @@ $on_game(Loaded) {
         if (!mod) return;
         bool enabled = !mod->getSettingValue<bool>("noclip");
         mod->setSettingValue<bool>("noclip", enabled);
-        if (enabled) mod->setSettingValue<bool>("practice-tools", true);
+        if (enabled && mod->getSettingValue<bool>("safe-mode")) {
+            if (auto layer = PlayLayer::get(); layer && !layer->m_isPracticeMode)
+                layer->m_isPracticeMode = true;
+        }
     });
 
     listenForKeybindSettingPresses("keybind-speedhack", [](Keybind const&, bool down, bool repeat, double) {
