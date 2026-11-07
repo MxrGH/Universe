@@ -54,6 +54,11 @@ missing_keybinds = [
 if missing_keybinds:
     fail("keybind settings are not referenced in source: " + ", ".join(missing_keybinds))
 
+if any(key.startswith("ai-") for key in settings):
+    fail("unfinished Uni-1 settings must not be shipped")
+if "ai-tab-enabled" in source or "ai-base-url" in source:
+    fail("unfinished Uni-1 UI must not be exposed in the release")
+
 for feature_marker in (
     'addAction("PRACTICE", 130',
     'addAction("VISUALS", 131',
@@ -95,9 +100,6 @@ for feature_marker in (
     "floating-button-label",
     "void generateAIDraft()",
     "Page::AI",
-    "ANTHROPIC_API_KEY",
-    "m_aiApiKeyInput",
-    '.header("x-api-key", apiKey)',
     "local-icon-override",
     "applyUniverseLocalIconColors",
     "icon-primary-color",
