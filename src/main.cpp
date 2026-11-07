@@ -493,6 +493,7 @@ protected:
                 bool overrideEnabled = mod->getSettingValue<bool>("local-icon-override");
                 addAction(overrideEnabled ? "DISABLE LOCAL OVERRIDE" : "EQUIP LOCAL ICON", 127, {0.f, -280.f});
                 addText("LOCAL ONLY: account unlocks and saved icon set are unchanged.", {-245.f, -310.f}, 0.27f);
+                addText("Primary, secondary and glow colors: Geode > Universe settings.", {-245.f, -340.f}, 0.24f);
                 break;
             case Page::Practice: {
                 auto mod = Mod::get();
