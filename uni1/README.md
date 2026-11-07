@@ -71,3 +71,15 @@ The Geode client is wired to this keyless inference endpoint and the server vali
 ## Tests
 
 Run quota tests from this folder with `pip install -r requirements-dev.txt` and `pytest -q`.
+
+## Open-source level-editor integrations
+
+Uni-1 now adapts selected MIT-licensed components and design guidance from:
+- [EditorAI](https://github.com/entity12208/EditorAI): level-design workflow, gameplay readability, decoration planning, and style recipes are injected into the inference system prompt.
+- [GD-AI-bridge](https://github.com/RibomX/GD-AI-bridge): its compact ASCII map representation and gameplay-object priority rules are adapted into the in-editor context sent with Uni-1 generation requests.
+
+These are source-level adaptations, not bundled upstream binaries. Their MIT notices are preserved in `vendor/`.
+[LayoutGenerator](https://github.com/ProfessorDragon/LayoutGenerator) was reviewed, but no source was copied because the inspected repository did not provide a license file.
+
+Compatibility remains limited to the current Universe draft schema: cube gameplay and block, spike, saw, orb, and pad placements. The added design guidance does not make unsupported decoration, portals, triggers, or other modes available yet.
+
