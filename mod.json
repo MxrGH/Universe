@@ -201,12 +201,18 @@
       "default": false
     },
     "preview-icon-id": {
-      "name": "Cube icon ID",
-      "description": "Icon ID in the selected category. Locked IDs can be previewed locally but cannot be equipped.",
+      "name": "Local icon override ID",
+      "description": "Icon ID rendered for your local player when Local Icon Override is enabled. This does not unlock or save account icons.",
       "type": "int",
       "default": 1,
       "min": 1,
       "max": 500
+    },
+    "local-icon-override": {
+      "name": "Local Icon Override",
+      "description": "Render the selected icon ID on your local player without changing account unlocks or saved icon selections.",
+      "type": "bool",
+      "default": false
     },
     "floating-button-x": {
       "name": "Floating button horizontal position",
