@@ -9,22 +9,20 @@ from __future__ import annotations
 
 import argparse
 import json
-import random
 from collections import Counter
 from pathlib import Path
 
-import torch
-from peft import PeftModel
-from transformers import AutoModelForCausalLM, AutoTokenizer
 
 try:
     from .draft_validation import validate_generated_level
     from .object_catalog import OBJECT_IDS
-    from .train import DEFAULT_BASE, SYSTEM_PROMPT
+    from .server import SYSTEM_PROMPT
+    from .train import DEFAULT_BASE
 except ImportError:
     from draft_validation import validate_generated_level
     from object_catalog import OBJECT_IDS
-    from train import DEFAULT_BASE, SYSTEM_PROMPT
+    from server import SYSTEM_PROMPT
+    from train import DEFAULT_BASE
 
 
 def load_eval_prompts(path: Path, *, limit: int | None = None) -> list[str]:
@@ -115,6 +113,7 @@ def generate_one(model, tokenizer, prompt: str, *, max_new_tokens: int, temperat
     }
     if temperature > 0:
         generation["temperature"] = temperature
+    import torch
     with torch.inference_mode():
         output = model.generate(encoded, **generation)
     new_tokens = output[0][encoded.shape[1]:]
@@ -149,7 +148,10 @@ def main() -> int:
         prompts = load_eval_prompts(args.prompts, limit=args.max_examples)
     except (OSError, ValueError) as error:
         parser.error(str(error))
-    random.seed(args.seed)
+    import torch
+    from peft import PeftModel
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
     torch.manual_seed(args.seed)
     tokenizer = AutoTokenizer.from_pretrained(args.adapter, use_fast=True)
     if tokenizer.pad_token_id is None:
