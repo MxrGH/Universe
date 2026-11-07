@@ -47,7 +47,7 @@ jobs:
         run: |
           python -c "import pathlib, py_compile; [py_compile.compile(str(p), doraise=True) for p in pathlib.Path('scripts').glob('*.py')]"
           python -m unittest discover -s scripts -p "test_*.py" -v
-          python scripts/level_maker.py --offline --prompt "Snapshot 26.5 smoke test" --output universe-level-smoke-test.json
+          python -c "import json, pathlib; pathlib.Path('universe-level-smoke-test.json').write_text(json.dumps({'title':'CI smoke test','difficulty':'normal','style':'test','sections':[{'name':'Section 1','gameplay':'cube','events':[{'x':0,'y':0,'type':'block','note':'fixture'}]}]}), encoding='utf-8')"
           python scripts/level_maker.py --input universe-level-smoke-test.json --format csv --output universe-level-smoke-test.csv
           python scripts/level_maker.py --input universe-level-smoke-test.json --format markdown --output universe-level-smoke-test.md
           python scripts/export_video.py --help
@@ -166,7 +166,7 @@ jobs:
 
             The package is published only after all three platform builds pass, project validation and regression tests pass, and the combined archive is inspected. CI compilation and package checks do not replace real in-game testing on physical devices.
 
-            Online AI uses a user-configured HTTPS API key from the process environment; no key is bundled. Offline Draft is procedural and does not run a neural model. AI transforms and deletions only target the current editor selection.
+            Online AI uses a user-configured HTTPS API key from the process environment; no key is bundled. AI transforms and deletions only target the current editor selection.
           files: |
             release-assets/*.geode
             logo.png
