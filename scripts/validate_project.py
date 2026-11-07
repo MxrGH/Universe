@@ -123,7 +123,6 @@ for feature_marker in (
     "preview-icon-type",
     "isIconUnlocked",
     "applySavedDraftToEditor",
-    "pasteObjects(serialized, false, false)",
     "drawRoundedPanel",
     "animateClosePanel",
     "drawDot({34.f, 34.f}",
