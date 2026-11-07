@@ -2,6 +2,9 @@
 
 ## Universe 1 — Snapshot 26.5
 
+- Remove the procedural offline draft generator from the in-game AI tab and standalone Level Maker; online AI remains API-key-based.
+- Remove the standalone offline generator CLI option and its regression test; CI now validates blueprint conversion without generating fake AI content.
+
 - Replace the AI editor's section-editing brief with a full-level creation brief: 6–12 connected sections and normally approximately 150–500 object placements generated from scratch.
 - Enforce a hard ceiling of 1,000,000 generated object placements per draft; preflight rejects an oversized draft before it modifies the editor.
 - Document that the one-million ceiling is not yet the practical paste capacity: the current apply path retains a 1,000-operation processing guard and 2 MB draft-file limit; chunked placement, progress, and cancellation remain unfinished.
