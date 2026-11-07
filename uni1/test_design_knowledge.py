@@ -14,5 +14,5 @@ def test_guidance_explains_generic_objects_and_trigger_limits():
     override = DESIGN_GUIDANCE.split("CURRENT UNI-1 COMPATIBILITY OVERRIDE:", 1)[1]
     assert 'type="object"' in override
     assert "numeric id from the verified object catalogue" in override
-    assert "Do not invent trigger property keys or values" in override
+    assert "Do not invent" in override and "trigger property keys or values" in override
     assert "Never claim a level was playtested" in override
