@@ -313,7 +313,7 @@
     },
     "ai-base-url": {
       "name": "Uni-1 server URL",
-      "description": "HTTPS URL for your self-hosted Uni-1 inference server. Leave blank until a trained adapter is deployed. No provider API key is used.",
+      "description": "HTTPS for remote Uni-1 servers, or HTTP loopback (localhost/127.0.0.1) for local desktop development. No provider API key is used.",
       "type": "string",
       "default": ""
     }
