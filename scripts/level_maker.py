@@ -27,54 +27,6 @@ MAX_EVENTS = 5000
 MAX_COORDINATE = 10_000_000
 
 
-def offline_draft(prompt: str, difficulty: str, length: int, style: str, seed: int) -> dict:
-    rng = random.Random(seed)
-    section_count = max(3, min(24, length // 8))
-    spacing = 120
-    x = 0
-    sections = []
-    difficulty_scale = {"easy": 1, "normal": 2, "hard": 3, "insane": 4, "demon": 5}[difficulty]
-    gameplay_cycle = ["cube", "ship", "ball", "ufo", "wave", "robot", "spider", "swing"]
-    for section_index in range(section_count):
-        events = []
-        event_count = max(2, min(10, difficulty_scale + rng.randint(1, 4)))
-        for _ in range(event_count):
-            kind = rng.choices(
-                ["block", "spike", "saw", "orb", "pad", "deco"],
-                weights=[28, 30 + difficulty_scale * 5, 8 + difficulty_scale * 3, 12, 10, 5],
-                k=1,
-            )[0]
-            events.append({
-                "x": x,
-                "y": rng.choice([0, 30, 60, 90, 120]),
-                "type": kind,
-                "note": f"{style} section {section_index + 1}",
-            })
-            x += spacing
-        sections.append({
-            "name": f"Section {section_index + 1}",
-            "gameplay": gameplay_cycle[section_index % len(gameplay_cycle)],
-            "events": events,
-        })
-        x += spacing * 2
-
-    return {
-        "format": "universe-level-draft-v1",
-        "generator": "offline-template",
-        "title": prompt[:64] or "Untitled Universe Draft",
-        "prompt": prompt,
-        "difficulty": difficulty,
-        "length_units": length,
-        "style": style,
-        "seed": seed,
-        "sections": sections,
-        "notes": [
-            "This is a design blueprint, not a native Geometry Dash level.",
-            "Review spacing, gameplay transitions, and song timing in an editor.",
-        ],
-    }
-
-
 def validate_draft(data: object) -> dict:
     if not isinstance(data, dict):
         raise ValueError("The draft must be a JSON object.")
@@ -157,7 +109,7 @@ def request_ai_draft(args: argparse.Namespace) -> dict:
     key_env = args.api_key_env or ("ANTHROPIC_API_KEY" if args.provider == "anthropic" else "UNIVERSE_AI_API_KEY")
     api_key = os.environ.get(key_env)
     if not api_key:
-        raise RuntimeError(f"{key_env} is not set. Add it to your local environment; never commit it. Use --offline for a template.")
+        raise RuntimeError(f"{key_env} is not set. Add it to your local environment; never commit it.")
 
     schema = {
         "title": "string",
@@ -178,7 +130,7 @@ def request_ai_draft(args: argparse.Namespace) -> dict:
         + "Use non-decreasing x coordinates, finite coordinates, playable spacing, and clear section transitions. "
         + "Keep at most 100 sections and 5000 events. Do not wrap the JSON in Markdown fences. "
         + "For song/Newgrounds ideas, provide mood/search suggestions only; do not claim to download or license music. "
-        + "This is a design blueprint, not a native playable .gmd file."
+        + "This is a design blueprint, not a playable Geometry Dash level save."
     )
     model = args.model or ("claude-sonnet-4-6" if args.provider == "anthropic" else "gpt-4o-mini")
     if args.provider == "anthropic":
@@ -276,8 +228,6 @@ def main() -> int:
     parser.add_argument("--difficulty", choices=sorted(DIFFICULTIES), default="hard")
     parser.add_argument("--length", type=int, default=60, help="Approximate length in design units.")
     parser.add_argument("--style", default="mixed", help="Preferred gameplay style.")
-    parser.add_argument("--seed", type=int, default=2026, help="Offline generator seed.")
-    parser.add_argument("--offline", action="store_true", help="Use the deterministic local template generator.")
     parser.add_argument("--provider", choices=["anthropic", "openai-compatible"], default="anthropic")
     parser.add_argument("--base-url", default=None, help="Optional API base URL override.")
     parser.add_argument("--model", default=None, help="Model name override.")
@@ -301,8 +251,7 @@ def main() -> int:
             data = json.loads(strip_json_fence(raw_input))
             draft = validate_draft(data)
         else:
-            draft = offline_draft(args.prompt, args.difficulty, args.length, args.style, args.seed) if args.offline else request_ai_draft(args)
-            draft = validate_draft(draft)
+            draft = validate_draft(request_ai_draft(args))
         export_draft(draft, args.output, args.format)
     except (RuntimeError, ValueError, KeyError, IndexError, OSError, OverflowError, json.JSONDecodeError) as error:
         print(f"Universe Level Maker: {error}", file=sys.stderr)
