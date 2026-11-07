@@ -20,9 +20,11 @@ from pydantic import BaseModel, Field
 try:
     from .draft_validation import validate_generated_level
     from .design_knowledge import DESIGN_GUIDANCE
+    from .object_catalog import relevant_object_catalog
 except ImportError:  # uvicorn server:app when launched from the uni1 directory
     from draft_validation import validate_generated_level
     from design_knowledge import DESIGN_GUIDANCE
+    from object_catalog import relevant_object_catalog
 
 BASE_MODEL = os.getenv("UNI1_BASE_MODEL", "Qwen/Qwen2.5-0.5B-Instruct")
 ADAPTER_DIR = Path(os.getenv("UNI1_ADAPTER_DIR", "artifacts/uni1-adapter"))
@@ -37,9 +39,13 @@ SYSTEM_PROMPT = (
     "Return only valid JSON for the Universe level-draft schema. "
     "Create 6 to 8 connected sections and 96 to 144 ordered placements. "
     "Use the design workflow below to plan rhythm, obstacle readability, visual composition, "
-    "and coherent style. The compatibility override at the end is mandatory: "
-    "only cube gameplay and block, spike, saw, orb, and pad events are supported. "
-    "Never claim a draft was playtested or that decoration notes were placed.\n\n"
+    "and coherent style. The current draft schema supports named primitives or generic editor objects. "
+    "Generic objects use type='object', an exact numeric id from the supplied catalogue, and optional "
+    "properties as comma-separated numeric GD save-string key/value pairs. They may represent decorations, "
+    "portals, triggers, effects, gameplay objects, or editor utilities. Never invent an object ID. "
+    "Use only trigger properties you can identify confidently. Default to cube gameplay, but use mode "
+    "portals when the prompt requests mode changes. Include actual decoration objects when requested. "
+    "Never claim a draft was playtested.\n\n"
     + DESIGN_GUIDANCE
 )
 
@@ -242,6 +248,17 @@ def chat_completions(payload: ChatRequest, x_uni1_install_id: str | None = Heade
                 recent_requests.pop(key, None)
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     messages.extend(message.model_dump() for message in payload.messages if message.role != "system")
+    user_context = "\\n".join(message.content for message in payload.messages if message.role == "user")
+    object_catalog = relevant_object_catalog(user_context)
+    if object_catalog:
+        for message in reversed(messages):
+            if message["role"] == "user":
+                message["content"] += (
+                    "\\n\\nVERIFIED EDITOR OBJECT CATALOGUE (name = numeric object ID):\\n"
+                    + object_catalog
+                    + "\\nUse these exact IDs; this catalogue does not specify trigger property layouts."
+                )
+                break
     prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     inputs = tokenizer(prompt, return_tensors="pt")
     prompt_tokens = int(inputs["input_ids"].shape[1])
