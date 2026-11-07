@@ -1,6 +1,6 @@
-# Universe 1 — Snapshot 26.6
+# Universe 1 — Snapshot 26.5
 
-Universe 1 is a Geometry Dash 2.2091 Geode client by MxrGH. This update ships as Geode package v1.1.2.
+Universe 1 is a Geometry Dash 2.2091 Geode client by MxrGH. This update ships as Geode package v1.1.1.
 
 The client includes local gameplay modifiers, Safe Mode practice marking, StartPos tools, object hitboxes, player-bounds overlay, movement trail and projection, FPS controls, Practice Mode replay tools, icon previews, local-only icon overrides, keybinds, themes, presets, and touch controls.
 
