@@ -20,7 +20,7 @@ STYLES = [
 DIFFICULTIES = ["easy", "normal", "hard", "insane"]
 MODES = ["cube", "ship", "ball", "ufo", "wave", "robot", "spider", "swing"]
 MODE_PORTALS = {
-    "ship": 13, "ball": 47, "ufo": 111, "wave": 660,
+    "cube": 12, "ship": 13, "ball": 47, "ufo": 111, "wave": 660,
     "robot": 745, "spider": 1331, "swing": 1933,
 }
 DECORATION_IDS = [15, 16, 17, 85, 86, 87]
