@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from level_maker import export_draft, offline_draft, validate_draft
+from level_maker import export_draft, validate_draft
 
 
 def draft_with(events):
@@ -16,12 +16,6 @@ def draft_with(events):
 
 
 class LevelMakerTests(unittest.TestCase):
-    def test_offline_draft_is_deterministic(self):
-        first = offline_draft("Neon wave", "hard", 32, "wave", 1234)
-        second = offline_draft("Neon wave", "hard", 32, "wave", 1234)
-        self.assertEqual(first, second)
-        self.assertGreater(sum(len(s["events"]) for s in first["sections"]), 0)
-
     def test_valid_draft_is_normalized(self):
         result = validate_draft(draft_with([
             {"x": 0, "y": 10, "type": "block"},
