@@ -41,6 +41,11 @@ class Uni1DraftValidationTests(unittest.TestCase):
             self.assertGreater(count, 0)
             self.assertLessEqual(count, 1000)
             self.assertEqual(draft["format"], "universe-level-draft-v1")
+            self.assertEqual(count, sum(len(section["events"]) for section in draft["sections"]))
+            self.assertTrue(96 <= count <= 144)
+            self.assertTrue(all(section["gameplay"] == "cube" for section in draft["sections"]))
+            self.assertTrue(all(event["type"] in {"block", "spike", "saw", "orb", "pad"}
+                                for section in draft["sections"] for event in section["events"]))
 
     def test_synthetic_generator_is_reproducible(self):
         first = make_example(7, random.Random(1234))
@@ -65,6 +70,12 @@ class Uni1DraftValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "non-decreasing"):
             validate_draft_payload(draft)
 
+    def test_non_cube_mode_is_rejected(self):
+        draft = make_draft()
+        draft["sections"][0]["gameplay"] = "ship"
+        with self.assertRaisesRegex(ValueError, "Unsupported gameplay mode"):
+            validate_draft_payload(draft)
+
     def test_non_add_action_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "only add"):
             validate_draft_payload(make_draft([{
@@ -72,8 +83,10 @@ class Uni1DraftValidationTests(unittest.TestCase):
             }]))
 
     def test_unsupported_object_is_rejected(self):
-        with self.assertRaisesRegex(ValueError, "Unsupported object type"):
-            validate_draft_payload(make_draft([{"x": 0, "y": 0, "type": "portal"}]))
+        for object_type in ("portal", "deco"):
+            with self.subTest(object_type=object_type):
+                with self.assertRaisesRegex(ValueError, "Unsupported object type"):
+                    validate_draft_payload(make_draft([{"x": 0, "y": 0, "type": object_type}]))
 
     def test_object_limit_is_enforced(self):
         events = [{"x": i, "y": 0, "type": "block"} for i in range(1001)]
