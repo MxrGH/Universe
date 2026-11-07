@@ -64,7 +64,7 @@ class Uni1DraftValidationTests(unittest.TestCase):
         draft = make_draft()
         draft["sections"].append({
             "name": "Second",
-            "gameplay": "ship",
+            "gameplay": "cube",
             "events": [{"x": -1, "y": 0, "type": "block"}],
         })
         with self.assertRaisesRegex(ValueError, "non-decreasing"):
