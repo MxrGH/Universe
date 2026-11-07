@@ -30,6 +30,15 @@ class Uni1RuntimeContractTests(unittest.TestCase):
         self.assertIn("raise HTTPException(status_code=503", health)
         self.assertIn('"status": "ready"', health)
 
+    def test_local_http_is_limited_to_loopback_and_remote_urls_require_https(self):
+        source = (ROOT / "src" / "main.cpp").read_text(encoding="utf-8")
+        self.assertIn("bool isAllowedUni1ServerURL", source)
+        self.assertIn('scheme == "https"', source)
+        self.assertIn('host == "localhost"', source)
+        self.assertIn('host == "127.0.0.1"', source)
+        self.assertIn('host == "[::1]"', source)
+        self.assertIn("isAllowedUni1ServerURL(baseUrl)", source)
+
     def test_compose_is_loopback_bound_and_persists_quota_database(self):
         compose = (ROOT / "uni1" / "compose.yaml").read_text(encoding="utf-8")
         self.assertIn('"127.0.0.1:8000:8000"', compose)
