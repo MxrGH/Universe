@@ -1,36 +1,38 @@
-# Universe AI Level Editor
+# Universe AI Level Creator
 
-Snapshot 26.5 keeps AI editing inside the currently open Geometry Dash editor. It does not require GDShare or a generated .gmd file.
+The in-game AI creator generates a JSON level layout and places supported objects directly into the currently open Geometry Dash editor. It does not export a .gmd file and does not require GDShare.
 
 ## In-game workflow
 
-1. Open the target level in the Geometry Dash editor.
-2. Select objects if you want to use selection-based editing.
-3. Open Universe → AI and describe the task.
-4. Choose GENERATE ONLINE or OFFLINE DRAFT.
-5. Choose APPLY DRAFT TO OPEN EDITOR.
-6. Use the editor Undo control to revert inserted or changed objects.
+1. Open an empty level in the Geometry Dash editor.
+2. Open Universe and select the AI tab.
+3. Enter a complete level concept in the prompt field.
+4. Enter an API key in the AI tab for this request. On desktop, the `ANTHROPIC_API_KEY` process environment variable is also accepted.
+5. Choose **GENERATE ONLINE** and wait for the result message.
+6. Return to the editor and choose **CREATE FULL LEVEL IN EDITOR**.
+7. Inspect the layout and use the editor Undo control if you want to revert it.
 
-Before online generation, Universe sends a bounded live summary: total object count, up to 120 existing objects with unique IDs, object IDs, positions and rotations, plus up to 30 selected-object details. A new request reads the current editor state, supporting follow-up instructions.
+The in-game prompt requests a complete level made from connected sections. The model cannot guarantee a fun, balanced, or completable level; review and test the generated result.
 
-## Supported editor operations
+## Android and key handling
 
-- Add: insert supported blocks, spikes, saws, orbs, and pads at generated coordinates.
-- Move selected / rotate selected / delete selected: operate on the current selection.
-- Move object / rotate object / delete object: operate on one existing object using its exact unique ID from the live editor summary.
+Android apps normally do not inherit a key from a shell environment, so the AI tab has a per-request API-key field. The key entered there is held only for the current request and is not written to Geode settings or a file by Universe. It is cleared when the AI page is rebuilt. The key is visible while typing; avoid screen recording or screenshots during entry.
 
-Object-specific actions are accepted only when the target unique ID still exists in the open level at apply time. The AI is instructed not to invent IDs. Transforms are serialized and pasted through the editor integration; deletions use the editor's object-removal path. Use the editor Undo control to revert changes.
+The model name and HTTPS API base URL are configured in **Geode → Universe settings**. The current in-game request uses the Anthropic Messages API format. API use may cost money; use a provider account only with the account owner's permission. Never send API keys in chat, commit them, or include them in screenshots.
 
-The apply routine limits a batch to 1,000 supported operations, caps selected-object processing, and bounds coordinates and offsets before converting them to editor data.
+## Supported object placements and limits
 
-## Online AI configuration
+The current in-game creator supports blocks, spikes, saws, orbs, pads, and decoration objects. It does not create portals, triggers, or song timing.
 
-The in-game client reads ANTHROPIC_API_KEY from the Geometry Dash process environment. Configure the model and HTTPS API base URL in Geode settings. Do not paste API keys into chat, source files, commits, or screenshots. API calls may incur charges; involve a parent or guardian before using a paid account.
+Current safety limits:
+- The saved JSON draft must be no larger than 2 MB.
+- The preflight rejects more than 1,000,000 generated placements before changing the editor.
+- The current apply loop processes at most 1,000 add/edit/delete operations in one pass. The one-million value is only a validation ceiling, **not** the practical placement capacity.
+- The parser uses regular-expression event extraction rather than a complete JSON schema parser. Unexpected model output may be rejected or skipped.
+- The apply path is not chunked and has no progress/cancel UI. Do not request extremely large levels.
 
-## Offline draft
+Start with an empty level. The creator adds objects; it does not clear or replace existing contents. Use the editor Undo control to revert.
 
-OFFLINE DRAFT creates a procedural template without a network request or neural model. It can be applied to the open editor, but it is not a neural AI model.
+## Standalone blueprint helper
 
-## Standalone design helper
-
-scripts/level_maker.py remains available for JSON blueprint validation and CSV/Markdown exports. Those exports are optional planning tools; they are not required for the in-game editor workflow.
+`scripts/level_maker.py` validates and exports planning blueprints as JSON, CSV, or Markdown. These are design documents, not native Geometry Dash level saves and are not required for the in-game workflow. The standalone helper currently limits a blueprint to 5,000 events.
