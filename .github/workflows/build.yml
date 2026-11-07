@@ -100,6 +100,7 @@ jobs:
                   "mxrmc.universe.android64.so",
                   "mxrmc.universe.android32.so",
                   "resources/mxrmc.universe/click.mp3",
+                  "resources/mxrmc.universe/object_ids.txt",
                   "resources/mxrmc.universe/logo.png",
               }
               missing = required - names
