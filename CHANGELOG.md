@@ -2,6 +2,9 @@
 
 ## Universe 1 — Snapshot 26.5
 
+- Refresh the panel with a purple/cyan accent frame, local-client status header, selected-tab highlighting, and clearer icon-lab state labels.
+- Clarify that icon browsing is a local preview and equipping remains restricted to icons already unlocked on the account.
+
 - Remove the procedural offline draft generator from the in-game AI tab and standalone Level Maker; online AI remains API-key-based.
 - Add a Settings-page in-game runtime self-test for mod, scene, GameManager, and settings access.
 - Remove the standalone offline generator CLI option and its regression test; CI now validates blueprint conversion without generating fake AI content.
