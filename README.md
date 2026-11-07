@@ -31,6 +31,10 @@ Safe Mode is a local safeguard. Universe does not claim to guarantee server-side
 - Circular draggable UNIV control with the Universe logo and a fading motion trail.
 - Saved positions, touch-friendly Android controls, Windows mouse/keyboard support, themes, and global click sound.
 
+## In-game diagnostics
+
+Open Universe, go to **Settings**, and choose **RUN IN-GAME SELF TEST**. It checks that the mod instance, game scene, GameManager, and core settings can be accessed, and reports whether a gameplay or editor context is currently open. This is a runtime smoke test only; it does not simulate every feature or replace manual gameplay testing on Windows and Android.
+
 ## Icon tools
 
 - Preview Cube, Ship, Ball, UFO, Wave, Robot, Spider, Swing, and Jetpack IDs.
