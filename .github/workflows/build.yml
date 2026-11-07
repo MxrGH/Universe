@@ -103,7 +103,7 @@ jobs:
               metadata = json.loads(archive.read("mod.json"))
               assert metadata["id"] == "mxrmc.universe"
               assert metadata["name"] == "Universe 1"
-              assert metadata["version"] == "v1.1.2"
+              assert metadata["version"] == "v1.1.1"
               assert metadata["gd"]["win"] == "2.2091"
               assert metadata["gd"]["android"] == "2.2091"
               assert archive.read("resources/mxrmc.universe/logo.png")[:8] == b"\x89PNG\r\n\x1a\n"
@@ -180,7 +180,7 @@ jobs:
             echo "Android API 35 emulator booted and ADB commands succeeded."
 
   release:
-    name: Publish Universe 1 — Snapshot 26.6
+    name: Publish Universe 1 — Snapshot 26.5
     runs-on: ubuntu-latest
     needs: package
     if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[release]')))
@@ -194,21 +194,21 @@ jobs:
           name: Universe-1-Snapshot-26.5
           path: release-assets
 
-      - name: Publish Snapshot 26.6 prerelease
+      - name: Publish Snapshot 26.5 prerelease
         uses: softprops/action-gh-release@v2
         with:
           tag_name: snapshot-26.5
           target_commitish: ${{ github.sha }}
-          name: Universe 1 — Snapshot 26.6
+          name: Universe 1 — Snapshot 26.5
           prerelease: true
           draft: false
           make_latest: false
           overwrite_files: true
           generate_release_notes: true
           body: |
-            # Universe 1 — Snapshot 26.6 (Final Planned Snapshot)
+            # Universe 1 — Snapshot 26.5 (Final Planned Snapshot)
 
-            Snapshot 26.6 completes the planned Universe 1 snapshot series for Geometry Dash 2.2091.
+            Snapshot 26.5 completes the planned Universe 1 snapshot series for Geometry Dash 2.2091.
 
             Uni-1's AI panel is experimental and is not a working hosted feature in this snapshot: no trained adapter weights or deployed inference service are included. The editor-side draft importer currently supports cube-mode block, spike, saw, orb, and pad geometry only. The existing StartPos switcher, Noclip and Speedhack toggles, Safe Mode, hitboxes, movement trail and projection, FPS controls, Practice Mode recorder/replay, icon previews, themes, presets, keybinds, global touch sound, and circular draggable UNIV button are retained.
 
