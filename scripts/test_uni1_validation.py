@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "uni1"))
-from draft_validation import validate_draft_payload
+from draft_validation import validate_draft_payload, validate_generated_level
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "uni1"))
 from generate_dataset import make_example
 import random
@@ -37,7 +37,7 @@ class Uni1DraftValidationTests(unittest.TestCase):
         rng = random.Random(20261107)
         for index in range(32):
             row = make_example(index, rng)
-            draft, count = validate_draft_payload(json.loads(row["response"]))
+            draft, count = validate_generated_level(json.loads(row["response"]))
             self.assertGreater(count, 0)
             self.assertLessEqual(count, 1000)
             self.assertEqual(draft["format"], "universe-level-draft-v1")
@@ -46,6 +46,16 @@ class Uni1DraftValidationTests(unittest.TestCase):
             self.assertTrue(all(section["gameplay"] == "cube" for section in draft["sections"]))
             self.assertTrue(all(event["type"] in {"block", "spike", "saw", "orb", "pad"}
                                 for section in draft["sections"] for event in section["events"]))
+
+    def test_generated_level_gate_rejects_short_drafts(self):
+        with self.assertRaisesRegex(ValueError, "96 to 144"):
+            validate_generated_level(make_draft())
+
+    def test_generated_level_gate_accepts_generated_examples(self):
+        row = make_example(3, random.Random(2026))
+        draft, count = validate_generated_level(json.loads(row["response"]))
+        self.assertTrue(6 <= len(draft["sections"]) <= 8)
+        self.assertTrue(96 <= count <= 144)
 
     def test_synthetic_generator_is_reproducible(self):
         first = make_example(7, random.Random(1234))
