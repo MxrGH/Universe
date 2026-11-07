@@ -37,9 +37,9 @@ namespace {
         return buffer;
     }
 
-    std::filesystem::path uniAIUsagePath() {
+    std::string uniAIUsagePath() {
         auto mod = Mod::get();
-        return mod ? mod->getSaveDir() / "universe-ai-usage.txt" : std::filesystem::path{};
+        return mod ? (mod->getSaveDir() / "universe-ai-usage.txt").string() : std::string{};
     }
 
     UniAIUsage loadUniAIUsage() {
