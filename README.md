@@ -96,7 +96,7 @@ A successful CI build confirms compilation and packaging. It does not replace ga
 
 ## Important limitations
 
-- AI editing can target an exact existing object unique ID shown in its live editor context, or operate on the current selection. It does not guess IDs that are absent from that context.
+- Uni-1 AI generation is not included in the shipped interface. The `uni1/` directory is development-only and contains no trained weights or deployed server.
 - Noclip and Speedhack can run in Normal Mode when Safe Mode is OFF. Modified attempts are not represented as legitimate server-verified completions.
 - Replay recording and playback are Practice Mode-only.
 - Movement projection estimates recent motion; it is not full Geometry Dash physics.
