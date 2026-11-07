@@ -10,6 +10,7 @@
 #include <random>
 #include <sstream>
 #include <vector>
+#include <unordered_set>
 #include <Geode/Geode.hpp>
 #include <Geode/utils/web.hpp>
 #include <Geode/loader/GameEvent.hpp>
@@ -960,6 +961,21 @@ protected:
         }
     }
 
+    const std::unordered_set<int>& knownEditorObjectIDs() {
+        static const std::unordered_set<int> ids = [] {
+            std::unordered_set<int> loaded;
+            auto mod = Mod::get();
+            if (!mod) return loaded;
+            std::ifstream file(mod->getResourcesDir() / "object_ids.txt");
+            int id = 0;
+            while (file >> id) {
+                if (id > 0 && id <= 5000) loaded.insert(id);
+            }
+            return loaded;
+        }();
+        return ids;
+    }
+
     std::string buildEditorContext() {
         auto editor = LevelEditorLayer::get();
         if (!editor || !editor->m_editorUI)
@@ -1193,6 +1209,7 @@ protected:
         static const std::regex typePattern(R"rx("type"\s*:\s*"([A-Za-z]+)")rx");
         static const std::regex objectIDPattern(R"("id"\s*:\s*([0-9]+))");
         static const std::regex propertiesPattern(R"rx("properties"\s*:\s*"([^"]*)")rx");
+        static const std::regex propertyValuePattern(R"(-?\d+(?:\.\d+)?(?:\.-?\d+(?:\.\d+)?)* )");
         static const std::regex actionPattern(R"rx("action"\s*:\s*"([A-Za-z_]+)")rx");
         static const std::regex dxPattern(R"("dx"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
         static const std::regex dyPattern(R"("dy"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
@@ -1372,26 +1389,54 @@ protected:
                 std::smatch idMatch, propertiesMatch;
                 if (!std::regex_search(event, idMatch, objectIDPattern)) continue;
                 try { objectID = std::stoi(idMatch[1].str()); } catch (...) { continue; }
-                if (objectID < 1 || objectID > 5000) continue;
+                if (objectID < 1 || objectID > 5000 || !knownEditorObjectIDs().contains(objectID)) continue;
 
                 if (std::regex_search(event, propertiesMatch, propertiesPattern)) {
                     extraProperties = propertiesMatch[1].str();
                     if (extraProperties.size() > 2000) continue;
                     if (!extraProperties.empty()) {
+                        static const std::unordered_set<int> allowedPropertyKeys = {
+                            4,5,6,7,8,9,10,11,12,13,14,15,16,17,19,20,21,22,23,24,25,
+                            28,29,30,32,33,34,35,41,42,45,46,47,48,50,51,52,54,55,56,
+                            57,58,59,60,61,62,63,64,65,66,67,68,69,71,72,73,75,76,
+                            77,78,79,80,81,82,84,85,86,87,88,89,90,91,92,93,94,95,
+                            96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,
+                            111,112,113,114,115,116,117,118,119,120,121,122,123,124,
+                            125,126,127,128,129
+                        };
                         std::stringstream propertyStream(extraProperties);
                         std::string key, value;
                         bool valid = true;
                         size_t pairCount = 0;
+                        std::unordered_set<int> seenKeys;
                         while (std::getline(propertyStream, key, ',')) {
                             if (!std::getline(propertyStream, value, ',')) { valid = false; break; }
                             if (key.empty() || !std::all_of(key.begin(), key.end(), [](unsigned char ch) { return std::isdigit(ch); })
-                                || key == "1" || key == "2" || key == "3" || value.empty()
-                                || value.find(';') != std::string::npos
-                                || value.find('"') != std::string::npos
-                                || value.find('\\n') != std::string::npos
-                                || value.find('\\r') != std::string::npos) {
+                                || value.empty() || value.find_first_of(";\\r\\n\\\"") != std::string::npos) {
                                 valid = false;
                                 break;
+                            }
+                            int numericKey = 0;
+                            try { numericKey = std::stoi(key); } catch (...) { valid = false; break; }
+                            if (!allowedPropertyKeys.contains(numericKey) || numericKey <= 3
+                                || !seenKeys.insert(numericKey).second
+                                || !std::regex_match(value, propertyValuePattern)) {
+                                valid = false;
+                                break;
+                            }
+                            if (numericKey == 57) {
+                                std::stringstream groupStream(value);
+                                std::string groupText;
+                                size_t groupCount = 0;
+                                while (std::getline(groupStream, groupText, '.')) {
+                                    int groupID = 0;
+                                    try { groupID = std::stoi(groupText); } catch (...) { valid = false; break; }
+                                    if (groupID < 1 || groupID > 9999 || ++groupCount > 10) {
+                                        valid = false;
+                                        break;
+                                    }
+                                }
+                                if (!valid || groupCount == 0) break;
                             }
                             if (++pairCount > 64) { valid = false; break; }
                         }
