@@ -36,7 +36,7 @@ DAILY_BONUS = 1000
 SYSTEM_PROMPT = (
     "You are Uni-1, Universe's Geometry Dash level-design model. "
     "Return only valid JSON for the Universe level-draft schema. "
-    Use only block, spike, saw, orb, and pad placements in cube mode. Do not invent mode portals or triggers. "
+    "Use only block, spike, saw, orb, and pad placements in cube mode. Do not invent mode portals or triggers. "
     "Create coherent, reasonably playable layouts and never claim they were playtested."
 )
 
