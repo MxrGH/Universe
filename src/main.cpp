@@ -631,7 +631,7 @@ protected:
                 if (layer) addAction("RESTART ATTEMPT", 133, {0.f, -135.f});
                 addText("These tools do not fake coins, records, or leaderboard results.", {-245.f, -175.f}, 0.29f);
                 addText("Online level-design helper: scripts/level_maker.py", {-245.f, -165.f}, 0.29f);
-                addText("Configure an AI API key to generate a design blueprint.", {-245.f, -200.f}, 0.27f);
+                addText("Set a self-hosted Uni-1 server URL in Geode > Universe settings.", {-245.f, -200.f}, 0.27f);
                 addText("Blueprint output is not a playable level save.", {-245.f, -235.f}, 0.27f);
                 break;
             }
@@ -687,8 +687,7 @@ protected:
                 break;
             case Page::AI: {
                 addText("UNI-1  /  AI LEVEL CREATOR", {-245.f, 105.f});
-                auto quotaText = uniAIQuotaLabel();
-                addText(quotaText.c_str(), {-245.f, 82.f}, 0.29f);
+                addText("Server quota: 100/day; 1,000/day after 7 UNIV taps.", {-245.f, 82.f}, 0.29f);
                 addText("Level idea", {-245.f, 72.f}, 0.31f);
                 m_aiPrompt = CCTextInputNode::create(430.f, 42.f, "Paste or type your full level prompt here...", "bigFont.fnt");
                 if (m_aiPrompt) {
@@ -1522,11 +1521,11 @@ public:
         m_actionMenu->setPosition({0.f, 0.f});
         this->addChild(m_actionMenu, 6);
 
-        float left = win.width * 0.16f;
+        float left = win.width * 0.12f;
         float tabY = win.height * 0.64f;
         Page pages[] = {Page::Player, Page::Practice, Page::Level, Page::Visuals,
-                        Page::Recorder, Page::Keybinds, Page::Settings};
-        int pageCount = 7;
+                        Page::Recorder, Page::Keybinds, Page::Settings, Page::AI};
+        int pageCount = 8;
         for (int i = 0; i < pageCount; ++i) {
             auto label = CCLabelBMFont::create(pageName(pages[i]), "bigFont.fnt");
             label->setScale(0.33f);
@@ -1534,7 +1533,7 @@ public:
             m_tabLabels.push_back(label);
             auto item = CCMenuItemLabel::create(label, this, menu_selector(UniversePanel::onTab));
             item->setTag(200 + i);
-            item->setPosition({left + i * (win.width * 0.113f), tabY});
+            item->setPosition({left + i * (win.width * 0.105f), tabY});
             m_menu->addChild(item);
         }
 
@@ -1550,7 +1549,7 @@ public:
 
     void onTab(CCObject* sender) {
         int index = static_cast<CCNode*>(sender)->getTag() - 200;
-        if (index < 0 || index > 6) return;
+        if (index < 0 || index > 7) return;
         auto mod = Mod::get();
         if (!mod) return;
         showPage(static_cast<Page>(index));
