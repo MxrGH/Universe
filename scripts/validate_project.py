@@ -54,10 +54,18 @@ missing_keybinds = [
 if missing_keybinds:
     fail("keybind settings are not referenced in source: " + ", ".join(missing_keybinds))
 
-if any(key.startswith("ai-") for key in settings):
-    fail("unfinished Uni-1 settings must not be shipped")
-if "ai-tab-enabled" in source:
-    fail("unfinished Uni-1 UI must not be exposed in the release")
+# Uni-1 is intentionally exposed as an experimental, self-hosted integration.
+# It must remain clearly non-operational until trained weights and a server exist.
+ai_settings = {key for key in settings if key.startswith("ai-")}
+if ai_settings != {"ai-base-url"}:
+    fail("only the keyless Uni-1 server URL setting may be shipped")
+ai_url = settings.get("ai-base-url", {})
+if ai_url.get("type") != "string" or ai_url.get("default") != "":
+    fail("Uni-1 server URL must be an empty-by-default string setting")
+if "no trained adapter or live server is included" not in readme_text.lower():
+    fail("README must disclose that Uni-1 has no trained adapter or live server")
+if "Page::Settings, Page::AI" not in source:
+    fail("Uni-1 AI page must be reachable from the in-game tab bar")
 
 for feature_marker in (
     'addAction("PRACTICE", 130',
