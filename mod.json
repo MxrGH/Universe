@@ -8,13 +8,13 @@
   "name": "Universe 1",
   "version": "v1.1.1",
   "developer": "MxrGH",
-  "description": "Geometry Dash hack client with local gameplay modifiers, StartPos tools, visual overlays, replay tools, an animated interface, and context-aware AI editor operations.",
+  "description": "Geometry Dash mod menu with local gameplay modifiers, visual tools, icon preview, practice replays, and an animated interface.",
   "tags": [
     "gameplay",
-    "interface",
+    "customization",
+    "practice",
     "utility",
-    "offline",
-    "practice"
+    "interface"
   ],
   "dependencies": {
     "geode.node-ids": ">=v1.23.3"
