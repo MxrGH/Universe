@@ -5,6 +5,7 @@
 #include <fstream>
 #include <limits>
 #include <regex>
+#include <random>
 #include <sstream>
 #include <vector>
 #include <Geode/Geode.hpp>
@@ -100,6 +101,35 @@ namespace {
         int limit = usage.bonusUnlocked ? 1000 : 100;
         return fmt::format("Uni-1 daily requests: {}/{}{}", usage.requests, limit,
             usage.bonusUnlocked ? "  /  BONUS UNLOCKED" : "");
+    }
+
+    std::string uniAIInstallID() {
+        auto mod = Mod::get();
+        if (!mod) return {};
+        auto path = (mod->getSaveDir() / "uni1-install-id.txt").string();
+        {
+            std::ifstream file(path);
+            std::string existing;
+            if (file >> existing && existing.size() == 32)
+                return existing;
+        }
+        std::random_device random;
+        static constexpr char hex[] = "0123456789abcdef";
+        std::string id;
+        id.reserve(32);
+        for (int i = 0; i < 32; ++i)
+            id.push_back(hex[random() & 0x0f]);
+        std::ofstream file(path, std::ios::out | std::ios::trunc);
+        if (file.is_open()) file << id;
+        return id;
+    }
+
+    std::string uni1ServerURL() {
+        auto mod = Mod::get();
+        if (!mod) return {};
+        auto url = mod->getSettingValue<std::string>("ai-base-url");
+        while (!url.empty() && url.back() == '/') url.pop_back();
+        return url;
     }
 
     struct MacroEvent {
@@ -680,15 +710,10 @@ protected:
                     m_aiPrompt->setPosition({55.f, 42.f});
                     m_content->addChild(m_aiPrompt, 4);
                 }
-                addText("API key (this session only)", {-245.f, -5.f}, 0.31f);
-                m_aiApiKeyInput = CCTextInputNode::create(430.f, 38.f, "Paste your provider API key here...", "bigFont.fnt");
-                if (m_aiApiKeyInput) {
-                    m_aiApiKeyInput->setDelegate(this);
-                    m_aiApiKeyInput->setPosition({55.f, -38.f});
-                    m_content->addChild(m_aiApiKeyInput, 4);
-                }
-                addText("Key is not saved by Universe. Avoid screen recording while entering it.", {-245.f, -75.f}, 0.25f);
-                addText("Model and HTTPS API URL: Geode > Universe settings.", {-245.f, -108.f}, 0.26f);
+                addText("No player API key required.", {-245.f, -5.f}, 0.34f);
+                addText("Uni-1 server URL: Geode > Universe settings.", {-245.f, -38.f}, 0.29f);
+                addText("Daily quota: 100 requests; 1,000 after 7 UNIV taps.", {-245.f, -70.f}, 0.27f);
+                addText("The server must be online for generation.", {-245.f, -102.f}, 0.26f);
                 addAction("SAVE PROMPT", 141, {-175.f, -150.f});
                 addAction("LOAD SAVED", 143, {0.f, -150.f});
                 addAction("CLEAR", 142, {175.f, -150.f});
@@ -792,102 +817,66 @@ protected:
             return;
         }
 
-        // Android apps normally do not inherit a user-configurable shell environment.
-        // Accept a per-request key in the in-game field; never persist it in Geode settings.
-        std::string apiKey = m_aiApiKeyInput ? m_aiApiKeyInput->getString() : "";
-        if (apiKey.empty()) {
-            auto environmentKey = std::getenv("ANTHROPIC_API_KEY");
-            if (environmentKey) apiKey = environmentKey;
-        }
-        if (apiKey.empty()) {
+        auto baseUrl = uni1ServerURL();
+        auto installID = uniAIInstallID();
+        if (baseUrl.empty() || baseUrl.rfind("https://", 0) != 0 || installID.empty()) {
             FLAlertLayer::create(
-                "Universe AI",
-                "Enter your API key in the AI tab. On desktop, ANTHROPIC_API_KEY from the process environment is also accepted. The in-game key is used for this request only and is not saved.",
+                "Uni-1",
+                "Set the HTTPS Uni-1 server URL in Geode > Universe settings. No provider API key is needed.",
                 "OK"
             )->show();
             return;
         }
 
         matjson::Value payload = matjson::Value::object();
-        payload["model"] = "claude-sonnet-4-6";
-        payload["max_tokens"] = 8192;
+        payload["model"] = "uni-1";
+        payload["max_tokens"] = 4096;
         matjson::Value messages = matjson::Value::array();
         matjson::Value userMessage = matjson::Value::object();
         userMessage["role"] = "user";
         userMessage["content"] =
-            "You are a Geometry Dash level creator. Create a COMPLETE NEW LEVEL FROM SCRATCH, not an edit plan for an existing level. "
-            "Return ONLY one valid JSON object matching the Universe Level Draft schema: title, prompt, difficulty, style, sections, notes. "
-            "Create 6 to 12 connected sections that together form one coherent, complete level from its opening to its ending. "
-            "Each section has name, gameplay, and events. Every event must be an object placement with action add, numeric x/y, and type block, spike, saw, orb, pad, or deco. "
-            "Generate a substantial complete layout (normally roughly 150 to 500 objects). The absolute hard ceiling is 1,000,000 object placements; never exceed it. "
-            "Use non-decreasing x coordinates, sensible spacing, a traversable player route, varied but fair obstacle patterns, and clear section transitions. "
-            "Use the requested difficulty and style consistently. Place the opening near x=0 and extend the level continuously through its ending. "
-            "Do not use move_selected, rotate_selected, delete_selected, move_object, rotate_object, or delete_object. Do not depend on existing objects or editor selection. "
-            "Keep coordinates finite and within +/-10000000, keep generated placements at or below 1,000,000 (normal requests should remain compact), and output valid JSON without Markdown. "
-            "The game will paste every generated object into the currently open editor. The user should open an empty level first; do not claim to clear or replace existing level contents. "
-            "Only these object types are supported by the in-editor creator: block, spike, saw, orb, pad, deco. Do not claim to create unsupported portal, trigger, or song objects. "
-            "User's complete level concept: " + prompt;
+            "Create a COMPLETE NEW GEOMETRY DASH LEVEL FROM SCRATCH. Return ONLY one valid JSON object "
+            "matching the Universe Level Draft schema: title, prompt, difficulty, style, sections, notes. "
+            "Create 6 to 12 connected sections, with events containing action add, numeric x/y, and type "
+            "block, spike, saw, orb, pad, or deco. Normally generate 150 to 500 placements, never exceed "
+            "the server's output limit. Use non-decreasing x coordinates, sensible spacing, traversable "
+            "routes, varied fair obstacle patterns, and clear transitions. Keep coordinates finite and "
+            "within +/-10000000. Do not invent unsupported portals, triggers, or song objects. The user "
+            "will apply this to an empty editor; do not claim it clears existing contents. Concept: " + prompt;
         messages.push(userMessage);
         payload["messages"] = messages;
 
-        auto model = Mod::get()->getSettingValue<std::string>("ai-model");
-        auto baseUrl = Mod::get()->getSettingValue<std::string>("ai-base-url");
-        if (model.empty()) model = "claude-sonnet-4-6";
-        if (baseUrl.empty()) baseUrl = "https://api.anthropic.com";
-        while (!baseUrl.empty() && baseUrl.back() == '/') baseUrl.pop_back();
-        if (baseUrl.rfind("https://", 0) != 0) {
-            FLAlertLayer::create(
-                "Universe AI",
-                "The AI API base URL must use HTTPS so your API key is not sent over an unencrypted connection.",
-                "OK"
-            )->show();
-            return;
-        }
-        payload["model"] = model;
-
-        if (!consumeUniAIRequest()) {
-            auto quota = fmt::format(
-                "Uni-1 daily limit reached ({} requests). It resets at local midnight.",
-                uniAIDailyLimit()
-            );
-            FLAlertLayer::create("Uni-1", quota.c_str(), "OK")->show();
-            return;
-        }
-
         auto request = web::WebRequest()
-            .header("x-api-key", apiKey)
-            .header("anthropic-version", "2023-06-01")
+            .header("X-Uni1-Install-ID", installID)
             .header("content-type", "application/json")
-            .timeout(std::chrono::seconds(90))
+            .timeout(std::chrono::seconds(180))
             .bodyJSON(payload);
 
         m_aiTask.spawn(
-            request.post(baseUrl + "/v1/messages"),
+            request.post(baseUrl + "/v1/chat/completions"),
             [this](web::WebResponse response) {
                 if (!response.ok()) {
                     auto details = response.string().unwrapOr("No response details were provided.");
                     if (details.size() > 500) details.resize(500);
-                    auto message = fmt::format("Anthropic request failed (HTTP {}). {}", response.code(), details);
-                    FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
+                    auto message = fmt::format("Uni-1 server error (HTTP {}). {}", response.code(), details);
+                    FLAlertLayer::create("Uni-1", message.c_str(), "OK")->show();
                     return;
                 }
 
                 auto parsed = response.json();
                 if (!parsed) {
-                    FLAlertLayer::create("Universe AI", "The API returned a response that could not be read as JSON.", "OK")->show();
+                    FLAlertLayer::create("Uni-1", "The Uni-1 server returned invalid JSON.", "OK")->show();
                     return;
                 }
 
                 std::string draft;
-                auto blocks = parsed.unwrap()["content"].asArray();
-                if (blocks) {
-                    for (auto const& block : blocks.unwrap()) {
-                        if (block["type"].asString().unwrapOr("") == "text")
-                            draft += block["text"].asString().unwrapOr("");
-                    }
+                auto choices = parsed.unwrap()["choices"].asArray();
+                if (choices && !choices.unwrap().empty()) {
+                    auto content = choices.unwrap().front()["message"]["content"].asString();
+                    if (content) draft = content.unwrap();
                 }
                 if (draft.empty()) {
-                    FLAlertLayer::create("Universe AI", "The API response did not contain a text draft.", "OK")->show();
+                    FLAlertLayer::create("Uni-1", "The model response did not contain a level draft.", "OK")->show();
                     return;
                 }
 
@@ -1700,6 +1689,22 @@ class $modify(UniversePlayerObject, PlayerObject) {
 class UniverseFloatingButton : public CCLayer {
     CCPoint m_touchStart = {0.f, 0.f};
     bool m_moved = false;
+    async::TaskHolder<web::WebResponse> m_bonusTask;
+
+    void notifyUni1Tap() {
+        registerUniButtonTap();
+        auto baseUrl = uni1ServerURL();
+        auto installID = uniAIInstallID();
+        if (baseUrl.empty() || installID.empty() || baseUrl.rfind("https://", 0) != 0) return;
+        auto request = web::WebRequest()
+            .header("X-Uni1-Install-ID", installID)
+            .header("content-type", "application/json")
+            .timeout(std::chrono::seconds(15));
+        m_bonusTask.spawn(request.post(baseUrl + "/v1/bonus/tap"), [](web::WebResponse response) {
+            if (!response.ok())
+                log::warn("Uni-1 bonus tap could not be recorded by the server (HTTP {}).", response.code());
+        });
+    }
 
     void togglePanel() {
         auto scene = CCDirector::sharedDirector()->getRunningScene();
@@ -1801,7 +1806,7 @@ public:
 
     void ccTouchEnded(CCTouch*, CCEvent*) override {
         if (!m_moved) {
-            registerUniButtonTap();
+            notifyUni1Tap();
             togglePanel();
             return;
         }
