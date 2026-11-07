@@ -264,8 +264,8 @@ def chat_completions(payload: ChatRequest, request: Request, x_uni1_install_id: 
                 raise HTTPException(status_code=502, detail="Uni-1 event coordinates must be ordered by x.")
             previous_x = event["x"]
             total += 1
-            if total > 5000:
-                raise HTTPException(status_code=502, detail="Uni-1 output exceeds the 5,000 object server limit.")
+            if total > 1000:
+                raise HTTPException(status_code=502, detail="Uni-1 output exceeds the 1,000 object server limit.")
     answer = json.dumps(draft, ensure_ascii=False, separators=(",", ":"))
     generated_count = total
     return {
