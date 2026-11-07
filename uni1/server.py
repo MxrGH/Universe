@@ -165,7 +165,9 @@ def load_model():
 
 @app.get("/health")
 def health():
-    return {"status": "ready" if model is not None else "model-not-loaded", "model": "uni-1"}
+    if model is None or tokenizer is None:
+        raise HTTPException(status_code=503, detail="Uni-1 model is not loaded.")
+    return {"status": "ready", "model": "uni-1"}
 
 
 @app.get("/v1/usage")
