@@ -238,13 +238,13 @@
     },
     "ai-model": {
       "name": "AI model",
-      "description": "Model name sent to the Anthropic Messages API. The AI tab can edit this value.",
+      "description": "Model name sent to the Anthropic Messages API. Configure this in Geode settings.",
       "type": "string",
       "default": "claude-sonnet-4-6"
     },
     "ai-base-url": {
       "name": "AI API base URL",
-      "description": "Base URL for an Anthropic-compatible Messages API. The API key remains in ANTHROPIC_API_KEY.",
+      "description": "HTTPS base URL for an Anthropic-compatible Messages API. Configure this in Geode settings; enter the API key per request in the in-game AI tab.",
       "type": "string",
       "default": "https://api.anthropic.com"
     },
