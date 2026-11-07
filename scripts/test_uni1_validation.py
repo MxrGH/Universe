@@ -1,7 +1,10 @@
 """Lightweight regression tests for the Uni-1 response validator."""
 import math
+import sys
 import unittest
+from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "uni1"))
 from draft_validation import validate_draft_payload
 
 
