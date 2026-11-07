@@ -1,4 +1,5 @@
 """Lightweight regression tests for the Uni-1 response validator."""
+import json
 import math
 import sys
 import unittest
@@ -36,7 +37,7 @@ class Uni1DraftValidationTests(unittest.TestCase):
         rng = random.Random(20261107)
         for index in range(32):
             row = make_example(index, rng)
-            draft, count = validate_draft_payload(__import__("json").loads(row["response"]))
+            draft, count = validate_draft_payload(json.loads(row["response"]))
             self.assertGreater(count, 0)
             self.assertLessEqual(count, 1000)
             self.assertEqual(draft["format"], "universe-level-draft-v1")
