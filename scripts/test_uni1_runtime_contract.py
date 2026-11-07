@@ -12,6 +12,13 @@ class Uni1RuntimeContractTests(unittest.TestCase):
         self.assertIn('"uni1_generated_objects": generated_count', source)
         self.assertNotIn("generated_count = total", source)
 
+    def test_request_input_is_bounded_and_model_id_is_fixed(self):
+        source = (ROOT / "uni1" / "server.py").read_text(encoding="utf-8")
+        self.assertIn('MAX_INPUT_TOKENS = 8192', source)
+        self.assertIn('model: Literal["uni-1"] = "uni-1"', source)
+        self.assertIn("prompt_chars > MAX_PROMPT_CHARS", source)
+        self.assertIn("prompt_tokens > MAX_INPUT_TOKENS", source)
+
     def test_inference_image_contains_the_validator_module(self):
         dockerfile = (ROOT / "uni1" / "Dockerfile").read_text(encoding="utf-8")
         self.assertIn("COPY server.py /app/server.py", dockerfile)
