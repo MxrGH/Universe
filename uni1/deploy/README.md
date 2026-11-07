@@ -4,7 +4,7 @@ This repository does not provide a hosted server or GPU. You must deploy the inf
 
 ## 1. Train and prepare weights
 
-Follow [../README.md](../README.md). Place the trained adapter at `uni1/artifacts/uni1-adapter`. The directory must contain the PEFT adapter config/weights and tokenizer files.
+From the `uni1/` directory, run `python generate_dataset.py --count 256`, review and improve the resulting corpus, then follow [../README.md](../README.md) to train. Place the trained adapter at `uni1/artifacts/uni1-adapter`. The directory must contain the PEFT adapter config/weights and tokenizer files.
 
 The checked-in dataset is only a schema fixture, not a training corpus. Do not deploy the base model as if it were a trained Uni-1 release.
 
