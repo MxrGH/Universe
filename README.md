@@ -46,6 +46,10 @@ Open Universe, go to **Settings**, and choose **RUN IN-GAME SELF TEST**. It chec
 - Equip an icon only when Geometry Dash reports it as unlocked on the current account.
 - Local previews do not grant account unlocks or achievements.
 
+## Uni-1 AI
+
+The in-game AI assistant is branded **Uni-1**. It currently sends requests through the configured Anthropic-compatible API model; Uni-1 is the Universe product name, not a separately trained or hosted foundation model. The default allowance is **100 requests per local calendar day**. Tapping the in-game **UNIV** floating button seven times unlocks a **1,000-request daily allowance**. The count resets at local midnight. This is a client-side convenience limit stored in the mod's local save folder, not an account-wide or tamper-proof server quota; deleting or editing local data can reset it. A hosted backend would be required for enforceable shared limits. Each request can incur provider charges.
+
 ## AI full-level creator
 
 The AI tab generates a new level layout and places supported objects directly into the open editor.
