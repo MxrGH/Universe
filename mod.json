@@ -230,24 +230,6 @@
       "min": 0.05,
       "max": 0.95
     },
-    "ai-tab-enabled": {
-      "name": "Show AI tab (experimental)",
-      "description": "Show the in-game AI level-draft prompt interface.",
-      "type": "bool",
-      "default": true
-    },
-    "ai-model": {
-      "name": "AI model",
-      "description": "Uni-1 model identifier sent to your self-hosted Uni-1 inference server.",
-      "type": "string",
-      "default": "uni-1"
-    },
-    "ai-base-url": {
-      "name": "AI API base URL",
-      "description": "HTTPS base URL of the self-hosted Uni-1 server. No player API key is required. Leave blank until a server is deployed.",
-      "type": "string",
-      "default": ""
-    },
     "panel-title": {
       "name": "Panel title",
       "description": "Custom title displayed at the top of the Universe overlay.",
