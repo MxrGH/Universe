@@ -22,13 +22,18 @@ python -m venv .venv
 # Linux/macOS:
 source .venv/bin/activate
 pip install -r requirements.txt
-python generate_dataset.py --count 256 --output dataset/train.jsonl
+# Optional schema/layout bootstrap experiment (synthetic data is NOT production quality):
+python generate_dataset.py --count 256 --output dataset/bootstrap.jsonl
+python train.py --dataset dataset/bootstrap.jsonl --output artifacts/uni1-bootstrap --allow-synthetic-bootstrap
+
+# Production training: dataset/train.jsonl must contain at least 32 unique,
+# human-reviewed, playtested examples, each marked with "reviewed": true.
 python train.py --dataset dataset/train.jsonl --output artifacts/uni1-adapter --validation-ratio 0.1
 ```
 
 Each JSONL line must contain `prompt` and `response` strings. The response must be a valid Universe level-draft JSON object. Generate a synthetic bootstrap corpus with `python generate_dataset.py --count 256`, then review it and expand it with diverse, licensed, human-authored examples. Synthetic examples teach schema and simple spacing patterns; they do not replace playtested design data. Do not train on copied copyrighted level data unless you have permission.
 
-The checked-in one-line dataset is only a format fixture. The generator can create a reproducible synthetic bootstrap corpus, but a useful release still needs a larger, reviewed and playtested corpus. Training produces an adapter, not a ready-to-publish model release. The training script reserves 10% of the corpus for held-out evaluation by default, keeps prompt tokens out of the loss, and saves the best evaluation-loss checkpoint. It rejects examples that do not match the complete-level contract (6–8 cube-mode sections and 96–144 supported placements).
+The checked-in one-line dataset is only a format fixture and does not meet the complete-level contract. Before training, the quality gate requires at least 32 examples, at least 90% unique prompts and responses, and at least four styles and three difficulty classes. Normal production training additionally requires every example to be explicitly marked `"reviewed": true`; this marker is a human workflow attestation, not an automatic proof of playability. Synthetic examples are rejected unless `--allow-synthetic-bootstrap` is explicitly passed. The generator can create a reproducible synthetic bootstrap corpus, but synthetic examples are only useful for schema/layout experiments and do not establish playable-level quality. A useful release still needs a larger, reviewed and playtested corpus. Training produces an adapter, not a ready-to-publish model release. The training script reserves 10% of the corpus for held-out evaluation by default, keeps prompt tokens out of the loss, and saves the best evaluation-loss checkpoint. It rejects examples that do not match the complete-level contract (6–8 cube-mode sections and 96–144 supported placements).
 
 ## Run inference
 
