@@ -1,6 +1,6 @@
 ## Local gameplay and customization
 
-Universe includes local Noclip and Speedhack modifiers, Safe Mode practice marking, hitbox and movement visualizers, FPS controls, Practice Mode input recording/replay, StartPos tools, and a draggable in-game panel. The Player tab includes an icon lab that previews icon IDs locally and only equips icons already unlocked on the account; it does not alter unlock flags or claim server-side unlocks. The interface uses animated page transitions, theme presets, selected-tab highlighting, and a compact local-client status header.
+Universe includes local Noclip and Speedhack modifiers, Safe Mode practice marking, object hitboxes, player-bounds overlay, movement visualizers, FPS controls, Practice Mode input recording/replay, StartPos tools, and a draggable in-game panel. The Player tab includes an icon lab that previews icon IDs locally and only equips icons already unlocked on the account; it does not alter unlock flags or claim server-side unlocks. The interface uses animated page transitions, theme presets, selected-tab highlighting, and a compact local-client status header.
 
 # Universe 1
 
