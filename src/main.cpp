@@ -550,6 +550,7 @@ protected:
                 addText("Render target only; it does not change game physics.", {-245.f, -145.f}, 0.27f);
                 addToggle("Show player path trail", "show-trajectory", 118, -125.f);
                 addToggle("Show movement projection", "show-projection", 123, -170.f);
+                addToggle("Show player bounds", "show-player-bounds", 151, -310.f);
                 addAction("CYCLE PANEL THEME", 119, {90.f, -215.f});
                 addText("The path preview follows your recent movement.", {-245.f, -245.f}, 0.27f);
                 addText("It cannot predict portals, gravity changes, or collisions.", {-245.f, -275.f}, 0.27f);
@@ -1055,6 +1056,7 @@ protected:
             (void)mod->getSettingValue<bool>("show-hitboxes");
             (void)mod->getSettingValue<bool>("show-trajectory");
             (void)mod->getSettingValue<bool>("show-projection");
+            (void)mod->getSettingValue<bool>("show-player-bounds");
             (void)mod->getSettingValue<bool>("click-sound");
             (void)mod->getSettingValue<bool>("floating-button");
         } catch (...) {
@@ -1336,6 +1338,7 @@ protected:
             case 112: key = "fps-bypass-enabled"; break;
             case 122: key = "floating-button"; break;
             case 123: key = "show-projection"; break;
+            case 151: key = "show-player-bounds"; break;
             default: return;
         }
         bool current = mod->getSettingValue<bool>(key);
@@ -1756,6 +1759,16 @@ class $modify(UniversePlayLayer, PlayLayer) {
                     ccc4f(1.f, 0.18f, 0.25f, 0.85f)
                 );
             }
+        }
+
+        if (mod->getSettingValue<bool>("show-player-bounds") && m_player1) {
+            auto bounds = m_player1->boundingBox();
+            node->drawRect(
+                bounds,
+                ccc4f(0.f, 0.f, 0.f, 0.f),
+                1.5f,
+                ccc4f(0.22f, 1.f, 0.72f, 0.95f)
+            );
         }
 
         bool showTrail = mod->getSettingValue<bool>("show-trajectory");
