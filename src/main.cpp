@@ -1047,7 +1047,7 @@ protected:
                 if (!symbol) continue;
                 auto p = object->getPosition();
                 int column = static_cast<int>(std::floor(p.x / kCell));
-                int row = static_cast<int>(std::floor((p.y - 90.f + 90.f) / kCell));
+                int row = static_cast<int>(std::floor((p.y - 90.f) / kCell));
                 if (column < 0 || column >= columns || row < 0 || row >= kRows) continue;
                 auto& cell = grid[row][column];
                 if (cell == '.' || uni1MapPriority(symbol) > uni1MapPriority(cell))
