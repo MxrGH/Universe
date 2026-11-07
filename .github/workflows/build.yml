@@ -52,7 +52,7 @@ jobs:
           python -c "import json, pathlib; rows=[json.loads(line) for line in pathlib.Path('uni1-smoke-test.jsonl').read_text(encoding='utf-8').splitlines()]; assert len(rows)==16; [json.loads(row['response']) for row in rows]; pathlib.Path('uni1-smoke-test.jsonl').unlink()"
           python uni1/generate_dataset.py --count 64 --output uni1-quality-test.jsonl
           python uni1/validate_dataset.py uni1-quality-test.jsonl --allow-synthetic-bootstrap
-          python -m pytest uni1/test_dataset_quality.py uni1/test_design_knowledge.py -q
+          python -m pytest uni1/test_dataset_quality.py uni1/test_design_knowledge.py uni1/test_object_catalog.py -q
           python -c "import pathlib; pathlib.Path('uni1-quality-test.jsonl').unlink()"
           python -m unittest discover -s scripts -p "test_*.py" -v
           python -m pytest uni1/test_quota.py -q
