@@ -10,7 +10,7 @@ COPY server.py /app/server.py
 
 ENV UNI1_ADAPTER_DIR=/models/uni1-adapter
 ENV UNI1_QUOTA_DB=/data/uni1-quota.sqlite3
-ENV UNI1_MAX_NEW_TOKENS=2048
+ENV UNI1_MAX_NEW_TOKENS=4096
 
 EXPOSE 8000
 CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
