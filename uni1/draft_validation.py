@@ -7,6 +7,13 @@ from __future__ import annotations
 
 import math
 
+try:
+    from .object_catalog import OBJECT_IDS
+except ImportError:  # unittest discover -s uni1
+    from object_catalog import OBJECT_IDS
+
+KNOWN_OBJECT_IDS = set(OBJECT_IDS.values())
+
 ALLOWED_OBJECTS = {"block", "spike", "saw", "orb", "pad", "object"}
 ALLOWED_GAMEPLAY = {"cube"}
 DIFFICULTIES = {"easy", "normal", "hard", "insane", "demon"}
@@ -63,8 +70,8 @@ def validate_draft_payload(data: object) -> tuple[dict, int]:
                 raise ValueError("Uni-1 generation may only add new objects.")
             if event["type"] == "object":
                 object_id = event.get("id")
-                if isinstance(object_id, bool) or not isinstance(object_id, int) or not 1 <= object_id <= 5000:
-                    raise ValueError("Generic editor objects need an integer id between 1 and 5000.")
+                if isinstance(object_id, bool) or not isinstance(object_id, int) or object_id not in KNOWN_OBJECT_IDS:
+                    raise ValueError("Generic editor objects need an exact integer id from the verified editor catalogue.")
                 properties = event.get("properties", "")
                 if not isinstance(properties, str) or len(properties) > 2000:
                     raise ValueError("Object properties must be a comma-separated string of at most 2,000 characters.")
