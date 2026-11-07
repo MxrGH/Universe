@@ -902,6 +902,9 @@ protected:
             return;
         }
 
+        // Absolute per-draft ceiling. This is a safety boundary, not a promise
+        // that the current editor paste path can practically handle one million objects.
+        static constexpr size_t kMaxGeneratedObjects = 1'000'000;
         static const std::regex eventPattern(R"(\{[^{}]*\})");
         static const std::regex xPattern(R"("x"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
         static const std::regex yPattern(R"("y"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
@@ -911,6 +914,28 @@ protected:
         static const std::regex dyPattern(R"("dy"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
         static const std::regex degreesPattern(R"("degrees"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
         static const std::regex targetPattern(R"("target"\s*:\s*([0-9]+))");
+        // Preflight the entire draft before touching the editor. Count placement
+        // events (the default action is "add") so an oversized draft is rejected
+        // atomically instead of being partially applied.
+        size_t requestedPlacements = 0;
+        for (std::sregex_iterator it(draft.begin(), draft.end(), eventPattern), end; it != end; ++it) {
+            auto event = it->str();
+            std::smatch actionMatch, typeMatch;
+            std::string action = "add";
+            if (std::regex_search(event, actionMatch, actionPattern))
+                action = actionMatch[1].str();
+            if (action == "add" && std::regex_search(event, typeMatch, typePattern))
+                ++requestedPlacements;
+            if (requestedPlacements > kMaxGeneratedObjects) {
+                FLAlertLayer::create(
+                    "Universe AI",
+                    "This draft exceeds the hard limit of 1,000,000 generated objects. Nothing was placed.",
+                    "OK"
+                )->show();
+                return;
+            }
+        }
+
         std::string serialized;
         size_t added = 0;
         size_t changed = 0;
