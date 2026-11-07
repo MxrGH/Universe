@@ -1,15 +1,26 @@
-# Uni-1 development notes
+# Uni-1 development status
 
-The Uni-1 AI level creator is **not included as an enabled feature** in the Universe 1 Snapshot 26.5 user interface.
+The Uni-1 page is present in the Universe 1 Snapshot 26.6 client. It is an experimental integration, **not a working level-generation feature yet**.
 
-The files in `uni1/` are an experimental development foundation only. They include a synthetic dataset generator, a LoRA training script, a FastAPI inference service, and deployment notes. They do not include trained adapter weights or a deployed inference endpoint. The synthetic examples are not human-reviewed or playtested. The editor currently applies cube-mode block, spike, saw, orb, and pad geometry only; it does not create mode portals, triggers, song objects, or generic decoration objects.
+The repository contains:
+- A strict draft validator for the supported geometry-only schema.
+- A reproducible synthetic-data generator for schema and layout-pattern smoke tests.
+- A LoRA fine-tuning pipeline with a held-out evaluation split.
+- A FastAPI inference service with a readiness check, bounded requests, and server-enforced per-installation quotas.
+- A Docker image and a loopback-bound Compose deployment template.
+- Client-side request cancellation, draft validation, editor context collection, and chunked/cancellable object placement.
 
-Do not enable or advertise the in-game AI workflow until all of the following have been completed and verified:
+The repository does **not** contain trained Uni-1 weights, a hosted inference endpoint, or a human-reviewed/playtested training corpus. The checked-in dataset is a single schema fixture. Synthetic examples are not evidence of playable level quality and must not be presented as production training data.
 
-1. Build a licensed, reviewed, human-authored and playtested training corpus.
-2. Train the adapter and evaluate it on held-out prompts and generated layouts.
-3. Deploy the inference service with persistent storage, HTTPS, monitoring, and abuse controls.
-4. Test the API and its quota behavior against the actual trained model.
-5. Build Windows and Android Geode packages and test generation and editor placement in the actual game.
+The current generated-level contract is deliberately narrow: 6–8 cube-mode sections and 96–144 ordered placements using blocks, spikes, saws, orbs, and pads. Portals, mode changes, triggers, song objects, and generic decoration are not generated. The native editor placement ceiling is 1,000 objects.
 
-No API key, hosted endpoint, model weights, or working AI feature is supplied by this repository.
+## Required before Uni-1 can be called complete
+
+1. Assemble a licensed, human-authored, reviewed, and playtested corpus with varied prompts and layouts.
+2. Train the LoRA adapter and record held-out evaluation results.
+3. Review generated levels for playability, fairness, and structural correctness.
+4. Deploy the adapter-backed server with HTTPS, persistent storage, monitoring, and abuse controls.
+5. Test quota rollover, rate limits, cancellation, errors, and generation against the live service.
+6. Install the Windows and Android builds in Geometry Dash 2.2091 with Geode and test the complete generate-to-editor workflow.
+
+No API key, trained model, hosted endpoint, or claim of a functioning AI generator is supplied by this repository.
