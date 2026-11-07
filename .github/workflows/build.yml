@@ -173,8 +173,9 @@ jobs:
           script: |
             adb wait-for-device
             adb shell 'until [ "$(getprop sys.boot_completed)" = "1" ]; do sleep 2; done'
-            SDK="$(adb shell getprop ro.build.version.sdk | tr -d '\\r')"
-            ABI="$(adb shell getprop ro.product.cpu.abi | tr -d '\\r')"
+            SDK="$(adb shell getprop ro.build.version.sdk | tr -d '[:space:]')"
+            ABI="$(adb shell getprop ro.product.cpu.abi | tr -d '[:space:]')"
+            case "$SDK" in ''|*[!0-9]*) echo "Invalid Android SDK value: '$SDK'"; exit 1;; esac
             test "$SDK" -ge 29
             test -n "$ABI"
             adb shell am get-current-user
