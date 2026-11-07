@@ -46,24 +46,9 @@ Open Universe, go to **Settings**, and choose **RUN IN-GAME SELF TEST**. It chec
 - Equip an icon only when Geometry Dash reports it as unlocked on the current account.
 - Local previews do not grant account unlocks or achievements.
 
-## Uni-1 AI
+## Features not included in this snapshot
 
-Universe now has a dedicated self-hosted Uni-1 inference client. The in-game client does not call Anthropic or OpenAI and does not ask players for provider API keys. Configure the HTTPS base URL of a deployed Uni-1 server in Geode > Universe settings.
-
-The server enforces 100 requests/day per installation. Seven UNIV floating-button taps unlock 1,000 requests/day. Quotas reset at 00:00 UTC. The installation ID is stored locally, so deleting local data can create a new quota; this is not account-level identity. The server validates generated JSON, supported gameplay/object types, add-only operations, ordered coordinates, and a 1,000-object ceiling before returning a draft.
-
-The training and inference project is in `uni1/`. Generate a synthetic bootstrap corpus with `python generate_dataset.py --count 256` from that directory, review it, add human-authored/playtested examples, and train the adapter. The current repository does **not** contain trained Uni-1 weights or a deployed inference server, so generation will remain unavailable until those steps are completed.
-
-## AI full-level creator
-
-1. Open a new, empty level in the Geometry Dash editor.
-2. Enter the complete concept in the Universe AI tab.
-3. Choose **GENERATE ONLINE**, wait for the Uni-1 server response, then return to the editor.
-4. Choose **CREATE FULL LEVEL IN EDITOR** and review the result. Use the editor Undo control to revert it.
-
-The current in-editor generator supports blocks, spikes, saws, orbs, pads, and decoration objects. It does not create portals, triggers, or song timing. The draft is limited to 2 MB, and the practical apply loop processes at most 1,000 operations in one pass. Chunked placement, progress reporting, and cancellation are not implemented. Start with an empty level; the creator adds objects and does not clear existing contents.
-
-The standalone `scripts/level_maker.py` helper validates and exports planning blueprints as JSON, CSV, or Markdown. Those files are not native Geometry Dash level saves.
+The experimental Uni-1 AI level creator is not exposed in this build. Its model adapter has not been trained, and no inference server is deployed. The training/deployment materials remain in `uni1/` for development only; they are not a working in-game feature. The snapshot does not advertise AI generation, level placement, or an online AI quota.
 
 ## Default controls
 
@@ -85,7 +70,7 @@ Keybinds can be changed in Geode settings. On Android, use the circular **UNIV**
 ## Install
 
 1. Install a Geode build compatible with Geometry Dash 2.2091.
-2. Download `Universe-1-Snapshot-26.5.geode` from the GitHub release.
+2. Obtain a `.geode` package from a successful GitHub Actions build artifact or a published GitHub release.
 3. Open the `.geode` file with Geode, or place it in the Geode mods folder.
 4. Enable Universe in Geode and restart the game if requested.
 
@@ -93,7 +78,7 @@ The release package contains Windows x64, Android ARM64, and Android ARMv7 binar
 
 ## Build and verification
 
-GitHub Actions builds all three targets independently, runs the Python regression suite, combines them, inspects the resulting archive, verifies platform binaries and resources, and only then publishes Snapshot 26.5.
+GitHub Actions is configured to build all three targets independently, run project checks, combine the platform outputs, and inspect the resulting archive. A release is only published from `main` after the release gate is deliberately triggered. A successful CI build still does not replace gameplay testing on actual Windows and Android devices.
 
 A successful CI build confirms compilation and packaging. It does not replace gameplay testing on actual Windows and Android devices. No claim of zero bugs is made.
 
@@ -101,7 +86,7 @@ A successful CI build confirms compilation and packaging. It does not replace ga
 
 | Path | Purpose |
 |---|---|
-| `src/main.cpp` | In-game UI, gameplay modifiers, visual helpers, editor AI apply, and replay code |
+| `src/main.cpp` | In-game UI, gameplay modifiers, visual helpers, and replay code |
 | `mod.json` | Geode metadata, settings, and keybinds |
 | `logo.png` | Universe logo |
 | `scripts/level_maker.py` | Online level-design blueprint helper |
@@ -124,4 +109,4 @@ A successful CI build confirms compilation and packaging. It does not replace ga
 - **Geode SDK** — mod framework
 - **RobTop Games** — Geometry Dash
 
-Uni-1 bootstrap corpus generation: from `uni1/`, run `python generate_dataset.py --count 256`, review the output, then follow `uni1/README.md` to train. The generated examples are synthetic and do not certify gameplay quality.
+Uni-1 development materials are not part of the shipped feature set. Generated examples are synthetic and do not certify gameplay quality.
