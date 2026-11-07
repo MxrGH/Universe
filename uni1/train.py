@@ -21,8 +21,10 @@ from transformers import (
 
 try:
     from .draft_validation import validate_generated_level
+    from .validate_dataset import validate_dataset
 except ImportError:  # direct execution: python train.py
     from draft_validation import validate_generated_level
+    from validate_dataset import validate_dataset
 
 DEFAULT_BASE = "Qwen/Qwen2.5-0.5B-Instruct"
 SYSTEM_PROMPT = (
@@ -147,10 +149,26 @@ def main():
     parser.add_argument("--validation-ratio", type=float, default=0.1)
     parser.add_argument("--seed", type=int, default=20261107)
     parser.add_argument("--max-steps", type=int, default=-1)
+    parser.add_argument(
+        "--allow-synthetic-bootstrap",
+        action="store_true",
+        help="Allow synthetic examples for experiments only; never treat this as a production model.",
+    )
     args = parser.parse_args()
 
     if not args.dataset.is_file():
         raise SystemExit(f"Dataset not found: {args.dataset}")
+    try:
+        corpus_report = validate_dataset(
+            args.dataset,
+            minimum=32,
+            allow_synthetic=args.allow_synthetic_bootstrap,
+        )
+    except ValueError as error:
+        raise SystemExit(f"Uni-1 dataset quality gate failed: {error}") from error
+    print(f"Validated Uni-1 training corpus: {json.dumps(corpus_report, sort_keys=True)}")
+    if args.allow_synthetic_bootstrap:
+        print("WARNING: synthetic bootstrap training is experimental and cannot establish playable-level quality.")
     if not 256 <= args.max_length <= 16384:
         raise SystemExit("--max-length must be between 256 and 16384.")
     if args.epochs <= 0 or args.learning_rate <= 0:
