@@ -238,15 +238,15 @@
     },
     "ai-model": {
       "name": "AI model",
-      "description": "Model name sent to the Anthropic Messages API. Configure this in Geode settings.",
+      "description": "Uni-1 model identifier sent to your self-hosted Uni-1 inference server.",
       "type": "string",
-      "default": "claude-sonnet-4-6"
+      "default": "uni-1"
     },
     "ai-base-url": {
       "name": "AI API base URL",
-      "description": "HTTPS base URL for an Anthropic-compatible Messages API. Configure this in Geode settings; enter the API key per request in the in-game AI tab.",
+      "description": "HTTPS base URL of the self-hosted Uni-1 server. No player API key is required. Leave blank until a server is deployed.",
       "type": "string",
-      "default": "https://api.anthropic.com"
+      "default": ""
     },
     "panel-title": {
       "name": "Panel title",
