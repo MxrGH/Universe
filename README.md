@@ -1,6 +1,6 @@
 ## Local gameplay and customization
 
-Universe includes local Noclip and Speedhack modifiers, Safe Mode practice marking, object hitboxes, player-bounds overlay, movement visualizers, FPS controls, Practice Mode input recording/replay, StartPos tools, and a draggable in-game panel. The Player tab includes an icon lab that previews icon IDs locally and only equips icons already unlocked on the account; it does not alter unlock flags or claim server-side unlocks. The interface uses animated page transitions, theme presets, selected-tab highlighting, and a compact local-client status header.
+Universe includes local Noclip and Speedhack modifiers, Safe Mode practice marking, object hitboxes, player-bounds overlay, movement visualizers, FPS controls, Practice Mode input recording/replay, StartPos tools, and a draggable in-game panel. The Player tab includes an icon lab and a local-only icon override; it does not alter account unlock flags or saved icon selections. The interface uses animated page transitions, theme presets, selected-tab highlighting, and a compact local-client status header.
 
 # Universe 1
 
@@ -47,19 +47,19 @@ Open Universe, go to **Settings**, and choose **RUN IN-GAME SELF TEST**. It chec
 
 ## AI full-level creator
 
-The AI tab is a **full-level generator**, not just an existing-object editor.
+The AI tab generates a new level layout and places supported objects directly into the open editor.
 
-1. Open a **new, empty level** in the Geometry Dash editor.
-2. Enter a complete concept in the Universe AI tab. Include the theme, difficulty, gameplay feel, and any section ideas.
-3. Choose **GENERATE ONLINE**. The configured AI model is instructed to design one complete level from its opening to its ending, using 6–12 connected sections and normally approximately 150–500 object placements. The absolute per-draft ceiling is **1,000,000 generated object placements**; oversized drafts are rejected before any editor changes.
-4. Choose **CREATE FULL LEVEL IN EDITOR**. Universe pastes the generated layout directly into the currently open editor.
-5. Review the result and use the editor's Undo control if you want to revert the placement.
+1. Open a new, empty level in the Geometry Dash editor.
+2. Enter the complete concept in the Universe AI tab.
+3. Enter an API key in the AI tab for this request. On desktop, `ANTHROPIC_API_KEY` from the process environment is also accepted.
+4. Choose **GENERATE ONLINE**, wait for the result message, then return to the editor.
+5. Choose **CREATE FULL LEVEL IN EDITOR** and review the result. Use the editor Undo control to revert it.
 
-The in-editor generator currently places blocks, spikes, saws, orbs, pads, and decoration objects. Important: the one-million figure is a hard validation ceiling, not a claim that the current paste engine can practically place one million objects. The current apply path still has a 1,000-operation processing guard and a 2 MB draft-file limit; large-scale chunked placement, progress reporting, and cancellation are not implemented yet. It does not yet create gameplay portals, triggers, or song timing. It adds the layout to the open editor; it does not automatically erase existing objects, so start with an empty level for a clean full-level build.
+The in-game API key field is designed for Android as well as desktop. The key is used for the current request only and is not saved by Universe. It is visible while typing, so avoid screen recording. Configure the model and HTTPS API base URL in Geode → Universe settings. The current in-game request uses the Anthropic Messages API format. API calls may incur charges; use a paid account only with a parent or guardian's permission.
 
-The 26.5 live editor context can still inspect up to 500 existing objects and 100 selected objects for future editing workflows. The full-level creation prompt deliberately does not depend on that context or on selected objects.
+The current in-editor generator supports blocks, spikes, saws, orbs, pads, and decoration objects. It does not yet create gameplay portals, triggers, or song timing. The saved JSON draft is limited to 2 MB. A preflight ceiling of 1,000,000 placements is a validation guard, **not** the practical apply capacity: the current apply loop processes at most 1,000 operations per pass. Chunked placement, progress reporting, and cancellation are not implemented. The parser currently extracts events with regular expressions rather than a complete JSON schema parser. Start with an empty level; the creator adds objects and does not clear existing contents.
 
-Online AI uses the Anthropic-compatible Messages API over HTTPS and reads `ANTHROPIC_API_KEY` from the Geometry Dash process environment. The key is not stored in mod settings or source. API calls may incur charges; use a paid API account only with a parent or guardian's permission. Never put keys in chat, source files, commits, or screenshots.
+The standalone `scripts/level_maker.py` helper validates and exports planning blueprints as JSON, CSV, or Markdown. Those files are not native Geometry Dash level saves and are not required for the in-game editor workflow. Its current blueprint limit is 5,000 events.
 
 ## Default controls
 
