@@ -85,3 +85,19 @@ def validate_draft_payload(data: object) -> tuple[dict, int]:
 
     data["format"] = "universe-level-draft-v1"
     return data, total
+
+MIN_GENERATED_SECTIONS = 6
+MAX_GENERATED_SECTIONS = 8
+MIN_GENERATED_OBJECTS = 96
+MAX_GENERATED_OBJECTS = 144
+
+
+def validate_generated_level(data: object) -> tuple[dict, int]:
+    """Validate the stricter shape expected from a complete Uni-1 level request."""
+    draft, object_count = validate_draft_payload(data)
+    section_count = len(draft["sections"])
+    if not MIN_GENERATED_SECTIONS <= section_count <= MAX_GENERATED_SECTIONS:
+        raise ValueError("Generated levels must contain 6 to 8 sections.")
+    if not MIN_GENERATED_OBJECTS <= object_count <= MAX_GENERATED_OBJECTS:
+        raise ValueError("Generated levels must contain 96 to 144 object placements.")
+    return draft, object_count
