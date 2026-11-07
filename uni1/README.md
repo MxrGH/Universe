@@ -72,6 +72,29 @@ The Geode client is wired to this keyless inference endpoint and the server vali
 
 Run quota tests from this folder with `pip install -r requirements-dev.txt` and `pytest -q`.
 
+## Held-out generation evaluation
+
+After training, prepare a separate JSONL file of human-reviewed evaluation
+prompts. Each line must be an object with a unique `prompt` and
+`"reviewed": true`. Do not reuse training prompts or synthetic bootstrap
+examples as evidence of model quality.
+
+Run generation evaluation with:
+
+```bash
+python evaluate.py --prompts dataset/evaluation-prompts.jsonl \
+  --adapter artifacts/uni1-adapter \
+  --report artifacts/uni1-evaluation.json
+```
+
+The evaluator loads the base model and trained adapter, generates one complete
+draft per prompt, validates each draft with the production validator, and
+reports valid-output rate, section/placement counts, gameplay-mode coverage,
+and object-family coverage. It fails when the valid-output rate is below 90%
+by default. The report explicitly records that physics playtesting was not
+performed. Passing this evaluation is a structural quality gate, not proof
+that generated levels are fun, fair, or completable.
+
 ## Full-editor object generation
 
 Uni-1's draft schema now accepts generic Geometry Dash editor objects in addition to
