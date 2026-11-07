@@ -248,15 +248,15 @@ def chat_completions(payload: ChatRequest, x_uni1_install_id: str | None = Heade
                 recent_requests.pop(key, None)
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     messages.extend(message.model_dump() for message in payload.messages if message.role != "system")
-    user_context = "\\n".join(message.content for message in payload.messages if message.role == "user")
+    user_context = "\n".join(message.content for message in payload.messages if message.role == "user")
     object_catalog = relevant_object_catalog(user_context)
     if object_catalog:
         for message in reversed(messages):
             if message["role"] == "user":
                 message["content"] += (
-                    "\\n\\nVERIFIED EDITOR OBJECT CATALOGUE (name = numeric object ID):\\n"
+                    "\n\nVERIFIED EDITOR OBJECT CATALOGUE (name = numeric object ID):\n"
                     + object_catalog
-                    + "\\nUse these exact IDs; this catalogue does not specify trigger property layouts."
+                    + "\nUse these exact IDs; this catalogue does not specify trigger property layouts."
                 )
                 break
     prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
