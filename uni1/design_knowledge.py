@@ -73,8 +73,23 @@ cube simulation is NOT proof that every mode or dual is playable; report unsuppo
 checks and reserve verified completion for actual playtesting.
 
 CURRENT UNI-1 COMPATIBILITY OVERRIDE:
-The current server schema supports only cube gameplay and block, spike, saw, orb, and
-pad events. Do not emit decoration placeholders, portals, triggers, other game modes,
-or unsupported object properties. Describe decoration ideas in notes only; do not
-pretend those notes have been placed. Never claim that a level was playtested.
-"""
+The output schema supports two event styles:
+1. Named primitives: block, spike, saw, orb, pad.
+2. Generic editor objects: type="object", numeric id from the verified object catalogue,
+   and optional properties as a comma-separated sequence of numeric GD save-string
+   key/value pairs. The client appends these pairs to the object's save string.
+
+Generic objects include decorations, portals, triggers, effects, gameplay objects,
+and other catalogue entries. Use only IDs supplied in the request's verified catalogue.
+A catalogue entry confirms an object ID, NOT its property configuration. Do not invent
+trigger property keys or values. If the trigger's required configuration is unknown,
+place only the base object when safe, or omit it and explain the limitation in notes.
+
+Use actual decorative object IDs for backgrounds, structures, glow pieces, and visual
+motifs. Use color, pulse, alpha, move, spawn, toggle, camera, shader, and other triggers
+only when the required object ID and properties are known. Do not claim a trigger works
+unless its configuration is supported and tested.
+
+The current client creates new objects only. It does not yet support every editor
+operation, keyframe sequence, group linking workflow, or trigger configuration. Never
+claim unsupported operations were applied. Never claim a level was playtested.
