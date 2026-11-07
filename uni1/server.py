@@ -21,9 +21,9 @@ from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 try:
-    from .draft_validation import validate_draft_payload
+    from .draft_validation import validate_generated_level
 except ImportError:  # uvicorn server:app when launched from the uni1 directory
-    from draft_validation import validate_draft_payload
+    from draft_validation import validate_generated_level
 
 BASE_MODEL = os.getenv("UNI1_BASE_MODEL", "Qwen/Qwen2.5-0.5B-Instruct")
 ADAPTER_DIR = Path(os.getenv("UNI1_ADAPTER_DIR", "artifacts/uni1-adapter"))
@@ -37,7 +37,7 @@ SYSTEM_PROMPT = (
     "You are Uni-1, Universe's Geometry Dash level-design model. "
     "Return only valid JSON for the Universe level-draft schema. "
     "Use only block, spike, saw, orb, and pad placements in cube mode. Do not invent mode portals or triggers. "
-    "Create coherent, reasonably playable layouts and never claim they were playtested."
+    "Create 6 to 8 sections and 96 to 144 ordered placements. Create coherent layouts and never claim they were playtested."
 )
 
 app = FastAPI(title="Uni-1 Inference", version="0.1.0")
@@ -252,7 +252,7 @@ def chat_completions(payload: ChatRequest, x_uni1_install_id: str | None = Heade
     except json.JSONDecodeError as error:
         raise HTTPException(status_code=502, detail=f"Uni-1 produced invalid JSON: {error.msg}") from error
     try:
-        draft, generated_count = validate_draft_payload(draft)
+        draft, generated_count = validate_generated_level(draft)
     except ValueError as error:
         raise HTTPException(status_code=502, detail=f"Uni-1 returned an invalid level draft: {error}") from error
     answer = json.dumps(draft, ensure_ascii=False, separators=(",", ":"))
