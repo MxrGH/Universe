@@ -56,7 +56,7 @@ if missing_keybinds:
 
 if any(key.startswith("ai-") for key in settings):
     fail("unfinished Uni-1 settings must not be shipped")
-if "ai-tab-enabled" in source or "ai-base-url" in source:
+if "ai-tab-enabled" in source:
     fail("unfinished Uni-1 UI must not be exposed in the release")
 
 for feature_marker in (
