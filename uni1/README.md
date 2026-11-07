@@ -91,13 +91,24 @@ the original block/spike/saw/orb/pad shortcuts:
 - `id` must exist in the verified EditorAI object-name/ID catalogue.
 - `properties` is an optional comma-separated sequence of numeric GD save-string
   key/value pairs. It is validated before being appended to the object save string.
+- Structured fields support up to 10 group IDs, target groups/colors, color RGB,
+  trigger timing, move offsets, easing, pulse settings, opacity, rotation, scale,
+  editor layers, spawn/touch activation and several object flags.
+- The client bundles the same verified object-ID set and rejects IDs outside it.
+- Section gameplay metadata supports cube, ship, ball, UFO, wave, robot, spider,
+  swing and jetpack. Actual mode changes still require the corresponding portal objects.
 - The catalogue contains thousands of editor object IDs, including decoration,
   portals, and trigger families. Uni-1 retrieves a compact relevant subset per prompt.
 - The catalogue identifies object IDs; it does **not** document every trigger's
-  required property configuration. Unknown trigger settings must not be guessed.
-- The current client applies new objects only. It does not yet implement every
-  editor workflow, multi-step trigger sequencing, group editing, or automated
-  playtesting. Check generated levels in the editor and use Undo if needed.
+  required property configuration. Structured properties use the documented
+  Geometry Dash object-save format; advanced keyframe, camera and 2.2 trigger data
+  still need dedicated serializers and in-game testing. See
+  https://github.com/gd-programming/gd.docs/blob/main/docs/resources/client/level-components/level-object.md.
+- The importer can place new objects and perform the existing selected-object
+  transform/delete operations. Group membership and basic trigger sequencing can
+  be expressed through group IDs, target groups, spawn-triggered flags and delays.
+  This is not a full automated physics playtest; use the in-game editor Play button
+  to verify timing, collisions and trigger behavior, and use Undo if needed.
 
 ## Open-source level-editor integrations
 
@@ -108,5 +119,5 @@ Uni-1 now adapts selected MIT-licensed components and design guidance from:
 These are source-level adaptations, not bundled upstream binaries. Their MIT notices are preserved in `vendor/`.
 [LayoutGenerator](https://github.com/ProfessorDragon/LayoutGenerator) was reviewed, but no source was copied because the inspected repository did not provide a license file.
 
-Compatibility remains limited to the current Universe draft schema: cube gameplay and block, spike, saw, orb, and pad placements. The added design guidance does not make unsupported decoration, portals, triggers, or other modes available yet.
+The draft schema supports verified generic object IDs, decoration, portals, documented trigger properties, group assignments, and all current section gameplay labels. Complex 2.2 trigger systems and true automated physics playtesting remain outside the implemented scope.
 
