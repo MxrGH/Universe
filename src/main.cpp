@@ -1413,13 +1413,13 @@ protected:
                         while (std::getline(propertyStream, key, ',')) {
                             if (!std::getline(propertyStream, value, ',')) { valid = false; break; }
                             if (key.empty() || !std::all_of(key.begin(), key.end(), [](unsigned char ch) { return std::isdigit(ch); })
-                                || value.empty() || value.find_first_of(";\\r\\n\\\"") != std::string::npos) {
+                                || value.empty() || value.find_first_of(";\r\n\"") != std::string::npos) {
                                 valid = false;
                                 break;
                             }
                             int numericKey = 0;
                             try { numericKey = std::stoi(key); } catch (...) { valid = false; break; }
-                            if (!allowedPropertyKeys.find(numericKey) == allowedPropertyKeys.end() || numericKey <= 3
+                            if (allowedPropertyKeys.find(numericKey) == allowedPropertyKeys.end() || numericKey <= 3
                                 || !seenKeys.insert(numericKey).second
                                 || !std::regex_match(value, propertyValuePattern)) {
                                 valid = false;
