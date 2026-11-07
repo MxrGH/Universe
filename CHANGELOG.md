@@ -1,31 +1,21 @@
 # Changelog
 
+## Universe 1 — Snapshot 26.6
+
+- Align the client-side Uni-1 daily quota date with the server's 00:00 UTC reset.
+- Add a regression test that prevents local-time and server-time quota rollover from drifting apart.
+- Bump the Geode package to v1.1.2 and update the Windows, Android ARM64, Android ARMv7, and universal artifact labels.
+- Keep the release gate manual; a successful CI build is not represented as an in-game test.
+
 ## Universe 1 — Snapshot 26.5
 
-- Add a live player-bounds overlay to the Visuals tab, separate from object hitboxes.
-
-- Refresh the panel with a purple/cyan accent frame, local-client status header, selected-tab highlighting, and clearer icon-lab state labels.
-- Clarify that icon browsing is a local preview and equipping remains restricted to icons already unlocked on the account.
-
-- Remove the procedural offline draft generator from the in-game AI tab and standalone Level Maker; online AI remains API-key-based.
-- Add a Settings-page in-game runtime self-test for mod, scene, GameManager, and settings access.
-- Remove the standalone offline generator CLI option and its regression test; CI now validates blueprint conversion without generating fake AI content.
-
-- Replace the AI editor's section-editing brief with a full-level creation brief: 6–12 connected sections and normally approximately 150–500 object placements generated from scratch.
-- Enforce a hard ceiling of 1,000,000 generated object placements per draft; preflight rejects an oversized draft before it modifies the editor.
-- Document that the one-million ceiling is not yet the practical paste capacity: the current apply path retains a 1,000-operation processing guard and 2 MB draft-file limit; chunked placement, progress, and cancellation remain unfinished.
-- Add a dedicated **CREATE FULL LEVEL IN EDITOR** action that pastes the generated layout into the currently open editor; it does not erase existing content, so an empty level is recommended.
-- Expand the online AI response budget to 8192 tokens for larger complete-level layouts.
-- Document current placement limits: blocks, spikes, saws, orbs, pads, and deco; portals, triggers, and song timing are not yet generated.
-- Add live editor context to AI generation: object count and up to 500 existing objects and 100 selected objects, including unique IDs, object IDs, positions, and rotations.
-- Clarify the AI apply summary so exact-ID edits/deletions are not mislabeled as selection-only operations.
-- Extend AI drafts with selected-object and exact-unique-ID move, rotate, and delete operations, alongside object placement.
-- Include a bounded live summary of existing editor objects so follow-up requests can refer to real object IDs and positions.
-- Rebuild transformed selections through the editor object serialization/paste path and keep deletion on the editor undo history.
-- Keep all prior StartPos, hitbox, trail/projection, FPS, replay, icon preview, theme, keybind, preset, touch, and floating-button features.
-- Tighten apply limits and reject invalid/non-finite operation values before editing.
-- Bump Geode package version to v1.1.1.
-- Build and inspect one universal package for Windows x64, Android ARM64, and Android ARMv7 before publishing.
+- Add a player-bounds overlay alongside object hitboxes, movement trail, and movement projection.
+- Refresh the Universe panel with theme accents, selected-tab state, local-client status, and touch-friendly controls.
+- Add local-only icon preview and color overrides; account unlocks and saved icon selections are not modified.
+- Add a self-hosted Uni-1 client/server development path with prompt validation, request cancellation, bounded editor placement, and server-enforced per-installation quotas.
+- Keep Uni-1 generation explicitly non-operational until a reviewed dataset, trained adapter, deployed server, and live game test exist.
+- Limit generated drafts to 6–8 sections and 96–144 geometry placements, with a hard 1,000-object validation ceiling.
+- Build and inspect a universal package for Windows x64, Android ARM64, and Android ARMv7 before any deliberate publication.
 
 ## Universe 1 — Snapshot 26.3
 
