@@ -556,9 +556,9 @@ protected:
                     addText("Enter a level to see the current player state.", {-245.f, 55.f}, 0.34f);
                 }
                 addText("ICON LAB  /  LOCAL COSMETIC PREVIEW", {-245.f, -90.f}, 0.32f);
+                auto mod = Mod::get();
+                if (!mod) break;
                 if (auto gm = GameManager::get()) {
-                    auto mod = Mod::get();
-                    if (!mod) break;
                     static const char* iconNames[] = {
                         "Cube", "Ship", "Ball", "UFO", "Wave", "Robot", "Spider", "Swing", "Jetpack"
                     };
