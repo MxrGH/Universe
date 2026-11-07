@@ -22,12 +22,12 @@ python -m venv .venv
 # Linux/macOS:
 source .venv/bin/activate
 pip install -r requirements.txt
-python train.py --dataset dataset/train.jsonl --output artifacts/uni1-adapter
+python generate_dataset.py --count 256 --output dataset/train.jsonl\npython train.py --dataset dataset/train.jsonl --output artifacts/uni1-adapter
 ```
 
-Each JSONL line must contain `prompt` and `response` strings. The response must be a valid Universe level-draft JSON object. Start with a small hand-reviewed dataset, then expand it with diverse, licensed examples. Do not train on copied copyrighted level data unless you have permission.
+Each JSONL line must contain `prompt` and `response` strings. The response must be a valid Universe level-draft JSON object. Generate a synthetic bootstrap corpus with `python generate_dataset.py --count 256`, then review it and expand it with diverse, licensed, human-authored examples. Synthetic examples teach schema and simple spacing patterns; they do not replace playtested design data. Do not train on copied copyrighted level data unless you have permission.
 
-The starter dataset is only a format example; it is nowhere near enough to train a useful model. Training produces an adapter, not a ready-to-publish model release.
+The checked-in one-line dataset is only a format fixture. The generator can create a reproducible synthetic bootstrap corpus, but a useful release still needs a larger, reviewed and playtested corpus. Training produces an adapter, not a ready-to-publish model release.
 
 ## Run inference
 
@@ -43,10 +43,11 @@ The API is OpenAI-chat-completions-shaped for easy client integration, but it do
 
 ## Quotas and costs
 
-The service enforces a server-side daily allowance of 100 requests per installation ID. Seven calls to `POST /v1/bonus/tap` unlock 1,000 requests per day for that installation. The client integration must persist a random installation ID and call the tap endpoint when the UNIV button is tapped.
+The service resets at 00:00 UTC and enforces a server-side daily allowance of 100 requests per installation ID. Seven calls to `POST /v1/bonus/tap` unlock 1,000 requests per day for that installation. The client integration must persist a random installation ID and call the tap endpoint when the UNIV button is tapped.
 
 This is not account identity: a user who deletes their local installation ID can obtain a new quota. Add authenticated accounts only if Universe later needs cross-device identity. A public hosted service still costs money for GPU time, bandwidth, storage, and operations; removing API keys removes per-user provider credentials, not compute costs.
 
 ## Current status
 
 This folder is the training/inference foundation only. No Uni-1 weights have been trained or checked into this repository, no inference server has been deployed, and the Geode client has not yet been switched from its existing provider request code. Those are separate steps and must be verified before claiming Uni-1 is live.
+\n## Tests\n\nRun quota tests from this folder with `pip install -r requirements-dev.txt` and `pytest -q`.\n
