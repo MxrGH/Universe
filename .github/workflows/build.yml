@@ -141,7 +141,7 @@ jobs:
           retention-days: 30
 
   emulator-smoke:
-    name: Android Emulator Smoke Test (runtime + package ABI)
+    name: Android Emulator Boot Smoke Test (package ABI + ADB)
     runs-on: ubuntu-latest
     needs: package
     steps:
@@ -180,6 +180,10 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_2
+          cores: 2
+          ram-size: 2048M
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
             adb wait-for-device
