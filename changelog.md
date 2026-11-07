@@ -4,7 +4,7 @@
 
 - Add a local-only icon override that does not alter account unlocks or saved icon selection.
 - Add an in-game, per-request AI API key field so Android users are not blocked by process environment variables.
-- Align project validation with the online-only AI workflow.
+- Align project validation with the online-only AI workflow and remove stale checks for deleted offline/icon enum code.
 - Preserve existing gameplay modifiers, Safe Mode, StartPos tools, visual overlays, replay recorder, icon previews, themes, keybinds, presets, and mobile controls.
 - Bump Geode package version to v1.1.1 and prepare the final planned snapshot release.
 
