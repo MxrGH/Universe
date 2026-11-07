@@ -3,6 +3,7 @@
 ## Universe 1 — Snapshot 26.5
 
 - Remove the procedural offline draft generator from the in-game AI tab and standalone Level Maker; online AI remains API-key-based.
+- Add a Settings-page in-game runtime self-test for mod, scene, GameManager, and settings access.
 - Remove the standalone offline generator CLI option and its regression test; CI now validates blueprint conversion without generating fake AI content.
 
 - Replace the AI editor's section-editing brief with a full-level creation brief: 6–12 connected sections and normally approximately 150–500 object placements generated from scratch.
