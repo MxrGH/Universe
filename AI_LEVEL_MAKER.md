@@ -1,6 +1,6 @@
 # Uni-1 development status
 
-The Uni-1 page is present in the Universe 1 Snapshot 26.6 client. It is an experimental integration, **not a working level-generation feature yet**.
+The Uni-1 page is present in the Universe 1 Snapshot 26.5 client. It is an experimental integration, **not a working level-generation feature yet**.
 
 The repository contains:
 - A strict draft validator for the supported geometry-only schema.
