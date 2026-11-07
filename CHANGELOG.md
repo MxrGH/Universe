@@ -2,7 +2,9 @@
 
 ## Universe 1 — Snapshot 26.5
 
-- Replace the AI editor's section-editing brief with a full-level creation brief: 6–12 connected sections and approximately 150–500 object placements generated from scratch.
+- Replace the AI editor's section-editing brief with a full-level creation brief: 6–12 connected sections and normally approximately 150–500 object placements generated from scratch.
+- Enforce a hard ceiling of 1,000,000 generated object placements per draft; preflight rejects an oversized draft before it modifies the editor.
+- Document that the one-million ceiling is not yet the practical paste capacity: the current apply path retains a 1,000-operation processing guard and 2 MB draft-file limit; chunked placement, progress, and cancellation remain unfinished.
 - Add a dedicated **CREATE FULL LEVEL IN EDITOR** action that pastes the generated layout into the currently open editor; it does not erase existing content, so an empty level is recommended.
 - Expand the online AI response budget to 8192 tokens for larger complete-level layouts.
 - Document current placement limits: blocks, spikes, saws, orbs, pads, and deco; portals, triggers, and song timing are not yet generated.
