@@ -2,6 +2,10 @@
 
 ## Universe 1 — Snapshot 26.5
 
+- Replace the AI editor's section-editing brief with a full-level creation brief: 6–12 connected sections and approximately 150–500 object placements generated from scratch.
+- Add a dedicated **CREATE FULL LEVEL IN EDITOR** action that pastes the generated layout into the currently open editor; it does not erase existing content, so an empty level is recommended.
+- Expand the online AI response budget to 8192 tokens for larger complete-level layouts.
+- Document current placement limits: blocks, spikes, saws, orbs, pads, and deco; portals, triggers, and song timing are not yet generated.
 - Add live editor context to AI generation: object count and up to 500 existing objects and 100 selected objects, including unique IDs, object IDs, positions, and rotations.
 - Clarify the AI apply summary so exact-ID edits/deletions are not mislabeled as selection-only operations.
 - Extend AI drafts with selected-object and exact-unique-ID move, rotate, and delete operations, alongside object placement.
