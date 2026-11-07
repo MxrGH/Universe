@@ -1512,32 +1512,66 @@ class $modify(UniversePlayerObject, PlayerObject) {
         ));
     }
 
+    void applyUniverseLocalIconColors() {
+        auto mod = Mod::get();
+        if (!mod || !mod->getSettingValue<bool>("local-icon-override") || !isUniverseLocalPlayer())
+            return;
+        auto primary = mod->getSettingValue<ccColor4B>("icon-primary-color");
+        auto secondary = mod->getSettingValue<ccColor4B>("icon-secondary-color");
+        auto glow = mod->getSettingValue<ccColor4B>("icon-glow-color");
+        PlayerObject::setColor({primary.r, primary.g, primary.b});
+        PlayerObject::setSecondColor({secondary.r, secondary.g, secondary.b});
+        bool showGlow = mod->getSettingValue<bool>("local-icon-glow");
+        if (m_iconGlow) {
+            m_iconGlow->setColor({glow.r, glow.g, glow.b});
+            m_iconGlow->setVisible(showGlow);
+        }
+        if (m_vehicleGlow) {
+            m_vehicleGlow->setColor({glow.r, glow.g, glow.b});
+            m_vehicleGlow->setVisible(showGlow);
+        }
+    }
+
     void updatePlayerFrame(int frame) {
         PlayerObject::updatePlayerFrame(universeIconFrame(frame, 0));
+        applyUniverseLocalIconColors();
+    }
+
+    void updatePlayerGlow() {
+        PlayerObject::updatePlayerGlow();
+        applyUniverseLocalIconColors();
     }
     void updatePlayerShipFrame(int frame) {
         PlayerObject::updatePlayerShipFrame(universeIconFrame(frame, 1));
+        applyUniverseLocalIconColors();
     }
     void updatePlayerRollFrame(int frame) {
         PlayerObject::updatePlayerRollFrame(universeIconFrame(frame, 2));
+        applyUniverseLocalIconColors();
     }
     void updatePlayerBirdFrame(int frame) {
         PlayerObject::updatePlayerBirdFrame(universeIconFrame(frame, 3));
+        applyUniverseLocalIconColors();
     }
     void updatePlayerDartFrame(int frame) {
         PlayerObject::updatePlayerDartFrame(universeIconFrame(frame, 4));
+        applyUniverseLocalIconColors();
     }
     void createRobot(int frame) {
         PlayerObject::createRobot(universeIconFrame(frame, 5));
+        applyUniverseLocalIconColors();
     }
     void createSpider(int frame) {
         PlayerObject::createSpider(universeIconFrame(frame, 6));
+        applyUniverseLocalIconColors();
     }
     void updatePlayerSwingFrame(int frame) {
         PlayerObject::updatePlayerSwingFrame(universeIconFrame(frame, 7));
+        applyUniverseLocalIconColors();
     }
     void updatePlayerJetpackFrame(int frame) {
         PlayerObject::updatePlayerJetpackFrame(universeIconFrame(frame, 8));
+        applyUniverseLocalIconColors();
     }
 
     bool pushButton(PlayerButton button) {
