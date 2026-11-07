@@ -283,7 +283,7 @@ def main():
         synthetic_bootstrap=args.allow_synthetic_bootstrap,
     )
     (args.output / "uni1-manifest.json").write_text(
-        json.dumps(manifest, indent=2, sort_keys=True) + "\\n",
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
     print(f"Saved Uni-1 LoRA adapter and manifest to {args.output}")

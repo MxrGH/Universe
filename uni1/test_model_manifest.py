@@ -46,7 +46,7 @@ class ModelManifestTests(unittest.TestCase):
     def test_builds_reproducible_dataset_fingerprint(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "train.jsonl"
-            path.write_text('{"prompt":"reviewed"}\\n', encoding="utf-8")
+            path.write_text('{"prompt":"reviewed"}\n', encoding="utf-8")
             manifest = build_model_manifest(
                 base_model="base",
                 dataset_path=path,
