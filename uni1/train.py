@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import inspect
 import random
 from pathlib import Path
 
@@ -19,16 +20,16 @@ from transformers import (
 )
 
 try:
-    from .draft_validation import validate_draft_payload
+    from .draft_validation import validate_generated_level
 except ImportError:  # direct execution: python train.py
-    from draft_validation import validate_draft_payload
+    from draft_validation import validate_generated_level
 
 DEFAULT_BASE = "Qwen/Qwen2.5-0.5B-Instruct"
 SYSTEM_PROMPT = (
     "You are Uni-1, a Geometry Dash level-design assistant for Universe. "
     "Return only one valid JSON object using the Universe level-draft schema. "
-    "Use only block, spike, saw, orb, pad, and deco objects. "
-    "Create a coherent, readable cube-mode layout with fair spacing and a clear route. "
+    Use only block, spike, saw, orb, and pad objects. "
+    Create 6 to 8 sections and 96 to 144 placements in a coherent cube-mode layout with fair spacing. "
     "Do not claim the layout was playtested."
 )
 
@@ -58,7 +59,7 @@ class BlueprintDataset(Dataset):
                 )
             try:
                 response = json.loads(row["response"])
-                response, object_count = validate_draft_payload(response)
+                response, object_count = validate_generated_level(response)
             except (json.JSONDecodeError, ValueError) as error:
                 raise ValueError(f"Line {line_number} has an invalid Universe draft: {error}") from error
             if object_count == 0:
@@ -210,7 +211,7 @@ def main():
     )
     model.print_trainable_parameters()
 
-    training_args = TrainingArguments(
+    training_options = dict(
         output_dir=str(args.output),
         num_train_epochs=args.epochs,
         max_steps=args.max_steps,
@@ -219,7 +220,6 @@ def main():
         per_device_eval_batch_size=1,
         gradient_accumulation_steps=8,
         logging_steps=5,
-        evaluation_strategy="epoch",
         save_strategy="epoch",
         save_total_limit=2,
         load_best_model_at_end=True,
@@ -234,6 +234,16 @@ def main():
         seed=args.seed,
         data_seed=args.seed,
     )
+    # Transformers renamed evaluation_strategy to eval_strategy; support both
+    # ends of the declared >=4.45,<5 dependency range.
+    strategy_arg = (
+        "eval_strategy"
+        if "eval_strategy" in inspect.signature(TrainingArguments).parameters
+        else "evaluation_strategy"
+    )
+    training_options[strategy_arg] = "epoch"
+    training_args = TrainingArguments(**training_options)
+
     trainer = Trainer(
         model=model,
         args=training_args,
