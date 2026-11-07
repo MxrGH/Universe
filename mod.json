@@ -310,6 +310,12 @@
       "description": "Show a local glow on the overridden icon without changing account settings.",
       "type": "bool",
       "default": true
+    },
+    "ai-base-url": {
+      "name": "Uni-1 server URL",
+      "description": "HTTPS URL for your self-hosted Uni-1 inference server. Leave blank until a trained adapter is deployed. No provider API key is used.",
+      "type": "string",
+      "default": ""
     }
   },
   "repository": "https://github.com/MxrGH/Universe"
