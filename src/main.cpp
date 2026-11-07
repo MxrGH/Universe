@@ -293,6 +293,7 @@ protected:
     CCSize m_panelSize = {0.f, 0.f};
     CCLayerColor* m_dimBackground = nullptr;
     CCLabelBMFont* m_pageTitle = nullptr;
+    std::vector<CCLabelBMFont*> m_tabLabels;
     CCLayer* m_content = nullptr;
     bool m_isDragging = false;
     CCPoint m_dragTouchStart = {0.f, 0.f};
@@ -302,6 +303,7 @@ protected:
         auto label = CCLabelBMFont::create(text, "bigFont.fnt");
         label->setAnchorPoint({0.f, 0.5f});
         label->setScale(scale);
+        label->setColor({205, 216, 245});
         label->setPosition(pos);
         m_content->addChild(label);
     }
@@ -309,6 +311,7 @@ protected:
     void addAction(const char* text, int tag, CCPoint pos) {
         auto label = CCLabelBMFont::create(text, "goldFont.fnt");
         label->setScale(0.38f);
+        label->setColor({153, 207, 255});
         auto item = CCMenuItemLabel::create(label, this, menu_selector(UniversePanel::onAction));
         item->setTag(tag);
         item->setPosition(pos);
@@ -425,7 +428,14 @@ protected:
         m_pageTitle->setString(pageName(page));
         m_pageTitle->stopAllActions();
         m_pageTitle->setScale(0.48f);
+        m_pageTitle->setColor({190, 145, 255});
         m_pageTitle->runAction(CCEaseBackOut::create(CCScaleTo::create(0.18f, 0.55f)));
+        for (size_t i = 0; i < m_tabLabels.size(); ++i) {
+            if (!m_tabLabels[i]) continue;
+            bool selected = i == static_cast<size_t>(page);
+            m_tabLabels[i]->setColor(selected ? ccColor3B{190, 145, 255} : ccColor3B{185, 198, 225});
+            m_tabLabels[i]->setScale(selected ? 0.37f : 0.33f);
+        }
 
         switch (page) {
             case Page::Player:
@@ -445,7 +455,7 @@ protected:
                 } else {
                     addText("Enter a level to see the current player state.", {-245.f, 55.f}, 0.34f);
                 }
-                addText("Icon preview and selection", {-245.f, -90.f}, 0.34f);
+                addText("ICON LAB  /  LOCAL COSMETIC PREVIEW", {-245.f, -90.f}, 0.32f);
                 if (auto gm = GameManager::get()) {
                     auto mod = Mod::get();
                     if (!mod) break;
@@ -473,13 +483,13 @@ protected:
                         m_content->addChild(icon);
                     }
                     auto owned = gm->isIconUnlocked(previewID, iconType);
-                    auto iconText = fmt::format("Preview ID: {}  |  {}", previewID, owned ? "OWNED" : "PREVIEW ONLY");
+                    auto iconText = fmt::format("ICON #{}  /  {}", previewID, owned ? "OWNED" : "LOCAL PREVIEW");
                     addText(iconText.c_str(), {-245.f, -235.f}, 0.30f);
                     addAction("-", 124, {125.f, -235.f});
                     addAction("+", 125, {205.f, -235.f});
                 }
                 addAction("EQUIP IF OWNED", 127, {0.f, -280.f});
-                addText("Locked icons are preview-only; Universe never changes unlock flags.", {-245.f, -310.f}, 0.27f);
+                addText("Locked icons can be previewed; unlock data is never modified.", {-245.f, -310.f}, 0.27f);
                 break;
             case Page::Practice: {
                 auto mod = Mod::get();
@@ -1437,12 +1447,30 @@ public:
 
         m_pageTitle = CCLabelBMFont::create("Player", "goldFont.fnt");
         m_pageTitle->setScale(0.55f);
+        m_pageTitle->setColor({190, 145, 255});
         m_pageTitle->setPosition({win.width * 0.5f, win.height * 0.72f});
         this->addChild(m_pageTitle, 3);
+
+        auto accent = CCDrawNode::create();
+        if (accent) {
+            accent->drawSegment({18.f, m_panelSize.height - 13.f}, {m_panelSize.width - 18.f, m_panelSize.height - 13.f}, 2.5f, ccc4f(0.62f, 0.40f, 1.f, 0.95f));
+            accent->drawSegment({18.f, 13.f}, {m_panelSize.width - 18.f, 13.f}, 1.2f, ccc4f(0.25f, 0.75f, 1.f, 0.48f));
+            accent->setPosition(panel->getPosition());
+            this->addChild(accent, 2);
+        }
+
+        auto status = CCLabelBMFont::create("LOCAL CLIENT  /  GD 2.2091", "bigFont.fnt");
+        if (status) {
+            status->setScale(0.25f);
+            status->setColor({115, 225, 255});
+            status->setPosition({win.width * 0.5f, win.height * 0.875f});
+            this->addChild(status, 3);
+        }
 
         m_menu = CCMenu::create();
         m_menu->setPosition({0.f, 0.f});
         this->addChild(m_menu, 5);
+        m_tabLabels.clear();
 
         m_actionMenu = CCMenu::create();
         m_actionMenu->setPosition({0.f, 0.f});
@@ -1456,7 +1484,9 @@ public:
         if (mod->getSettingValue<bool>("ai-tab-enabled")) pageCount = 8;
         for (int i = 0; i < pageCount; ++i) {
             auto label = CCLabelBMFont::create(pageName(pages[i]), "bigFont.fnt");
-            label->setScale(0.34f);
+            label->setScale(0.33f);
+            label->setColor({185, 198, 225});
+            m_tabLabels.push_back(label);
             auto item = CCMenuItemLabel::create(label, this, menu_selector(UniversePanel::onTab));
             item->setTag(200 + i);
             item->setPosition({left + i * (win.width * 0.113f), tabY});
