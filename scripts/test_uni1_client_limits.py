@@ -25,6 +25,11 @@ class Uni1ClientLimitTests(unittest.TestCase):
         self.assertEqual(client_limit, server_limit)
         self.assertEqual(client_limit, 1000)
 
+    def test_client_quota_day_uses_utc_like_the_server(self):
+        cpp = (ROOT / "src" / "main.cpp").read_text(encoding="utf-8")
+        self.assertIn("std::gmtime(&now)", cpp)
+        self.assertNotIn("std::localtime(&now)", cpp)
+
     def test_rejection_message_reports_the_actual_limit(self):
         cpp = (ROOT / "src" / "main.cpp").read_text(encoding="utf-8")
         self.assertIn("1,000 generated objects", cpp)
