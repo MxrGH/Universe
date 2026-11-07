@@ -1186,6 +1186,8 @@ protected:
         static const std::regex xPattern(R"("x"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
         static const std::regex yPattern(R"("y"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
         static const std::regex typePattern(R"rx("type"\s*:\s*"([A-Za-z]+)")rx");
+        static const std::regex objectIDPattern(R"("id"\s*:\s*([0-9]+))");
+        static const std::regex propertiesPattern(R"rx("properties"\s*:\s*"([^"]*)")rx");
         static const std::regex actionPattern(R"rx("action"\s*:\s*"([A-Za-z_]+)")rx");
         static const std::regex dxPattern(R"("dx"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
         static const std::regex dyPattern(R"("dy"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
@@ -1356,13 +1358,45 @@ protected:
 
             auto type = typeMatch[1].str();
             int objectID = 1;
+            std::string extraProperties;
             if (type == "spike") objectID = 8;
             else if (type == "saw") objectID = 39;
             else if (type == "orb") objectID = 36;
             else if (type == "pad") objectID = 35;
-            else if (type != "block") continue;
+            else if (type == "object") {
+                std::smatch idMatch, propertiesMatch;
+                if (!std::regex_search(event, idMatch, objectIDPattern)) continue;
+                try { objectID = std::stoi(idMatch[1].str()); } catch (...) { continue; }
+                if (objectID < 1 || objectID > 5000) continue;
 
-            serialized += fmt::format("1,{},2,{:.0f},3,{:.0f};", objectID, x, y);
+                if (std::regex_search(event, propertiesMatch, propertiesPattern)) {
+                    extraProperties = propertiesMatch[1].str();
+                    if (extraProperties.size() > 2000) continue;
+                    if (!extraProperties.empty()) {
+                        std::stringstream propertyStream(extraProperties);
+                        std::string key, value;
+                        bool valid = true;
+                        size_t pairCount = 0;
+                        while (std::getline(propertyStream, key, ',')) {
+                            if (!std::getline(propertyStream, value, ',')) { valid = false; break; }
+                            if (key.empty() || !std::all_of(key.begin(), key.end(), [](unsigned char ch) { return std::isdigit(ch); })
+                                || key == "1" || key == "2" || key == "3" || value.empty()
+                                || value.find(';') != std::string::npos
+                                || value.find('"') != std::string::npos
+                                || value.find('\\n') != std::string::npos
+                                || value.find('\\r') != std::string::npos) {
+                                valid = false;
+                                break;
+                            }
+                            if (++pairCount > 64) { valid = false; break; }
+                        }
+                        if (!valid) continue;
+                    }
+                }
+            } else if (type != "block") continue;
+
+            serialized += fmt::format("1,{},2,{:.0f},3,{:.0f}{};", objectID, x, y,
+                extraProperties.empty() ? "" : "," + extraProperties);
             ++added;
             ++chunkObjectCount;
             if (chunkObjectCount >= 100) {
