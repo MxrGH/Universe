@@ -31,3 +31,5 @@
 
 - Snapshot 26.2 — replay/UI hardening and AI blueprint validation.
 - Snapshot 26.1 — initial Universe 1 release.
+
+- Uni-1 AI branding and local daily quota: 100 requests/day by default; seven UNIV floating-button taps unlock 1,000/day. Counter resets at local midnight and is a client-side limit only.
