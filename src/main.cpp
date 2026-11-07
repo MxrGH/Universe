@@ -1525,9 +1525,8 @@ public:
         float left = win.width * 0.16f;
         float tabY = win.height * 0.64f;
         Page pages[] = {Page::Player, Page::Practice, Page::Level, Page::Visuals,
-                        Page::Recorder, Page::Keybinds, Page::Settings, Page::AI};
+                        Page::Recorder, Page::Keybinds, Page::Settings};
         int pageCount = 7;
-        if (mod->getSettingValue<bool>("ai-tab-enabled")) pageCount = 8;
         for (int i = 0; i < pageCount; ++i) {
             auto label = CCLabelBMFont::create(pageName(pages[i]), "bigFont.fnt");
             label->setScale(0.33f);
@@ -1551,10 +1550,9 @@ public:
 
     void onTab(CCObject* sender) {
         int index = static_cast<CCNode*>(sender)->getTag() - 200;
-        if (index < 0 || index > 7) return;
+        if (index < 0 || index > 6) return;
         auto mod = Mod::get();
         if (!mod) return;
-        if (index == 7 && !mod->getSettingValue<bool>("ai-tab-enabled")) return;
         showPage(static_cast<Page>(index));
     }
 };
