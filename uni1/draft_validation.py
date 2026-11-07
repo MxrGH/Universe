@@ -58,7 +58,7 @@ STRUCTURED_PROPERTIES = {
     "fade_out": (47, "float", 0, 3600),
     "pulse_mode": (48, "int", 0, 1),
     "copied_color_id": (50, "int", 0, 1014),
-    "target_group": (51, "int", 1, 9999),
+    "target_group": (51, "int", 0, 9999),
     "teleport_y_offset": (54, "float", -100000, 100000),
     "teleport_ease": (55, "bool", 0, 1),
     "pulse_target_type": (52, "int", 0, 2),
@@ -81,9 +81,20 @@ STRUCTURED_PROPERTIES = {
     "multi_trigger": (87, "bool", 0, 1),
     "high_detail": (103, "bool", 0, 1),
     "disable_glow": (96, "bool", 0, 1),
+    "parent_group": (71, "int", 0, 9999),
+    "lock_object_rotation": (70, "bool", 0, 1),
+    "keyframe_order": (115, "int", 0, 9999),
+    "camera_exit_static": (110, "bool", 0, 1),
+    "camera_free_mode": (111, "bool", 0, 1),
+    "camera_edit_settings": (112, "bool", 0, 1),
+    "camera_free_mode_easing": (113, "int", 0, 32),
+    "camera_padding": (114, "float", 0, 1000),
+    "scale_x": (128, "float", 0.05, 20),
+    "warp_y_angle": (131, "float", -3600, 3600),
+    "warp_x_angle": (132, "float", -3600, 3600),
 }
 GROUP_LIST_KEY = 57
-RAW_PROPERTY_KEYS = {4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 32, 33, 34, 35, 41, 42, 45, 46, 47, 48, 50, 51, 52, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 71, 72, 73, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129}
+RAW_PROPERTY_KEYS = {4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 32, 33, 34, 35, 41, 42, 45, 46, 47, 48, 50, 51, 52, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 131, 132}
 
 
 def _format_number(value: int | float) -> str:
@@ -236,6 +247,53 @@ def validate_draft_payload(data: object) -> tuple[dict, int]:
         raise ValueError("Draft notes must be a list containing at most 100 items.")
     if any(not isinstance(note, str) or len(note) > 500 for note in notes):
         raise ValueError("Draft notes must contain text items of at most 500 characters.")
+
+    # Keyframe points (3032) and their activation trigger (3033) form a
+    # linked animation: all points share one group, each has a unique order,
+    # and an animation trigger targets that group's points.
+    keyframe_points: dict[int, list[int]] = {}
+    keyframe_triggers: set[int] = set()
+    camera_ids = {1913, 1914, 1916, 2015, 2016, 2062, 2901, 2925}
+    for section in sections:
+        for event in section["events"]:
+            if event.get("type") != "object":
+                continue
+            object_id = event.get("id")
+            if object_id in camera_ids:
+                camera_fields = {
+                    "camera_exit_static", "camera_free_mode", "camera_edit_settings",
+                    "camera_free_mode_easing", "camera_padding",
+                }
+                if any(field in event for field in camera_fields) and object_id not in {1914, 2925}:
+                    raise ValueError("Camera mode/static settings are only valid on Static Camera or Camera Mode triggers.")
+                if object_id == 1914 and "target_group" not in event and not event.get("camera_exit_static", False):
+                    raise ValueError("Static Camera requires target_group unless camera_exit_static is enabled.")
+                if object_id == 2062 and "target_group" not in event:
+                    raise ValueError("Edge Camera requires target_group; use 0 to release the edge.")
+                if object_id == 2925 and "camera_free_mode" not in event:
+                    raise ValueError("Camera Mode requires camera_free_mode.")
+            if object_id == 3032:
+                group = event.get("group_id")
+                order = event.get("keyframe_order")
+                if group is None or order is None:
+                    raise ValueError("Keyframe Point requires group_id and keyframe_order.")
+                keyframe_points.setdefault(group, []).append(order)
+            elif object_id == 3033:
+                group = event.get("group_id")
+                if group is None or "target_group" not in event:
+                    raise ValueError("Keyframe Animation Trigger requires group_id (animation group) and target_group.")
+                keyframe_triggers.add(group)
+
+    for group, orders in keyframe_points.items():
+        if len(orders) < 2:
+            raise ValueError(f"Keyframe animation group {group} needs at least two Keyframe Points.")
+        if len(orders) != len(set(orders)):
+            raise ValueError(f"Keyframe animation group {group} has duplicate keyframe_order values.")
+        if group not in keyframe_triggers:
+            raise ValueError(f"Keyframe animation group {group} has no Keyframe Animation Trigger.")
+    for group in keyframe_triggers:
+        if group not in keyframe_points:
+            raise ValueError(f"Keyframe Animation Trigger group {group} has no Keyframe Points.")
 
     data["format"] = "universe-level-draft-v1"
     return data, total

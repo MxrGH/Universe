@@ -104,6 +104,17 @@ the original block/spike/saw/orb/pad shortcuts:
   Geometry Dash object-save format; advanced keyframe, camera and 2.2 trigger data
   still need dedicated serializers and in-game testing. See
   https://github.com/gd-programming/gd.docs/blob/main/docs/resources/client/level-components/level-object.md.
+- Keyframe Point (3032) and Keyframe Animation Trigger (3033) now have a
+  linked serializer: points require a shared group ID, unique order values and
+  at least two points; the activation trigger must reference that animation group
+  and a target group. Point duration/easing/rotation/scale use the documented
+  object properties. Keyframe loop/ref-only/curve controls and animation modifier
+  fields without verified save-key mappings remain raw/unsupported.
+- Camera Static (1914), Camera Edge (2062), and Camera Mode (2925) have
+  typed property validation for documented target-group and mode/padding fields.
+  Camera offset/rotation use the existing move/rotate fields. Camera Zoom amount
+  and other 2.2 camera settings without a verified save-key mapping are not
+  guessed or silently emitted.
 - The importer can place new objects and perform the existing selected-object
   transform/delete operations. Group membership and basic trigger sequencing can
   be expressed through group IDs, target groups, spawn-triggered flags and delays.

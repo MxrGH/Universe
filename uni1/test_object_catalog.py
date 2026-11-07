@@ -84,6 +84,92 @@ def test_unknown_object_id_is_rejected():
         validate_draft_payload(draft({"x": 0, "y": 0, "type": "object", "id": 4999}))
 
 
+
+def test_keyframe_point_and_animation_trigger_are_serialized_and_linked():
+    events = [
+        {"x": 0, "y": 0, "type": "object", "id": 3032,
+         "group_id": 22, "keyframe_order": 0, "duration": 0.5,
+         "easing": 2, "rotation": 0, "scale": 1},
+        {"x": 60, "y": 30, "type": "object", "id": 3032,
+         "group_id": 22, "keyframe_order": 1, "duration": 0.75,
+         "easing": 3, "rotation": 90, "scale": 1.5},
+        {"x": 120, "y": 0, "type": "object", "id": 3033,
+         "group_id": 22, "target_group": 40, "parent_group": 41,
+         "properties": "72,1,73,1"},
+    ]
+    normalized, count = validate_draft_payload(draft({"x": 0, "y": 0, "type": "block"}))
+    del normalized, count
+    normalized, count = validate_draft_payload({
+        "title": "Keyframe test", "difficulty": "normal", "sections": [
+            {"name": "Animation", "gameplay": "cube", "events": events}
+        ]
+    })
+    assert count == 3
+    point = normalized["sections"][0]["events"][0]
+    trigger = normalized["sections"][0]["events"][2]
+    assert "33,22" in point["properties"]
+    assert "115,0" in point["properties"]
+    assert "10,0.5" in point["properties"]
+    assert "33,22" in trigger["properties"]
+    assert "51,40" in trigger["properties"]
+    assert "71,41" in trigger["properties"]
+
+
+def test_keyframe_group_requires_multiple_points_and_trigger():
+    events = [
+        {"x": 0, "y": 0, "type": "object", "id": 3032,
+         "group_id": 7, "keyframe_order": 0},
+        {"x": 60, "y": 0, "type": "object", "id": 3033,
+         "group_id": 7, "target_group": 8},
+    ]
+    with pytest.raises(ValueError, match="at least two"):
+        validate_draft_payload({
+            "title": "Bad keyframe", "difficulty": "normal", "sections": [
+                {"name": "Animation", "gameplay": "cube", "events": events}
+            ]
+        })
+
+
+def test_camera_static_and_mode_properties_are_serialized():
+    events = [
+        {"x": 0, "y": 0, "type": "object", "id": 1914,
+         "target_group": 30, "duration": 0.5, "easing": 2},
+        {"x": 60, "y": 0, "type": "object", "id": 2925,
+         "camera_free_mode": True, "camera_edit_settings": True,
+         "camera_free_mode_easing": 2, "camera_padding": 20},
+    ]
+    normalized, _ = validate_draft_payload({
+        "title": "Camera test", "difficulty": "normal", "sections": [
+            {"name": "Camera", "gameplay": "cube", "events": events}
+        ]
+    })
+    static_props = normalized["sections"][0]["events"][0]["properties"]
+    mode_props = normalized["sections"][0]["events"][1]["properties"]
+    assert "51,30" in static_props
+    assert "111,1" in mode_props
+    assert "112,1" in mode_props
+    assert "113,2" in mode_props
+    assert "114,20" in mode_props
+
+
+def test_camera_edge_can_release_with_zero_group():
+    normalized, _ = validate_draft_payload({
+        "title": "Camera edge", "difficulty": "normal", "sections": [
+            {"name": "Camera", "gameplay": "cube", "events": [
+                {"x": 0, "y": 0, "type": "object", "id": 2062, "target_group": 0}
+            ]}
+        ]
+    })
+    assert "51,0" in normalized["sections"][0]["events"][0]["properties"]
+
+
+def test_invalid_camera_fields_are_rejected_on_wrong_trigger():
+    with pytest.raises(ValueError, match="only valid"):
+        validate_draft_payload(draft({
+            "x": 0, "y": 0, "type": "object", "id": 1913,
+            "camera_free_mode": True,
+        }))
+
 @pytest.mark.parametrize("properties", [
     "1,999", "2,10", "3,10", "21,1;1,2", "21,", "21,2,21,3",
     "9999,1", "31,SGVsbG8=",
