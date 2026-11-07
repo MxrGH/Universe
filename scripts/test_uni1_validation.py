@@ -93,11 +93,12 @@ class Uni1DraftValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "non-decreasing"):
             validate_draft_payload(draft)
 
-    def test_non_cube_mode_is_rejected(self):
+    def test_supported_non_cube_mode_is_preserved_as_section_metadata(self):
         draft = make_draft()
         draft["sections"][0]["gameplay"] = "ship"
-        with self.assertRaisesRegex(ValueError, "Unsupported gameplay mode"):
-            validate_draft_payload(draft)
+        normalized, count = validate_draft_payload(draft)
+        self.assertEqual(normalized["sections"][0]["gameplay"], "ship")
+        self.assertEqual(count, 2)
 
     def test_non_add_action_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "only add"):
