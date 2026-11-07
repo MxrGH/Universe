@@ -129,6 +129,57 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  emulator-smoke:
+    name: Android Emulator Smoke Test (runtime + package ABI)
+    runs-on: ubuntu-latest
+    needs: package
+    steps:
+      - name: Download verified universal package
+        uses: actions/download-artifact@v4
+        with:
+          name: Universe-1-Snapshot-26.5
+          path: package
+
+      - name: Verify Android native library ELF architectures
+        run: |
+          python - <<'PY'
+          import struct
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          packages = list(Path("package").glob("*.geode"))
+          assert len(packages) == 1, f"Expected one .geode package, got {len(packages)}"
+          with ZipFile(packages[0]) as archive:
+              expected = {
+                  "mxrmc.universe.android64.so": 183,
+                  "mxrmc.universe.android32.so": 40,
+              }
+              for name, machine in expected.items():
+                  data = archive.read(name)
+                  assert data[:4] == b"\\x7fELF", f"{name} is not ELF"
+                  actual = struct.unpack_from("<H", data, 18)[0]
+                  assert actual == machine, f"{name}: expected ELF machine {machine}, got {actual}"
+                  print(f"{name}: ELF machine {actual} verified")
+          PY
+
+      - name: Boot Android emulator and verify runtime
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          script: |
+            adb wait-for-device
+            adb shell 'until [ "$(getprop sys.boot_completed)" = "1" ]; do sleep 2; done'
+            SDK="$(adb shell getprop ro.build.version.sdk | tr -d '\\r')"
+            ABI="$(adb shell getprop ro.product.cpu.abi | tr -d '\\r')"
+            test "$SDK" -ge 29
+            test -n "$ABI"
+            adb shell am get-current-user
+            echo "Android emulator booted: API $SDK, ABI $ABI"
+
   release:
     name: Publish Universe 1 — Snapshot 26.5
     runs-on: ubuntu-latest
