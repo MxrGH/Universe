@@ -47,13 +47,11 @@ The AI tab is a **full-level generator**, not just an existing-object editor.
 4. Choose **CREATE FULL LEVEL IN EDITOR**. Universe pastes the generated layout directly into the currently open editor.
 5. Review the result and use the editor's Undo control if you want to revert the placement.
 
-The in-editor generator currently places blocks, spikes, saws, orbs, pads, and decoration objects. Important: the one-million figure is a hard validation ceiling, not a claim that the current paste engine can practically place one million objects. The current apply path still has a 1,000-operation processing guard and a 2 MB draft-file limit; large-scale chunked placement, progress reporting, and cancellation are not implemented yet. It does not yet create gameplay portals, triggers, song timing, or a native `.gmd` export. It adds the layout to the open editor; it does not automatically erase existing objects, so start with an empty level for a clean full-level build.
+The in-editor generator currently places blocks, spikes, saws, orbs, pads, and decoration objects. Important: the one-million figure is a hard validation ceiling, not a claim that the current paste engine can practically place one million objects. The current apply path still has a 1,000-operation processing guard and a 2 MB draft-file limit; large-scale chunked placement, progress reporting, and cancellation are not implemented yet. It does not yet create gameplay portals, triggers, or song timing. It adds the layout to the open editor; it does not automatically erase existing objects, so start with an empty level for a clean full-level build.
 
-The 26.5 live editor context can still inspect up to 500 existing objects and 100 selected objects for future editing workflows. The full-level creation prompt deliberately does not depend on that context or on selected objects. No GDShare or `.gmd` export is required.
+The 26.5 live editor context can still inspect up to 500 existing objects and 100 selected objects for future editing workflows. The full-level creation prompt deliberately does not depend on that context or on selected objects.
 
 Online AI uses the Anthropic-compatible Messages API over HTTPS and reads `ANTHROPIC_API_KEY` from the Geometry Dash process environment. The key is not stored in mod settings or source. API calls may incur charges; use a paid API account only with a parent or guardian's permission. Never put keys in chat, source files, commits, or screenshots.
-
-**OFFLINE DRAFT** creates a procedural template, not neural inference. It can also be applied to the open editor.
 
 ## Default controls
 
@@ -94,7 +92,7 @@ A successful CI build confirms compilation and packaging. It does not replace ga
 | `src/main.cpp` | In-game UI, gameplay modifiers, visual helpers, editor AI apply, and replay code |
 | `mod.json` | Geode metadata, settings, and keybinds |
 | `logo.png` | Universe logo |
-| `scripts/level_maker.py` | Offline/online level-design helper |
+| `scripts/level_maker.py` | Online level-design blueprint helper |
 | `scripts/export_video.py` | FFmpeg conversion helper |
 | `.github/workflows/build.yml` | Multi-platform build, package verification, and release |
 | `LICENSE` | MIT License |
