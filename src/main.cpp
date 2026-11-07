@@ -380,6 +380,140 @@ public:
     }
 };
 
+class DraftPlacementRunner : public CCLayer {
+    std::vector<std::string> m_chunks;
+    LevelEditorLayer* m_editor = nullptr;
+    CCLabelBMFont* m_progress = nullptr;
+    size_t m_nextChunk = 0;
+    size_t m_totalObjects = 0;
+    size_t m_processedObjects = 0;
+    size_t m_added = 0;
+    size_t m_changed = 0;
+    size_t m_deleted = 0;
+
+    void finish(bool cancelled, bool editorClosed = false) {
+        unscheduleAllSelectors();
+        auto currentEditor = LevelEditorLayer::get();
+        auto ui = currentEditor == m_editor && currentEditor ? currentEditor->m_editorUI : nullptr;
+        if (ui) {
+            ui->updateButtons();
+            ui->updateObjectInfoLabel();
+        }
+
+        std::string message;
+        if (editorClosed) {
+            message = fmt::format(
+                "Placement stopped because the editor closed. {} of {} new objects were placed; existing edits already applied remain. Reopen the editor and use Undo if needed.",
+                m_processedObjects, m_totalObjects
+            );
+        } else if (cancelled) {
+            message = fmt::format(
+                "Placement cancelled after {} of {} new objects. Objects already placed remain in the editor; use Undo to revert them.",
+                m_processedObjects, m_totalObjects
+            );
+        } else {
+            message = fmt::format(
+                "Universe applied {} new objects, {} existing-object edits, and {} object deletions. Use the editor Undo button to revert.",
+                m_added, m_changed, m_deleted
+            );
+        }
+        FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
+        removeFromParentAndCleanup(true);
+    }
+
+    void step(float) {
+        auto editor = LevelEditorLayer::get();
+        if (!editor || editor != m_editor || !editor->m_editorUI) {
+            finish(false, true);
+            return;
+        }
+        if (m_nextChunk >= m_chunks.size()) {
+            finish(false);
+            return;
+        }
+
+        auto const& chunk = m_chunks[m_nextChunk++];
+        editor->m_editorUI->pasteObjects(chunk, false, false);
+        m_processedObjects += static_cast<size_t>(std::count(chunk.begin(), chunk.end(), ';'));
+        if (m_progress) {
+            auto status = fmt::format("PLACING OBJECTS: {} / {}", m_processedObjects, m_totalObjects);
+            m_progress->setString(status.c_str());
+        }
+        if (m_nextChunk >= m_chunks.size())
+            finish(false);
+    }
+
+    void cancel(CCObject*) {
+        finish(true);
+    }
+
+public:
+    static DraftPlacementRunner* create(
+        std::vector<std::string> chunks,
+        LevelEditorLayer* editor,
+        size_t added,
+        size_t changed,
+        size_t deleted
+    ) {
+        auto ret = new DraftPlacementRunner();
+        if (ret && ret->init(std::move(chunks), editor, added, changed, deleted)) {
+            ret->autorelease();
+            return ret;
+        }
+        CC_SAFE_DELETE(ret);
+        return nullptr;
+    }
+
+    bool init(
+        std::vector<std::string> chunks,
+        LevelEditorLayer* editor,
+        size_t added,
+        size_t changed,
+        size_t deleted
+    ) {
+        if (!CCLayer::init() || !editor || chunks.empty())
+            return false;
+        m_chunks = std::move(chunks);
+        m_editor = editor;
+        m_added = added;
+        m_changed = changed;
+        m_deleted = deleted;
+        for (auto const& chunk : m_chunks)
+            m_totalObjects += static_cast<size_t>(std::count(chunk.begin(), chunk.end(), ';'));
+
+        auto win = CCDirector::sharedDirector()->getWinSize();
+        auto backdrop = CCLayerColor::create(ccc4(12, 15, 28, 235));
+        if (backdrop) {
+            backdrop->setContentSize(win);
+            backdrop->setPosition({0.f, 0.f});
+            addChild(backdrop);
+        }
+
+        m_progress = CCLabelBMFont::create("PLACING OBJECTS: 0", "bigFont.fnt");
+        if (m_progress) {
+            m_progress->setScale(0.48f);
+            m_progress->setColor({205, 190, 255});
+            m_progress->setPosition({win.width / 2.f, win.height / 2.f + 18.f});
+            addChild(m_progress, 2);
+        }
+
+        auto cancelLabel = CCLabelBMFont::create("CANCEL PLACEMENT", "goldFont.fnt");
+        auto cancelItem = cancelLabel
+            ? CCMenuItemLabel::create(cancelLabel, this, menu_selector(DraftPlacementRunner::cancel))
+            : nullptr;
+        auto menu = cancelItem ? CCMenu::create(cancelItem, nullptr) : nullptr;
+        if (menu) {
+            cancelItem->setScale(0.8f);
+            cancelItem->setPosition({0.f, -35.f});
+            menu->setPosition({win.width / 2.f, win.height / 2.f});
+            addChild(menu, 3);
+        }
+
+        schedule(schedule_selector(DraftPlacementRunner::step), 0.f);
+        return true;
+    }
+};
+
 class UniversePanel : public CCLayer, public TextInputDelegate {
 protected:
     Page m_page = Page::Player;
@@ -960,6 +1094,8 @@ protected:
         }
 
         std::string serialized;
+        std::vector<std::string> placementChunks;
+        size_t chunkObjectCount = 0;
         size_t added = 0;
         size_t changed = 0;
         size_t deleted = 0;
@@ -1108,20 +1244,40 @@ protected:
 
             serialized += fmt::format("1,{},2,{:.0f},3,{:.0f};", objectID, x, y);
             ++added;
+            ++chunkObjectCount;
+            if (chunkObjectCount >= 100) {
+                placementChunks.push_back(std::move(serialized));
+                serialized.clear();
+                chunkObjectCount = 0;
+            }
         }
 
-        if (!serialized.empty()) {
-            ui->pasteObjects(serialized, false, false);
-            ui->updateButtons();
-            ui->updateObjectInfoLabel();
-        }
+        if (!serialized.empty())
+            placementChunks.push_back(std::move(serialized));
+
         if (added + changed + deleted == 0) {
             FLAlertLayer::create("Universe AI", "No supported add/move/rotate/delete operations were found. Select the objects you want edited, then generate a new instruction.", "OK")->show();
             return;
         }
+
+        if (!placementChunks.empty()) {
+            auto scene = CCDirector::sharedDirector()->getRunningScene();
+            auto runner = DraftPlacementRunner::create(
+                std::move(placementChunks), editor, added, changed, deleted
+            );
+            if (!scene || !runner) {
+                FLAlertLayer::create("Universe AI", "Could not start the placement task. No new objects were placed; any existing-object edits already applied remain.", "OK")->show();
+                return;
+            }
+            scene->addChild(runner, 20000);
+            return;
+        }
+
+        ui->updateButtons();
+        ui->updateObjectInfoLabel();
         auto message = fmt::format(
-            "Universe applied {} new objects, {} existing-object edits, and {} object deletions. Use the editor Undo button to revert.",
-            added, changed, deleted
+            "Universe applied {} existing-object edits and {} object deletions. Use the editor Undo button to revert.",
+            changed, deleted
         );
         FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
     }
