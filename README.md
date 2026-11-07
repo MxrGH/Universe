@@ -48,7 +48,7 @@ Open Universe, go to **Settings**, and choose **RUN IN-GAME SELF TEST**. It chec
 
 ## Features not included in this snapshot
 
-The experimental Uni-1 AI level creator is not exposed in this build. Its model adapter has not been trained, and no inference server is deployed. The training/deployment materials remain in `uni1/` for development only; they are not a working in-game feature. The snapshot does not advertise AI generation, level placement, or an online AI quota.
+The Uni-1 AI panel is present in the client, but generation is **not operational yet**. The client needs an HTTPS server URL in Geode settings, a trained LoRA adapter, and a deployed inference server. No trained adapter or live server is included. The checked-in synthetic dataset is only a bootstrap fixture and does not establish playable level quality. Do not treat the panel as a working AI feature until the model is trained, deployed, and live-tested.
 
 ## Default controls
 
@@ -96,7 +96,7 @@ A successful CI build confirms compilation and packaging. It does not replace ga
 
 ## Important limitations
 
-- Uni-1 AI generation is not included in the shipped interface. The `uni1/` directory is development-only and contains no trained weights or deployed server.
+- Uni-1's panel and client integration are experimental. The `uni1/` directory contains training and server code, but no trained weights or deployed inference service. Generation cannot work until those external prerequisites exist.
 - Noclip and Speedhack can run in Normal Mode when Safe Mode is OFF. Modified attempts are not represented as legitimate server-verified completions.
 - Replay recording and playback are Practice Mode-only.
 - Movement projection estimates recent motion; it is not full Geometry Dash physics.
