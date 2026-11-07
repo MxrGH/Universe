@@ -1,0 +1,32 @@
+services:
+  uni1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: universe-uni1:local
+    restart: unless-stopped
+    environment:
+      UNI1_BASE_MODEL: Qwen/Qwen2.5-0.5B-Instruct
+      UNI1_ADAPTER_DIR: /models/uni1-adapter
+      UNI1_QUOTA_DB: /data/uni1-quota.sqlite3
+      UNI1_MAX_NEW_TOKENS: "4096"
+    ports:
+      # Bind to loopback by default. Put a properly secured HTTPS reverse proxy
+      # in front before allowing access from other machines.
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./artifacts/uni1-adapter:/models/uni1-adapter:ro
+      - uni1-data:/data
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10m
+
+volumes:
+  uni1-data:
