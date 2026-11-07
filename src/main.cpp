@@ -906,9 +906,9 @@ protected:
             return;
         }
 
-        // Absolute per-draft ceiling. This is a safety boundary, not a promise
-        // that the current editor paste path can practically handle one million objects.
-        static constexpr size_t kMaxGeneratedObjects = 1'000'000;
+        // Keep the editor-side ceiling aligned with Uni-1's server validator.
+        // Large single-frame paste operations can freeze or exhaust mobile memory.
+        static constexpr size_t kMaxGeneratedObjects = 1000;
         static const std::regex eventPattern(R"(\{[^{}]*\})");
         static const std::regex xPattern(R"("x"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
         static const std::regex yPattern(R"("y"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
@@ -933,7 +933,7 @@ protected:
             if (requestedPlacements > kMaxGeneratedObjects) {
                 FLAlertLayer::create(
                     "Universe AI",
-                    "This draft exceeds the hard limit of 1,000,000 generated objects. Nothing was placed.",
+                    "This draft exceeds the hard limit of 1,000 generated objects. Nothing was placed.",
                     "OK"
                 )->show();
                 return;
