@@ -277,6 +277,12 @@
       "default": 0,
       "min": 0,
       "max": 8
+    },
+    "show-player-bounds": {
+      "name": "Show player bounds",
+      "description": "Draw a local outline around the player's current sprite bounds. This is a visual reference, not the game's exact collision shape.",
+      "type": "bool",
+      "default": false
     }
   },
   "repository": "https://github.com/MxrGH/Universe"
