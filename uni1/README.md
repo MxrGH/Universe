@@ -72,6 +72,33 @@ The Geode client is wired to this keyless inference endpoint and the server vali
 
 Run quota tests from this folder with `pip install -r requirements-dev.txt` and `pytest -q`.
 
+## Full-editor object generation
+
+Uni-1's draft schema now accepts generic Geometry Dash editor objects in addition to
+the original block/spike/saw/orb/pad shortcuts:
+
+```json
+{
+  "action": "add",
+  "x": 300,
+  "y": 0,
+  "type": "object",
+  "id": 899,
+  "properties": "57,1.2,21,3"
+}
+```
+
+- `id` must exist in the verified EditorAI object-name/ID catalogue.
+- `properties` is an optional comma-separated sequence of numeric GD save-string
+  key/value pairs. It is validated before being appended to the object save string.
+- The catalogue contains thousands of editor object IDs, including decoration,
+  portals, and trigger families. Uni-1 retrieves a compact relevant subset per prompt.
+- The catalogue identifies object IDs; it does **not** document every trigger's
+  required property configuration. Unknown trigger settings must not be guessed.
+- The current client applies new objects only. It does not yet implement every
+  editor workflow, multi-step trigger sequencing, group editing, or automated
+  playtesting. Check generated levels in the editor and use Undo if needed.
+
 ## Open-source level-editor integrations
 
 Uni-1 now adapts selected MIT-licensed components and design guidance from:
