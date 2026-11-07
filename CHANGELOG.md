@@ -2,6 +2,8 @@
 
 ## Universe 1 — Snapshot 26.5
 
+- Add a live player-bounds overlay to the Visuals tab, separate from object hitboxes.
+
 - Refresh the panel with a purple/cyan accent frame, local-client status header, selected-tab highlighting, and clearer icon-lab state labels.
 - Clarify that icon browsing is a local preview and equipping remains restricted to icons already unlocked on the account.
 
