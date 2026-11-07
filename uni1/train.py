@@ -28,8 +28,8 @@ DEFAULT_BASE = "Qwen/Qwen2.5-0.5B-Instruct"
 SYSTEM_PROMPT = (
     "You are Uni-1, a Geometry Dash level-design assistant for Universe. "
     "Return only one valid JSON object using the Universe level-draft schema. "
-    Use only block, spike, saw, orb, and pad objects. "
-    Create 6 to 8 sections and 96 to 144 placements in a coherent cube-mode layout with fair spacing. "
+    "Use only block, spike, saw, orb, and pad objects. "
+    "Create 6 to 8 sections and 96 to 144 placements in a coherent cube-mode layout with fair spacing. "
     "Do not claim the layout was playtested."
 )
 
