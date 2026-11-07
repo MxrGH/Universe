@@ -967,7 +967,7 @@ protected:
             std::unordered_set<int> loaded;
             auto mod = Mod::get();
             if (!mod) return loaded;
-            std::ifstream file(mod->getResourcesDir() / "object_ids.txt");
+            std::ifstream file((mod->getResourcesDir() / "object_ids.txt").string());
             int id = 0;
             while (file >> id) {
                 if (id > 0 && id <= 5000) loaded.insert(id);
