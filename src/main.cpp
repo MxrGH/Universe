@@ -120,6 +120,35 @@ namespace {
         return url;
     }
 
+    // Remote Uni-1 endpoints must use HTTPS. Plain HTTP is permitted only
+    // for loopback development servers on the same desktop.
+    bool isAllowedUni1ServerURL(std::string const& url) {
+        auto schemeEnd = url.find("://");
+        if (schemeEnd == std::string::npos) return false;
+        auto scheme = url.substr(0, schemeEnd);
+        if (scheme != "https" && scheme != "http") return false;
+
+        auto authorityStart = schemeEnd + 3;
+        auto authorityEnd = url.find_first_of("/?#", authorityStart);
+        auto authority = url.substr(
+            authorityStart,
+            authorityEnd == std::string::npos ? std::string::npos : authorityEnd - authorityStart
+        );
+        if (authority.empty() || authority.find('@') != std::string::npos) return false;
+        if (scheme == "https") return true;
+
+        std::string host;
+        if (authority.front() == '[') {
+            auto closing = authority.find(']');
+            if (closing == std::string::npos) return false;
+            host = authority.substr(0, closing + 1);
+        } else {
+            auto port = authority.find(':');
+            host = authority.substr(0, port);
+        }
+        return host == "localhost" || host == "127.0.0.1" || host == "[::1]";
+    }
+
     struct MacroEvent {
         float time = 0.f;
         int button = 0;
@@ -953,10 +982,10 @@ protected:
 
         auto baseUrl = uni1ServerURL();
         auto installID = uniAIInstallID();
-        if (baseUrl.empty() || baseUrl.rfind("https://", 0) != 0 || installID.empty()) {
+        if (!isAllowedUni1ServerURL(baseUrl) || installID.empty()) {
             FLAlertLayer::create(
                 "Uni-1",
-                "Set the HTTPS Uni-1 server URL in Geode > Universe settings. No provider API key is needed.",
+                "Use HTTPS for remote servers, or http://127.0.0.1:8000 for a local desktop server. No provider API key is needed.",
                 "OK"
             )->show();
             return;
@@ -1866,7 +1895,7 @@ class UniverseFloatingButton : public CCLayer {
         registerUniButtonTap();
         auto baseUrl = uni1ServerURL();
         auto installID = uniAIInstallID();
-        if (baseUrl.empty() || installID.empty() || baseUrl.rfind("https://", 0) != 0) return;
+        if (!isAllowedUni1ServerURL(baseUrl) || installID.empty()) return;
         auto request = web::WebRequest()
             .header("X-Uni1-Install-ID", installID)
             .header("content-type", "application/json")
