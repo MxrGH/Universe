@@ -69,7 +69,8 @@ class DatasetQualityTests(unittest.TestCase):
                                 generic_ids.add(event["id"])
                     row["synthetic"] = True
                     stream.write(json.dumps(row, ensure_ascii=False) + "\n")
-            self.assertEqual(set(MODES), set(MODE_PORTALS))\n            self.assertGreaterEqual(len(modes), 4)
+            self.assertEqual(set(MODES), set(MODE_PORTALS))
+            self.assertGreaterEqual(len(modes), 4)
             self.assertGreaterEqual(len(generic_ids), 4)
             self.assertTrue(generic_ids.issubset(set(OBJECT_IDS.values())))
             report = validate_dataset(path, allow_synthetic=True)
