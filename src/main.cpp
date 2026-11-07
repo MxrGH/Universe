@@ -1,9 +1,12 @@
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdlib>
+#include <ctime>
 #include <fstream>
 #include <limits>
 #include <regex>
+#include <random>
 #include <sstream>
 #include <vector>
 #include <Geode/Geode.hpp>
@@ -19,6 +22,103 @@ using namespace geode::prelude;
 
 namespace {
     double g_originalFrameInterval = 0.0;
+
+    struct UniAIUsage {
+        std::string day;
+        int requests = 0;
+        int buttonTaps = 0;
+        bool bonusUnlocked = false;
+    };
+
+    std::string uniAIToday() {
+        std::time_t now = std::time(nullptr);
+        std::tm* local = std::localtime(&now);
+        if (!local) return "unknown-day";
+        char buffer[16] = {};
+        std::strftime(buffer, sizeof(buffer), "%Y%m%d", local);
+        return buffer;
+    }
+
+    std::string uniAIUsagePath() {
+        auto mod = Mod::get();
+        return mod ? (mod->getSaveDir() / "universe-ai-usage.txt").string() : std::string{};
+    }
+
+    UniAIUsage loadUniAIUsage() {
+        UniAIUsage usage;
+        auto path = uniAIUsagePath();
+        if (path.empty()) return usage;
+        std::ifstream file(path);
+        if (file.is_open()) {
+            int bonus = 0;
+            file >> usage.day >> usage.requests >> usage.buttonTaps >> bonus;
+            usage.bonusUnlocked = bonus != 0;
+        }
+        auto today = uniAIToday();
+        if (usage.day != today) {
+            usage.day = today;
+            usage.requests = 0;
+        }
+        usage.requests = std::clamp(usage.requests, 0, 1000);
+        usage.buttonTaps = std::clamp(usage.buttonTaps, 0, 7);
+        return usage;
+    }
+
+    void saveUniAIUsage(UniAIUsage const& usage) {
+        auto path = uniAIUsagePath();
+        if (path.empty()) return;
+        std::ofstream file(path, std::ios::out | std::ios::trunc);
+        if (file.is_open())
+            file << usage.day << ' ' << usage.requests << ' '
+                 << usage.buttonTaps << ' ' << (usage.bonusUnlocked ? 1 : 0) << '\n';
+    }
+
+    void registerUniButtonTap() {
+        auto usage = loadUniAIUsage();
+        if (usage.bonusUnlocked) return;
+        usage.buttonTaps = std::min(7, usage.buttonTaps + 1);
+        if (usage.buttonTaps >= 7) {
+            usage.bonusUnlocked = true;
+            log::info("Uni-1 bonus daily allowance unlocked: 1,000 requests.");
+        }
+        saveUniAIUsage(usage);
+    }
+
+    std::string uniAIQuotaLabel() {
+        auto usage = loadUniAIUsage();
+        int limit = usage.bonusUnlocked ? 1000 : 100;
+        return fmt::format("Uni-1 daily requests: {}/{}{}", usage.requests, limit,
+            usage.bonusUnlocked ? "  /  BONUS UNLOCKED" : "");
+    }
+
+    std::string uniAIInstallID() {
+        auto mod = Mod::get();
+        if (!mod) return {};
+        auto path = (mod->getSaveDir() / "uni1-install-id.txt").string();
+        {
+            std::ifstream file(path);
+            std::string existing;
+            if (file >> existing && existing.size() == 32)
+                return existing;
+        }
+        std::random_device random;
+        static constexpr char hex[] = "0123456789abcdef";
+        std::string id;
+        id.reserve(32);
+        for (int i = 0; i < 32; ++i)
+            id.push_back(hex[random() & 0x0f]);
+        std::ofstream file(path, std::ios::out | std::ios::trunc);
+        if (file.is_open()) file << id;
+        return id;
+    }
+
+    std::string uni1ServerURL() {
+        auto mod = Mod::get();
+        if (!mod) return {};
+        auto url = mod->getSettingValue<std::string>("ai-base-url");
+        while (!url.empty() && url.back() == '/') url.pop_back();
+        return url;
+    }
 
     struct MacroEvent {
         float time = 0.f;
@@ -438,7 +538,7 @@ protected:
         }
 
         switch (page) {
-            case Page::Player:
+            case Page::Player: {
                 addText("Your current run", {-245.f, 105.f});
                 if (auto layer = PlayLayer::get(); layer && layer->m_player1) {
                     auto mode = layer->m_isPracticeMode ? "Practice Mode" : "Normal Mode";
@@ -456,9 +556,9 @@ protected:
                     addText("Enter a level to see the current player state.", {-245.f, 55.f}, 0.34f);
                 }
                 addText("ICON LAB  /  LOCAL COSMETIC PREVIEW", {-245.f, -90.f}, 0.32f);
+                auto mod = Mod::get();
+                if (!mod) break;
                 if (auto gm = GameManager::get()) {
-                    auto mod = Mod::get();
-                    if (!mod) break;
                     static const char* iconNames[] = {
                         "Cube", "Ship", "Ball", "UFO", "Wave", "Robot", "Spider", "Swing", "Jetpack"
                     };
@@ -488,9 +588,12 @@ protected:
                     addAction("-", 124, {125.f, -235.f});
                     addAction("+", 125, {205.f, -235.f});
                 }
-                addAction("EQUIP IF OWNED", 127, {0.f, -280.f});
-                addText("Locked icons can be previewed; unlock data is never modified.", {-245.f, -310.f}, 0.27f);
+                bool overrideEnabled = mod->getSettingValue<bool>("local-icon-override");
+                addAction(overrideEnabled ? "DISABLE LOCAL OVERRIDE" : "EQUIP LOCAL ICON", 127, {0.f, -280.f});
+                addText("LOCAL ONLY: account unlocks and saved icon set are unchanged.", {-245.f, -310.f}, 0.27f);
+                addText("Primary, secondary and glow colors: Geode > Universe settings.", {-245.f, -340.f}, 0.24f);
                 break;
+            }
             case Page::Practice: {
                 auto mod = Mod::get();
                 addText("Gameplay hacks", {-245.f, 105.f});
@@ -529,7 +632,7 @@ protected:
                 if (layer) addAction("RESTART ATTEMPT", 133, {0.f, -135.f});
                 addText("These tools do not fake coins, records, or leaderboard results.", {-245.f, -175.f}, 0.29f);
                 addText("Online level-design helper: scripts/level_maker.py", {-245.f, -165.f}, 0.29f);
-                addText("Configure an AI API key to generate a design blueprint.", {-245.f, -200.f}, 0.27f);
+                addText("Set a self-hosted Uni-1 server URL in Geode > Universe settings.", {-245.f, -200.f}, 0.27f);
                 addText("Blueprint output is not a playable level save.", {-245.f, -235.f}, 0.27f);
                 break;
             }
@@ -584,7 +687,8 @@ protected:
                 addText("J  Toggle path trail     K  Toggle movement projection", {-245.f, -300.f}, 0.31f);
                 break;
             case Page::AI: {
-                addText("AI FULL LEVEL CREATOR", {-245.f, 105.f});
+                addText("UNI-1  /  AI LEVEL CREATOR", {-245.f, 105.f});
+                addText("Server quota: 100/day; 1,000/day after 7 UNIV taps.", {-245.f, 82.f}, 0.29f);
                 addText("Level idea", {-245.f, 72.f}, 0.31f);
                 m_aiPrompt = CCTextInputNode::create(430.f, 42.f, "Paste or type your full level prompt here...", "bigFont.fnt");
                 if (m_aiPrompt) {
@@ -592,31 +696,19 @@ protected:
                     m_aiPrompt->setPosition({55.f, 42.f});
                     m_content->addChild(m_aiPrompt, 4);
                 }
-                addText("Model", {-245.f, -5.f}, 0.31f);
-                m_aiModelInput = CCTextInputNode::create(340.f, 30.f, "claude-sonnet-4-6", "bigFont.fnt");
-                if (m_aiModelInput) {
-                    m_aiModelInput->setDelegate(this);
-                    m_aiModelInput->setString(Mod::get()->getSettingValue<std::string>("ai-model").c_str());
-                    m_aiModelInput->setPosition({55.f, -35.f});
-                    m_content->addChild(m_aiModelInput, 4);
-                }
-                addText("API base URL", {-245.f, -75.f}, 0.31f);
-                m_aiBaseUrlInput = CCTextInputNode::create(340.f, 30.f, "https://api.anthropic.com", "bigFont.fnt");
-                if (m_aiBaseUrlInput) {
-                    m_aiBaseUrlInput->setDelegate(this);
-                    m_aiBaseUrlInput->setString(Mod::get()->getSettingValue<std::string>("ai-base-url").c_str());
-                    m_aiBaseUrlInput->setPosition({55.f, -105.f});
-                    m_content->addChild(m_aiBaseUrlInput, 4);
-                }
-                addAction("SAVE PROMPT", 141, {-175.f, -155.f});
-                addAction("LOAD SAVED", 143, {0.f, -155.f});
-                addAction("CLEAR", 142, {175.f, -155.f});
-                addAction("GENERATE ONLINE", 126, {-115.f, -205.f});
-                addText("Describe the entire level: layout, gameplay flow, and difficulty.", {-245.f, -250.f}, 0.27f);
-                addText("Online AI generates a complete object layout, not an edit plan.", {-245.f, -280.f}, 0.25f);
-                addAction("CREATE FULL LEVEL IN EDITOR", 149, {0.f, -250.f});
-                addText("Open an empty level first; creation adds the generated layout.", {-245.f, -290.f}, 0.25f);
-                addText("Supported objects: blocks, spikes, saws, orbs, pads, deco.", {-245.f, -320.f}, 0.24f);
+                addText("No player API key required.", {-245.f, -5.f}, 0.34f);
+                addText("Uni-1 server URL: Geode > Universe settings.", {-245.f, -38.f}, 0.29f);
+                addText("The server is authoritative for quota and usage.", {-245.f, -70.f}, 0.27f);
+                addText("The server must be online for generation.", {-245.f, -102.f}, 0.26f);
+                addAction("SAVE PROMPT", 141, {-175.f, -150.f});
+                addAction("LOAD SAVED", 143, {0.f, -150.f});
+                addAction("CLEAR", 142, {175.f, -150.f});
+                addAction("GENERATE ONLINE", 126, {-115.f, -200.f});
+                addText("Describe the entire level: layout, gameplay flow, and difficulty.", {-245.f, -238.f}, 0.26f);
+                addText("Online AI creates a complete object layout.", {-245.f, -268.f}, 0.25f);
+                addAction("CREATE FULL LEVEL IN EDITOR", 149, {0.f, -285.f});
+                addText("Open an empty level first; creation adds the generated layout.", {-245.f, -315.f}, 0.24f);
+                addText("Blocks, spikes, saws, orbs, pads and deco are supported.", {-245.f, -345.f}, 0.23f);
                 break;
             }
             case Page::Settings:
@@ -711,87 +803,66 @@ protected:
             return;
         }
 
-        auto key = std::getenv("ANTHROPIC_API_KEY");
-        if (!key || std::string_view(key).empty()) {
+        auto baseUrl = uni1ServerURL();
+        auto installID = uniAIInstallID();
+        if (baseUrl.empty() || baseUrl.rfind("https://", 0) != 0 || installID.empty()) {
             FLAlertLayer::create(
-                "Universe AI",
-                "ANTHROPIC_API_KEY was not found. Set it in your operating system environment, then restart Geometry Dash. Do not paste your API key into chat or the mod source.",
+                "Uni-1",
+                "Set the HTTPS Uni-1 server URL in Geode > Universe settings. No provider API key is needed.",
                 "OK"
             )->show();
             return;
         }
 
         matjson::Value payload = matjson::Value::object();
-        payload["model"] = "claude-sonnet-4-6";
-        payload["max_tokens"] = 8192;
+        payload["model"] = "uni-1";
+        payload["max_tokens"] = 4096;
         matjson::Value messages = matjson::Value::array();
         matjson::Value userMessage = matjson::Value::object();
         userMessage["role"] = "user";
         userMessage["content"] =
-            "You are a Geometry Dash level creator. Create a COMPLETE NEW LEVEL FROM SCRATCH, not an edit plan for an existing level. "
-            "Return ONLY one valid JSON object matching the Universe Level Draft schema: title, prompt, difficulty, style, sections, notes. "
-            "Create 6 to 12 connected sections that together form one coherent, complete level from its opening to its ending. "
-            "Each section has name, gameplay, and events. Every event must be an object placement with action add, numeric x/y, and type block, spike, saw, orb, pad, or deco. "
-            "Generate a substantial complete layout (normally roughly 150 to 500 objects). The absolute hard ceiling is 1,000,000 object placements; never exceed it. "
-            "Use non-decreasing x coordinates, sensible spacing, a traversable player route, varied but fair obstacle patterns, and clear section transitions. "
-            "Use the requested difficulty and style consistently. Place the opening near x=0 and extend the level continuously through its ending. "
-            "Do not use move_selected, rotate_selected, delete_selected, move_object, rotate_object, or delete_object. Do not depend on existing objects or editor selection. "
-            "Keep coordinates finite and within +/-10000000, keep generated placements at or below 1,000,000 (normal requests should remain compact), and output valid JSON without Markdown. "
-            "The game will paste every generated object into the currently open editor. The user should open an empty level first; do not claim to clear or replace existing level contents. "
-            "Only these object types are supported by the in-editor creator: block, spike, saw, orb, pad, deco. Do not claim to create unsupported portal, trigger, or song objects. "
-            "User's complete level concept: " + prompt;
+            "Create a COMPLETE NEW GEOMETRY DASH LEVEL FROM SCRATCH. Return ONLY one valid JSON object "
+            "matching the Universe Level Draft schema: title, prompt, difficulty, style, sections, notes. "
+            "Create 6 to 12 connected sections, with events containing action add, numeric x/y, and type "
+            "block, spike, saw, orb, pad, or deco. Normally generate 150 to 500 placements, never exceed "
+            "the server's output limit. Use non-decreasing x coordinates, sensible spacing, traversable "
+            "routes, varied fair obstacle patterns, and clear transitions. Keep coordinates finite and "
+            "within +/-10000000. Do not invent unsupported portals, triggers, or song objects. The user "
+            "will apply this to an empty editor; do not claim it clears existing contents. Concept: " + prompt;
         messages.push(userMessage);
         payload["messages"] = messages;
 
-        auto model = Mod::get()->getSettingValue<std::string>("ai-model");
-        auto baseUrl = Mod::get()->getSettingValue<std::string>("ai-base-url");
-        if (model.empty()) model = "claude-sonnet-4-6";
-        if (baseUrl.empty()) baseUrl = "https://api.anthropic.com";
-        while (!baseUrl.empty() && baseUrl.back() == '/') baseUrl.pop_back();
-        if (baseUrl.rfind("https://", 0) != 0) {
-            FLAlertLayer::create(
-                "Universe AI",
-                "The AI API base URL must use HTTPS so your API key is not sent over an unencrypted connection.",
-                "OK"
-            )->show();
-            return;
-        }
-        payload["model"] = model;
-
         auto request = web::WebRequest()
-            .header("x-api-key", key)
-            .header("anthropic-version", "2023-06-01")
+            .header("X-Uni1-Install-ID", installID)
             .header("content-type", "application/json")
-            .timeout(std::chrono::seconds(90))
+            .timeout(std::chrono::seconds(180))
             .bodyJSON(payload);
 
         m_aiTask.spawn(
-            request.post(baseUrl + "/v1/messages"),
+            request.post(baseUrl + "/v1/chat/completions"),
             [this](web::WebResponse response) {
                 if (!response.ok()) {
                     auto details = response.string().unwrapOr("No response details were provided.");
                     if (details.size() > 500) details.resize(500);
-                    auto message = fmt::format("Anthropic request failed (HTTP {}). {}", response.code(), details);
-                    FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
+                    auto message = fmt::format("Uni-1 server error (HTTP {}). {}", response.code(), details);
+                    FLAlertLayer::create("Uni-1", message.c_str(), "OK")->show();
                     return;
                 }
 
                 auto parsed = response.json();
                 if (!parsed) {
-                    FLAlertLayer::create("Universe AI", "The API returned a response that could not be read as JSON.", "OK")->show();
+                    FLAlertLayer::create("Uni-1", "The Uni-1 server returned invalid JSON.", "OK")->show();
                     return;
                 }
 
                 std::string draft;
-                auto blocks = parsed.unwrap()["content"].asArray();
-                if (blocks) {
-                    for (auto const& block : blocks.unwrap()) {
-                        if (block["type"].asString().unwrapOr("") == "text")
-                            draft += block["text"].asString().unwrapOr("");
-                    }
+                auto choices = parsed.unwrap()["choices"].asArray();
+                if (choices && !choices.unwrap().empty()) {
+                    auto content = choices.unwrap().front()["message"]["content"].asString();
+                    if (content) draft = content.unwrap();
                 }
                 if (draft.empty()) {
-                    FLAlertLayer::create("Universe AI", "The API response did not contain a text draft.", "OK")->show();
+                    FLAlertLayer::create("Uni-1", "The model response did not contain a level draft.", "OK")->show();
                     return;
                 }
 
@@ -807,7 +878,7 @@ protected:
                 file.close();
 
                 auto message = fmt::format(
-                    "AI draft generated. Open the level editor and click APPLY DRAFT TO OPEN EDITOR.\n\nDraft: {}",
+                    "AI draft generated. Open the level editor and click CREATE FULL LEVEL IN EDITOR.\n\nDraft: {}",
                     path.string()
                 );
                 FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
@@ -1203,40 +1274,12 @@ protected:
             return;
         }
         if (tag == 127) {
-            auto gm = GameManager::get();
-            if (!gm) return;
-            auto typeID = static_cast<int>(std::clamp<int64_t>(
-                mod->getSettingValue<int64_t>("preview-icon-type"), 0, 8
-            ));
-            auto iconType = static_cast<IconType>(typeID);
-            auto iconID = static_cast<int>(std::clamp<int64_t>(
-                mod->getSettingValue<int64_t>("preview-icon-id"), 1, 500
-            ));
-            if (!gm->isIconUnlocked(iconID, iconType)) {
-                FLAlertLayer::create(
-                    "Universe",
-                    "That icon is locked on this account. You can preview it locally, but Universe will not equip it or change unlock flags.",
-                    "OK"
-                )->show();
-                return;
-            }
-            switch (iconType) {
-                case IconType::Cube: gm->setPlayerFrame(iconID); break;
-                case IconType::Ship: gm->setPlayerShip(iconID); break;
-                case IconType::Ball: gm->setPlayerBall(iconID); break;
-                case IconType::Ufo: gm->setPlayerBird(iconID); break;
-                case IconType::Wave: gm->setPlayerDart(iconID); break;
-                case IconType::Robot: gm->setPlayerRobot(iconID); break;
-                case IconType::Spider: gm->setPlayerSpider(iconID); break;
-                case IconType::Swing: gm->setPlayerSwing(iconID); break;
-                case IconType::Jetpack: gm->setPlayerJetpack(iconID); break;
-                default: return;
-            }
-            FLAlertLayer::create(
-                "Universe",
-                "Your owned icon was selected. Use Geometry Dash's normal save option if you want to save the selection.",
-                "OK"
-            )->show();
+            bool enabled = mod->getSettingValue<bool>("local-icon-override");
+            mod->setSettingValue<bool>("local-icon-override", !enabled);
+            auto message = enabled
+                ? "Local icon override disabled. Your official Geometry Dash icon selection was not changed."
+                : "Local icon override enabled. The selected icon is rendered locally only; account unlocks and saved icon data are untouched.";
+            FLAlertLayer::create("Universe Icon Lab", message, "OK")->show();
             showPage(m_page);
             return;
         }
@@ -1479,12 +1522,11 @@ public:
         m_actionMenu->setPosition({0.f, 0.f});
         this->addChild(m_actionMenu, 6);
 
-        float left = win.width * 0.16f;
+        float left = win.width * 0.12f;
         float tabY = win.height * 0.64f;
         Page pages[] = {Page::Player, Page::Practice, Page::Level, Page::Visuals,
                         Page::Recorder, Page::Keybinds, Page::Settings, Page::AI};
-        int pageCount = 7;
-        if (mod->getSettingValue<bool>("ai-tab-enabled")) pageCount = 8;
+        int pageCount = 8;
         for (int i = 0; i < pageCount; ++i) {
             auto label = CCLabelBMFont::create(pageName(pages[i]), "bigFont.fnt");
             label->setScale(0.33f);
@@ -1492,7 +1534,7 @@ public:
             m_tabLabels.push_back(label);
             auto item = CCMenuItemLabel::create(label, this, menu_selector(UniversePanel::onTab));
             item->setTag(200 + i);
-            item->setPosition({left + i * (win.width * 0.113f), tabY});
+            item->setPosition({left + i * (win.width * 0.105f), tabY});
             m_menu->addChild(item);
         }
 
@@ -1511,7 +1553,6 @@ public:
         if (index < 0 || index > 7) return;
         auto mod = Mod::get();
         if (!mod) return;
-        if (index == 7 && !mod->getSettingValue<bool>("ai-tab-enabled")) return;
         showPage(static_cast<Page>(index));
     }
 };
@@ -1520,6 +1561,86 @@ public:
 // attempt to Practice Mode before a requested modifier is applied; with Safe
 // Mode disabled, the modifiers remain local client-side gameplay changes.
 class $modify(UniversePlayerObject, PlayerObject) {
+    bool isUniverseLocalPlayer() {
+        auto layer = PlayLayer::get();
+        return layer && layer->m_player1 == this;
+    }
+
+    int universeIconFrame(int frame, int type) {
+        auto mod = Mod::get();
+        if (!mod || !mod->getSettingValue<bool>("local-icon-override") || !isUniverseLocalPlayer())
+            return frame;
+        auto selectedType = static_cast<int>(std::clamp<int64_t>(
+            mod->getSettingValue<int64_t>("preview-icon-type"), 0, 8
+        ));
+        if (selectedType != type) return frame;
+        return static_cast<int>(std::clamp<int64_t>(
+            mod->getSettingValue<int64_t>("preview-icon-id"), 1, 500
+        ));
+    }
+
+    void applyUniverseLocalIconColors() {
+        auto mod = Mod::get();
+        if (!mod || !mod->getSettingValue<bool>("local-icon-override") || !isUniverseLocalPlayer())
+            return;
+        auto primary = mod->getSettingValue<ccColor4B>("icon-primary-color");
+        auto secondary = mod->getSettingValue<ccColor4B>("icon-secondary-color");
+        auto glow = mod->getSettingValue<ccColor4B>("icon-glow-color");
+        PlayerObject::setColor({primary.r, primary.g, primary.b});
+        PlayerObject::setSecondColor({secondary.r, secondary.g, secondary.b});
+        bool showGlow = mod->getSettingValue<bool>("local-icon-glow");
+        if (m_iconGlow) {
+            m_iconGlow->setColor({glow.r, glow.g, glow.b});
+            m_iconGlow->setVisible(showGlow);
+        }
+        if (m_vehicleGlow) {
+            m_vehicleGlow->setColor({glow.r, glow.g, glow.b});
+            m_vehicleGlow->setVisible(showGlow);
+        }
+    }
+
+    void updatePlayerFrame(int frame) {
+        PlayerObject::updatePlayerFrame(universeIconFrame(frame, 0));
+        applyUniverseLocalIconColors();
+    }
+
+    void updatePlayerGlow() {
+        PlayerObject::updatePlayerGlow();
+        applyUniverseLocalIconColors();
+    }
+    void updatePlayerShipFrame(int frame) {
+        PlayerObject::updatePlayerShipFrame(universeIconFrame(frame, 1));
+        applyUniverseLocalIconColors();
+    }
+    void updatePlayerRollFrame(int frame) {
+        PlayerObject::updatePlayerRollFrame(universeIconFrame(frame, 2));
+        applyUniverseLocalIconColors();
+    }
+    void updatePlayerBirdFrame(int frame) {
+        PlayerObject::updatePlayerBirdFrame(universeIconFrame(frame, 3));
+        applyUniverseLocalIconColors();
+    }
+    void updatePlayerDartFrame(int frame) {
+        PlayerObject::updatePlayerDartFrame(universeIconFrame(frame, 4));
+        applyUniverseLocalIconColors();
+    }
+    void createRobot(int frame) {
+        PlayerObject::createRobot(universeIconFrame(frame, 5));
+        applyUniverseLocalIconColors();
+    }
+    void createSpider(int frame) {
+        PlayerObject::createSpider(universeIconFrame(frame, 6));
+        applyUniverseLocalIconColors();
+    }
+    void updatePlayerSwingFrame(int frame) {
+        PlayerObject::updatePlayerSwingFrame(universeIconFrame(frame, 7));
+        applyUniverseLocalIconColors();
+    }
+    void updatePlayerJetpackFrame(int frame) {
+        PlayerObject::updatePlayerJetpackFrame(universeIconFrame(frame, 8));
+        applyUniverseLocalIconColors();
+    }
+
     bool pushButton(PlayerButton button) {
         auto layer = PlayLayer::get();
         if (g_macroRecording && !g_macroPlayingBack && layer && layer->m_isPracticeMode
@@ -1552,6 +1673,24 @@ class $modify(UniversePlayerObject, PlayerObject) {
 class UniverseFloatingButton : public CCLayer {
     CCPoint m_touchStart = {0.f, 0.f};
     bool m_moved = false;
+    std::array<async::TaskHolder<web::WebResponse>, 7> m_bonusTasks;
+    size_t m_bonusTaskIndex = 0;
+
+    void notifyUni1Tap() {
+        registerUniButtonTap();
+        auto baseUrl = uni1ServerURL();
+        auto installID = uniAIInstallID();
+        if (baseUrl.empty() || installID.empty() || baseUrl.rfind("https://", 0) != 0) return;
+        auto request = web::WebRequest()
+            .header("X-Uni1-Install-ID", installID)
+            .header("content-type", "application/json")
+            .timeout(std::chrono::seconds(15));
+        auto& task = m_bonusTasks[m_bonusTaskIndex++ % m_bonusTasks.size()];
+        task.spawn(request.post(baseUrl + "/v1/bonus/tap"), [](web::WebResponse response) {
+            if (!response.ok())
+                log::warn("Uni-1 bonus tap could not be recorded by the server (HTTP {}).", response.code());
+        });
+    }
 
     void togglePanel() {
         auto scene = CCDirector::sharedDirector()->getRunningScene();
@@ -1653,6 +1792,7 @@ public:
 
     void ccTouchEnded(CCTouch*, CCEvent*) override {
         if (!m_moved) {
+            notifyUni1Tap();
             togglePanel();
             return;
         }

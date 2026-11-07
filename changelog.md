@@ -2,9 +2,12 @@
 
 ## Universe 1 — Snapshot 26.5
 
-- Add live editor context and AI add/move/rotate/delete operations for selected objects or exact existing-object unique IDs.
+- Add a local-only icon override that does not alter account unlocks or saved icon selection.
+- Add configurable local primary, secondary, and glow colors, plus a local glow toggle.
+- Keep the untrained Uni-1 AI creator out of the shipped interface until model training and deployment are complete.
+- Align project validation with the online-only AI workflow and remove stale checks for deleted offline/icon enum code.
 - Preserve existing gameplay modifiers, Safe Mode, StartPos tools, visual overlays, replay recorder, icon previews, themes, keybinds, presets, and mobile controls.
-- Bump Geode package version to v1.1.1 and prepare the final planned snapshot release.
+- Bump Geode package version to v1.1.1; keep publication gated on successful CI and physical-device QA.
 
 ## Universe 1 — Snapshot 26.4
 
@@ -28,3 +31,7 @@
 
 - Snapshot 26.2 — replay/UI hardening and AI blueprint validation.
 - Snapshot 26.1 — initial Universe 1 release.
+
+- Replace the local Uni-1 request counter with server-enforced per-installation quotas: 100/day, or 1,000/day after seven UNIV taps; resets at 00:00 UTC.
+
+- Add a reproducible synthetic Uni-1 dataset bootstrap generator, container recipe, deployment guide, and server quota tests.

@@ -54,6 +54,19 @@ missing_keybinds = [
 if missing_keybinds:
     fail("keybind settings are not referenced in source: " + ", ".join(missing_keybinds))
 
+# Uni-1 is intentionally exposed as an experimental, self-hosted integration.
+# It must remain clearly non-operational until trained weights and a server exist.
+ai_settings = {key for key in settings if key.startswith("ai-")}
+if ai_settings != {"ai-base-url"}:
+    fail("only the keyless Uni-1 server URL setting may be shipped")
+ai_url = settings.get("ai-base-url", {})
+if ai_url.get("type") != "string" or ai_url.get("default") != "":
+    fail("Uni-1 server URL must be an empty-by-default string setting")
+if "no trained adapter or live server is included" not in readme_text.lower():
+    fail("README must disclose that Uni-1 has no trained adapter or live server")
+if "Page::Settings, Page::AI" not in source:
+    fail("Uni-1 AI page must be reachable from the in-game tab bar")
+
 for feature_marker in (
     'addAction("PRACTICE", 130',
     'addAction("VISUALS", 131',
@@ -68,8 +81,6 @@ for feature_marker in (
     'addAction("SAVE PROMPT", 141',
     'addAction("CLEAR", 142',
     "prompt.size() > 4000",
-    "void generateOfflineDraft()",
-    'addAction("OFFLINE DRAFT", 145',
     'addAction("LOAD SAVED", 143',
     "loaded.size() >= 100000",
     "layer->m_isPracticeMode",
@@ -97,9 +108,13 @@ for feature_marker in (
     "floating-button-label",
     "void generateAIDraft()",
     "Page::AI",
-    "ANTHROPIC_API_KEY",
+    "local-icon-override",
+    "applyUniverseLocalIconColors",
+    "icon-primary-color",
+    "icon-secondary-color",
+    "icon-glow-color",
+    "local-icon-glow",
     "preview-icon-type",
-    "IconType::Jetpack",
     "isIconUnlocked",
     "applySavedDraftToEditor",
     "pasteObjects(serialized, false, false)",

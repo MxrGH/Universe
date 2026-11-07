@@ -1,11 +1,9 @@
-# Universe 1 — Snapshot 26.4
+# Universe 1 — Snapshot 26.5
 
-Universe 1 is a Geometry Dash 2.2091 Geode hack client by MxrGH.
+Universe 1 is a Geometry Dash 2.2091 Geode client by MxrGH.
 
-Snapshot 26.4 expands gameplay modifiers beyond Practice Mode: Noclip and Speedhack remain active in Normal Mode when Safe Mode is turned off. With Safe Mode enabled, modified attempts are switched to Practice Mode. StartPos tools, hitboxes, movement trail/projection, FPS controls, local replay, keybinds, themes, and icon preview remain part of the client.
+This snapshot exposes the local gameplay modifiers, Safe Mode, StartPos tools, hitboxes, movement trail and projection, FPS controls, Practice Mode replay tools, icon previews, local-only icon override, keybinds, themes, presets, and mobile controls.
 
-The UNIV floating control is now circular, uses the Universe logo, and leaves a fading motion trail while dragged. The panel uses rounded geometry and animated opening/closing.
+The experimental Uni-1 AI level creator is intentionally not exposed in this snapshot. Its adapter has not been trained and its inference service has not been deployed. The training and server files are development materials only and are not advertised as a working feature.
 
-The AI tab can generate a level section and apply supported objects directly into the currently open Geometry Dash editor. It does not export a .gmd file or depend on GDShare. The first editor integration inserts objects; arbitrary edits/deletions of existing objects are not yet supported. Online AI requires a user-configured API key over HTTPS. Offline Draft is procedural, not neural inference.
-
-The release pipeline builds Windows x64, Android ARM64, and Android ARMv7, combines them into one .geode package, validates its contents, and publishes only after all build jobs pass. CI packaging success is not a substitute for testing in the actual game.
+The build workflow targets Windows x64, Android ARM64, and Android ARMv7. CI compilation and package checks do not replace testing in the actual game on physical devices.

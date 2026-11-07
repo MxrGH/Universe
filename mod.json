@@ -201,12 +201,18 @@
       "default": false
     },
     "preview-icon-id": {
-      "name": "Cube icon ID",
-      "description": "Icon ID in the selected category. Locked IDs can be previewed locally but cannot be equipped.",
+      "name": "Local icon override ID",
+      "description": "Icon ID rendered for your local player when Local Icon Override is enabled. This does not unlock or save account icons.",
       "type": "int",
       "default": 1,
       "min": 1,
       "max": 500
+    },
+    "local-icon-override": {
+      "name": "Local Icon Override",
+      "description": "Render the selected icon ID on your local player without changing account unlocks or saved icon selections.",
+      "type": "bool",
+      "default": false
     },
     "floating-button-x": {
       "name": "Floating button horizontal position",
@@ -223,24 +229,6 @@
       "default": 0.52,
       "min": 0.05,
       "max": 0.95
-    },
-    "ai-tab-enabled": {
-      "name": "Show AI tab (experimental)",
-      "description": "Show the in-game AI level-draft prompt interface.",
-      "type": "bool",
-      "default": true
-    },
-    "ai-model": {
-      "name": "AI model",
-      "description": "Model name sent to the Anthropic Messages API. The AI tab can edit this value.",
-      "type": "string",
-      "default": "claude-sonnet-4-6"
-    },
-    "ai-base-url": {
-      "name": "AI API base URL",
-      "description": "Base URL for an Anthropic-compatible Messages API. The API key remains in ANTHROPIC_API_KEY.",
-      "type": "string",
-      "default": "https://api.anthropic.com"
     },
     "panel-title": {
       "name": "Panel title",
@@ -283,6 +271,51 @@
       "description": "Draw a local outline around the player's current sprite bounds. This is a visual reference, not the game's exact collision shape.",
       "type": "bool",
       "default": false
+    },
+    "icon-primary-color": {
+      "name": "Local icon primary color",
+      "description": "Primary tint used by the local-only icon override.",
+      "type": "rgba",
+      "default": [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    "icon-secondary-color": {
+      "name": "Local icon secondary color",
+      "description": "Secondary tint used by the local-only icon override.",
+      "type": "rgba",
+      "default": [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    "icon-glow-color": {
+      "name": "Local icon glow color",
+      "description": "Glow tint used by the local-only icon override.",
+      "type": "rgba",
+      "default": [
+        190,
+        145,
+        255,
+        255
+      ]
+    },
+    "local-icon-glow": {
+      "name": "Local icon glow",
+      "description": "Show a local glow on the overridden icon without changing account settings.",
+      "type": "bool",
+      "default": true
+    },
+    "ai-base-url": {
+      "name": "Uni-1 server URL",
+      "description": "HTTPS URL for your self-hosted Uni-1 inference server. Leave blank until a trained adapter is deployed. No provider API key is used.",
+      "type": "string",
+      "default": ""
     }
   },
   "repository": "https://github.com/MxrGH/Universe"

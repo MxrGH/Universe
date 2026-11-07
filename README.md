@@ -1,6 +1,6 @@
 ## Local gameplay and customization
 
-Universe includes local Noclip and Speedhack modifiers, Safe Mode practice marking, object hitboxes, player-bounds overlay, movement visualizers, FPS controls, Practice Mode input recording/replay, StartPos tools, and a draggable in-game panel. The Player tab includes an icon lab that previews icon IDs locally and only equips icons already unlocked on the account; it does not alter unlock flags or claim server-side unlocks. The interface uses animated page transitions, theme presets, selected-tab highlighting, and a compact local-client status header.
+Universe includes local Noclip and Speedhack modifiers, Safe Mode practice marking, object hitboxes, player-bounds overlay, movement visualizers, FPS controls, Practice Mode input recording/replay, StartPos tools, and a draggable in-game panel. The Player tab includes an icon lab and a local-only icon override; it does not alter account unlock flags or saved icon selections. The interface uses animated page transitions, theme presets, selected-tab highlighting, and a compact local-client status header.
 
 # Universe 1
 
@@ -42,24 +42,13 @@ Open Universe, go to **Settings**, and choose **RUN IN-GAME SELF TEST**. It chec
 ## Icon tools
 
 - Preview Cube, Ship, Ball, UFO, Wave, Robot, Spider, Swing, and Jetpack IDs.
+- Apply a local-only icon override with configurable primary, secondary, and glow colors plus a local glow toggle in Geode settings.
 - Equip an icon only when Geometry Dash reports it as unlocked on the current account.
 - Local previews do not grant account unlocks or achievements.
 
-## AI full-level creator
+## Features not included in this snapshot
 
-The AI tab is a **full-level generator**, not just an existing-object editor.
-
-1. Open a **new, empty level** in the Geometry Dash editor.
-2. Enter a complete concept in the Universe AI tab. Include the theme, difficulty, gameplay feel, and any section ideas.
-3. Choose **GENERATE ONLINE**. The configured AI model is instructed to design one complete level from its opening to its ending, using 6–12 connected sections and normally approximately 150–500 object placements. The absolute per-draft ceiling is **1,000,000 generated object placements**; oversized drafts are rejected before any editor changes.
-4. Choose **CREATE FULL LEVEL IN EDITOR**. Universe pastes the generated layout directly into the currently open editor.
-5. Review the result and use the editor's Undo control if you want to revert the placement.
-
-The in-editor generator currently places blocks, spikes, saws, orbs, pads, and decoration objects. Important: the one-million figure is a hard validation ceiling, not a claim that the current paste engine can practically place one million objects. The current apply path still has a 1,000-operation processing guard and a 2 MB draft-file limit; large-scale chunked placement, progress reporting, and cancellation are not implemented yet. It does not yet create gameplay portals, triggers, or song timing. It adds the layout to the open editor; it does not automatically erase existing objects, so start with an empty level for a clean full-level build.
-
-The 26.5 live editor context can still inspect up to 500 existing objects and 100 selected objects for future editing workflows. The full-level creation prompt deliberately does not depend on that context or on selected objects.
-
-Online AI uses the Anthropic-compatible Messages API over HTTPS and reads `ANTHROPIC_API_KEY` from the Geometry Dash process environment. The key is not stored in mod settings or source. API calls may incur charges; use a paid API account only with a parent or guardian's permission. Never put keys in chat, source files, commits, or screenshots.
+The Uni-1 AI panel is present in the client, but generation is **not operational yet**. The client needs an HTTPS server URL in Geode settings, a trained LoRA adapter, and a deployed inference server. No trained adapter or live server is included. The checked-in synthetic dataset is only a bootstrap fixture and does not establish playable level quality. Do not treat the panel as a working AI feature until the model is trained, deployed, and live-tested.
 
 ## Default controls
 
@@ -81,7 +70,7 @@ Keybinds can be changed in Geode settings. On Android, use the circular **UNIV**
 ## Install
 
 1. Install a Geode build compatible with Geometry Dash 2.2091.
-2. Download `Universe-1-Snapshot-26.5.geode` from the GitHub release.
+2. Obtain a `.geode` package from a successful GitHub Actions build artifact or a published GitHub release.
 3. Open the `.geode` file with Geode, or place it in the Geode mods folder.
 4. Enable Universe in Geode and restart the game if requested.
 
@@ -89,7 +78,7 @@ The release package contains Windows x64, Android ARM64, and Android ARMv7 binar
 
 ## Build and verification
 
-GitHub Actions builds all three targets independently, runs the Python regression suite, combines them, inspects the resulting archive, verifies platform binaries and resources, and only then publishes Snapshot 26.5.
+GitHub Actions is configured to build all three targets independently, run project checks, combine the platform outputs, and inspect the resulting archive. A release is only published from `main` after the release gate is deliberately triggered. A successful CI build still does not replace gameplay testing on actual Windows and Android devices.
 
 A successful CI build confirms compilation and packaging. It does not replace gameplay testing on actual Windows and Android devices. No claim of zero bugs is made.
 
@@ -97,7 +86,7 @@ A successful CI build confirms compilation and packaging. It does not replace ga
 
 | Path | Purpose |
 |---|---|
-| `src/main.cpp` | In-game UI, gameplay modifiers, visual helpers, editor AI apply, and replay code |
+| `src/main.cpp` | In-game UI, gameplay modifiers, visual helpers, and replay code |
 | `mod.json` | Geode metadata, settings, and keybinds |
 | `logo.png` | Universe logo |
 | `scripts/level_maker.py` | Online level-design blueprint helper |
@@ -107,7 +96,7 @@ A successful CI build confirms compilation and packaging. It does not replace ga
 
 ## Important limitations
 
-- AI editing can target an exact existing object unique ID shown in its live editor context, or operate on the current selection. It does not guess IDs that are absent from that context.
+- Uni-1's panel and client integration are experimental. The `uni1/` directory contains training and server code, but no trained weights or deployed inference service. Generation cannot work until those external prerequisites exist.
 - Noclip and Speedhack can run in Normal Mode when Safe Mode is OFF. Modified attempts are not represented as legitimate server-verified completions.
 - Replay recording and playback are Practice Mode-only.
 - Movement projection estimates recent motion; it is not full Geometry Dash physics.
@@ -119,3 +108,5 @@ A successful CI build confirms compilation and packaging. It does not replace ga
 - **MxrGH** — Universe
 - **Geode SDK** — mod framework
 - **RobTop Games** — Geometry Dash
+
+Uni-1 development materials are not part of the shipped feature set. Generated examples are synthetic and do not certify gameplay quality.
