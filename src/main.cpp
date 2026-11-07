@@ -1089,15 +1089,19 @@ protected:
         userMessage["content"] =
             "Create a COMPLETE NEW GEOMETRY DASH LEVEL FROM SCRATCH. Return ONLY one valid JSON object "
             "matching the Universe Level Draft schema: title, prompt, difficulty, style, sections, notes. "
-            "Create 6 to 8 connected sections in CUBE mode only, with events containing action add, numeric x/y, "
-            "and type block, spike, saw, orb, or pad. Generate 96 to 144 placements, never exceed the "
-            "server's 1,000-object limit. Use non-decreasing x coordinates, sensible spacing, traversable "
-            "routes, varied fair obstacle patterns, and clear transitions. Keep coordinates finite and "
-            "within +/-10000000. Do not invent portals, mode changes, decoration placeholders, triggers, "
-            "or song objects. The layout is geometry-only and must be playtested by the user. The user "
-            "will apply this to an empty editor; do not claim it clears existing contents. "
-            "The following editor context is read-only background information; do not output edit/delete "
-            "operations or claim existing objects were changed: " + buildEditorContext() + "\nConcept: " + prompt;
+            "Create 6 to 8 connected sections with 96 to 144 ordered object placements. Events may use "
+            "named primitive types block, spike, saw, orb, pad, OR type object with an exact numeric id "
+            "from the verified editor catalogue supplied by the server. Generic object events may include "
+            "a properties string containing comma-separated numeric GD save-string key/value pairs. "
+            "Use actual decoration objects, portals, color/pulse/alpha/move triggers, effects, and other "
+            "editor objects when appropriate to the requested concept. Do not invent IDs or trigger property "
+            "keys; if a trigger configuration is unknown, omit its properties rather than guessing. "
+            "Use sensible spacing, traversable routes, varied fair obstacle patterns, readable decoration, "
+            "and clear transitions. Keep coordinates finite and within +/-10000000. Default to cube mode, "
+            "but use verified mode portals when the concept requests a mode change. Never claim the level "
+            "was playtested. The user will apply this to an empty editor; do not claim it clears existing "
+            "contents. The following editor context is read-only background information; do not output "
+            "edit/delete operations or claim existing objects were changed: " + buildEditorContext() + "\nConcept: " + prompt;
         messages.push(userMessage);
         payload["messages"] = messages;
 
