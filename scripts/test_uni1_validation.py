@@ -6,6 +6,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "uni1"))
 from draft_validation import validate_draft_payload
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "uni1"))
+from generate_dataset import make_example
+import random
 
 
 def make_draft(events=None):
@@ -28,6 +31,20 @@ class Uni1DraftValidationTests(unittest.TestCase):
         draft, count = validate_draft_payload(make_draft())
         self.assertEqual(count, 2)
         self.assertEqual(draft["format"], "universe-level-draft-v1")
+
+    def test_synthetic_bootstrap_examples_pass_production_validator(self):
+        rng = random.Random(20261107)
+        for index in range(32):
+            row = make_example(index, rng)
+            draft, count = validate_draft_payload(__import__("json").loads(row["response"]))
+            self.assertGreater(count, 0)
+            self.assertLessEqual(count, 1000)
+            self.assertEqual(draft["format"], "universe-level-draft-v1")
+
+    def test_synthetic_generator_is_reproducible(self):
+        first = make_example(7, random.Random(1234))
+        second = make_example(7, random.Random(1234))
+        self.assertEqual(first, second)
 
     def test_boolean_coordinate_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "numeric x"):
