@@ -745,8 +745,8 @@ protected:
                 if (!object) continue;
                 auto p = object->getPosition();
                 context += fmt::format(
-                    "[id={}, x={:.1f}, y={:.1f}, rotation={:.1f}] ",
-                    object->m_objectID, p.x, p.y, object->getRotation()
+                    "[uid={}, id={}, x={:.1f}, y={:.1f}, rotation={:.1f}] ",
+                    object->m_uniqueID, object->m_objectID, p.x, p.y, object->getRotation()
                 );
                 ++shown;
             }
@@ -754,8 +754,8 @@ protected:
             auto object = ui->m_selectedObject;
             auto p = object->getPosition();
             context += fmt::format(
-                "[id={}, x={:.1f}, y={:.1f}, rotation={:.1f}]",
-                object->m_objectID, p.x, p.y, object->getRotation()
+                "[uid={}, id={}, x={:.1f}, y={:.1f}, rotation={:.1f}]",
+                object->m_uniqueID, object->m_objectID, p.x, p.y, object->getRotation()
             );
         } else {
             context += "none.";
