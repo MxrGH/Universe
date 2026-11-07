@@ -47,6 +47,7 @@ jobs:
         run: |
           python -c "import pathlib, py_compile; [py_compile.compile(str(p), doraise=True) for p in pathlib.Path('scripts').glob('*.py')]"
           python -c "import pathlib, py_compile; [py_compile.compile(str(p), doraise=True) for p in pathlib.Path('uni1').glob('*.py')]"
+          python -m pip install "fastapi>=0.115" "pydantic>=2.8" "pytest>=8.0"
           python uni1/generate_dataset.py --count 16 --output uni1-smoke-test.jsonl
           python -c "import json, pathlib; rows=[json.loads(line) for line in pathlib.Path('uni1-smoke-test.jsonl').read_text(encoding='utf-8').splitlines()]; assert len(rows)==16; [json.loads(row['response']) for row in rows]; pathlib.Path('uni1-smoke-test.jsonl').unlink()"
           python uni1/generate_dataset.py --count 64 --output uni1-quality-test.jsonl
@@ -54,7 +55,6 @@ jobs:
           python -m pytest uni1/test_dataset_quality.py -q
           python -c "import pathlib; pathlib.Path('uni1-quality-test.jsonl').unlink()"
           python -m unittest discover -s scripts -p "test_*.py" -v
-          python -m pip install "fastapi>=0.115" "pydantic>=2.8" "pytest>=8.0"
           python -m pytest uni1/test_quota.py -q
           python -c "import json, pathlib; pathlib.Path('universe-level-smoke-test.json').write_text(json.dumps({'title':'CI smoke test','difficulty':'normal','style':'test','sections':[{'name':'Section 1','gameplay':'cube','events':[{'x':0,'y':0,'type':'block','note':'fixture'}]}]}), encoding='utf-8')"
           python scripts/level_maker.py --input universe-level-smoke-test.json --format csv --output universe-level-smoke-test.csv
