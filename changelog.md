@@ -1,14 +1,10 @@
 # Changelog
 
-## Universe 1 — Snapshot 26.6
+## Universe 1 — Snapshot 26.5
 
 - Align Uni-1's client-side daily quota rollover with the server's 00:00 UTC reset.
 - Add regression coverage for UTC quota rollover.
-- Bump the Geode package to v1.1.2 and update CI artifact labels for Snapshot 26.6.
-- Keep release publication manual and distinguish CI/emulator smoke checks from in-game QA.
-
-## Universe 1 — Snapshot 26.5
-
+- Keep the Geode package version at v1.1.1.
 - Add the player-bounds overlay, separate from object hitboxes.
 - Refresh the in-game panel with theme accents, selected-tab highlighting, local-client status, and clearer icon-lab state.
 - Keep icon overrides local-only; no account unlock flags or saved icon selections are modified.
