@@ -38,7 +38,18 @@ Set `UNI1_ADAPTER_DIR` to the adapter directory and start:
 uvicorn server:app --host 127.0.0.1 --port 8000
 ```
 
-For a remote server, use a proper HTTPS reverse proxy, firewall, monitoring, and a persistent database volume. Do not expose the development server directly to the public internet.
+For a local CPU deployment with Docker Compose, first train and save the adapter to `uni1/artifacts/uni1-adapter`, then run:
+
+```bash
+cd uni1
+docker compose -f compose.yaml up --build -d
+docker compose -f compose.yaml ps
+docker compose -f compose.yaml logs -f uni1
+```
+
+The compose file binds port 8000 to loopback only and persists quota state in a named volume. It mounts the adapter read-only. The first startup downloads the base checkpoint and may take several minutes; CPU inference can be slow. The health endpoint returns HTTP 503 until model and tokenizer are loaded. Stop it with `docker compose -f compose.yaml down`; the named quota volume is retained unless explicitly removed.
+
+For a remote server, use a proper HTTPS reverse proxy, firewall, monitoring, backups, and a persistent database volume. Do not expose the development server directly to the public internet. The included Compose setup is a local deployment template, not a hosted public service.
 
 The API is OpenAI-chat-completions-shaped for easy client integration, but it does not call OpenAI. It runs the locally loaded Uni-1 weights and requires no provider API key.
 
