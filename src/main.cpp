@@ -901,7 +901,7 @@ protected:
                 addAction("CLEAN RUN", 132, {155.f, -205.f});
                 addText("Choose a setup to change several options at once.", {-245.f, -245.f}, 0.27f);
                 addAction("RESET PANEL POSITION", 146, {0.f, -285.f});
-                addAction("RUN IN-GAME SELF TEST", 150, {0.f, -325.f});
+                addAction("RUN SELF TEST + EDITOR PREFLIGHT", 150, {0.f, -325.f});
                 break;
         }
     }
