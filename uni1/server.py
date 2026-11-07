@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Literal
 
 import torch
-from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -29,6 +29,7 @@ BASE_MODEL = os.getenv("UNI1_BASE_MODEL", "Qwen/Qwen2.5-0.5B-Instruct")
 ADAPTER_DIR = Path(os.getenv("UNI1_ADAPTER_DIR", "artifacts/uni1-adapter"))
 DATABASE = Path(os.getenv("UNI1_QUOTA_DB", "uni1-quota.sqlite3"))
 MAX_PROMPT_CHARS = 12000
+MAX_INPUT_TOKENS = 8192
 MAX_NEW_TOKENS = int(os.getenv("UNI1_MAX_NEW_TOKENS", "4096"))
 DAILY_DEFAULT = 100
 DAILY_BONUS = 1000
@@ -53,7 +54,7 @@ class Message(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    model: str = "uni-1"
+    model: Literal["uni-1"] = "uni-1"
     messages: list[Message] = Field(min_length=1, max_length=12)
     max_tokens: int = Field(default=2048, ge=64, le=MAX_NEW_TOKENS)
     temperature: float = Field(default=0.4, ge=0.0, le=1.5)
@@ -209,10 +210,13 @@ def bonus_tap(x_uni1_install_id: str | None = Header(default=None)):
 
 
 @app.post("/v1/chat/completions")
-def chat_completions(payload: ChatRequest, request: Request, x_uni1_install_id: str | None = Header(default=None)):
+def chat_completions(payload: ChatRequest, x_uni1_install_id: str | None = Header(default=None)):
     install_id = require_install_id(x_uni1_install_id)
     if model is None or tokenizer is None:
         raise HTTPException(status_code=503, detail="Uni-1 model is not loaded.")
+    prompt_chars = sum(len(message.content) for message in payload.messages if message.role != "system")
+    if prompt_chars == 0 or prompt_chars > MAX_PROMPT_CHARS:
+        raise HTTPException(status_code=413, detail=f"Combined user and assistant prompt content must be between 1 and {MAX_PROMPT_CHARS} characters.")
     now = time.monotonic()
     with rate_lock:
         recent = [stamp for stamp in recent_requests.get(install_id, []) if now - stamp < 60]
@@ -223,12 +227,15 @@ def chat_completions(payload: ChatRequest, request: Request, x_uni1_install_id: 
         if len(recent_requests) > 10000:
             for key in list(recent_requests)[:2000]:
                 recent_requests.pop(key, None)
-    used, limit = consume_request(install_id)
-
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     messages.extend(message.model_dump() for message in payload.messages if message.role != "system")
     prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+    inputs = tokenizer(prompt, return_tensors="pt")
+    prompt_tokens = int(inputs["input_ids"].shape[1])
+    if prompt_tokens > MAX_INPUT_TOKENS:
+        raise HTTPException(status_code=413, detail=f"Prompt exceeds the {MAX_INPUT_TOKENS}-token Uni-1 input limit.")
+    inputs = inputs.to(model.device)
+    used, limit = consume_request(install_id)
     with model_lock, torch.inference_mode():
         output = model.generate(
             **inputs,
