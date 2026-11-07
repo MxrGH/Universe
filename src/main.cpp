@@ -1389,7 +1389,7 @@ protected:
                 std::smatch idMatch, propertiesMatch;
                 if (!std::regex_search(event, idMatch, objectIDPattern)) continue;
                 try { objectID = std::stoi(idMatch[1].str()); } catch (...) { continue; }
-                if (objectID < 1 || objectID > 5000 || !knownEditorObjectIDs().contains(objectID)) continue;
+                if (objectID < 1 || objectID > 5000 || !knownEditorObjectIDs().find(objectID) == knownEditorObjectIDs().end()) continue;
 
                 if (std::regex_search(event, propertiesMatch, propertiesPattern)) {
                     extraProperties = propertiesMatch[1].str();
@@ -1418,7 +1418,7 @@ protected:
                             }
                             int numericKey = 0;
                             try { numericKey = std::stoi(key); } catch (...) { valid = false; break; }
-                            if (!allowedPropertyKeys.contains(numericKey) || numericKey <= 3
+                            if (!allowedPropertyKeys.find(numericKey) == allowedPropertyKeys.end() || numericKey <= 3
                                 || !seenKeys.insert(numericKey).second
                                 || !std::regex_match(value, propertyValuePattern)) {
                                 valid = false;
