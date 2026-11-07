@@ -8,9 +8,17 @@ ROOT = Path(__file__).resolve().parents[1]
 class Uni1RuntimeContractTests(unittest.TestCase):
     def test_completion_reports_validator_object_count(self):
         source = (ROOT / "uni1" / "server.py").read_text(encoding="utf-8")
-        self.assertIn("draft, generated_count = validate_draft_payload(draft)", source)
+        self.assertIn("draft, generated_count = validate_generated_level(draft)", source)
         self.assertIn('"uni1_generated_objects": generated_count', source)
         self.assertNotIn("generated_count = total", source)
+
+    def test_training_uses_tokenized_chat_templates_and_held_out_evaluation(self):
+        source = (ROOT / "uni1" / "train.py").read_text(encoding="utf-8")
+        self.assertIn("tokenize=True", source)
+        self.assertIn("random_split(", source)
+        self.assertIn("eval_dataset=eval_dataset", source)
+        self.assertIn("load_best_model_at_end=True", source)
+        self.assertIn("inspect.signature(TrainingArguments)", source)
 
     def test_request_input_is_bounded_and_model_id_is_fixed(self):
         source = (ROOT / "uni1" / "server.py").read_text(encoding="utf-8")
