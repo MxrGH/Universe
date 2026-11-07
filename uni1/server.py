@@ -247,7 +247,6 @@ def chat_completions(payload: ChatRequest, request: Request, x_uni1_install_id: 
     except ValueError as error:
         raise HTTPException(status_code=502, detail=f"Uni-1 returned an invalid level draft: {error}") from error
     answer = json.dumps(draft, ensure_ascii=False, separators=(",", ":"))
-    generated_count = total
     return {
         "id": f"uni1-{int(time.time())}",
         "object": "chat.completion",
