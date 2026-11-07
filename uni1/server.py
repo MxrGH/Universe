@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import json
+import math
 import os
 import sqlite3
 import threading
@@ -37,6 +39,7 @@ model_lock = threading.Lock()
 model = None
 tokenizer = None
 recent_requests: dict[str, list[float]] = {}
+rate_lock = threading.Lock()
 
 
 class Message(BaseModel):
@@ -75,7 +78,7 @@ def db():
 
 
 def today():
-    return datetime.now().astimezone().date().isoformat()
+    return datetime.now(timezone.utc).date().isoformat()
 
 
 def get_usage(install_id: str):
@@ -204,11 +207,15 @@ def chat_completions(payload: ChatRequest, request: Request, x_uni1_install_id: 
     if model is None or tokenizer is None:
         raise HTTPException(status_code=503, detail="Uni-1 model is not loaded.")
     now = time.monotonic()
-    recent = [stamp for stamp in recent_requests.get(install_id, []) if now - stamp < 60]
-    if len(recent) >= 10:
-        raise HTTPException(status_code=429, detail="Uni-1 short-term rate limit reached.")
-    recent.append(now)
-    recent_requests[install_id] = recent
+    with rate_lock:
+        recent = [stamp for stamp in recent_requests.get(install_id, []) if now - stamp < 60]
+        if len(recent) >= 10:
+            raise HTTPException(status_code=429, detail="Uni-1 short-term rate limit reached.")
+        recent.append(now)
+        recent_requests[install_id] = recent
+        if len(recent_requests) > 10000:
+            for key in list(recent_requests)[:2000]:
+                recent_requests.pop(key, None)
     used, limit = consume_request(install_id)
 
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
@@ -226,6 +233,41 @@ def chat_completions(payload: ChatRequest, request: Request, x_uni1_install_id: 
         )
     generated = output[0][inputs["input_ids"].shape[1]:]
     answer = tokenizer.decode(generated, skip_special_tokens=True).strip()
+    try:
+        draft = json.loads(answer)
+    except json.JSONDecodeError as error:
+        raise HTTPException(status_code=502, detail=f"Uni-1 produced invalid JSON: {error.msg}") from error
+    if not isinstance(draft, dict) or not isinstance(draft.get("sections"), list) or not draft["sections"]:
+        raise HTTPException(status_code=502, detail="Uni-1 output is missing a non-empty sections array.")
+    if len(draft["sections"]) > 100:
+        raise HTTPException(status_code=502, detail="Uni-1 output has too many sections.")
+    allowed_types = {"block", "spike", "saw", "orb", "pad", "deco"}
+    allowed_modes = {"cube", "ship", "ball", "ufo", "wave", "robot", "spider", "swing", "jetpack"}
+    total = 0
+    previous_x = float("-inf")
+    for section in draft["sections"]:
+        if not isinstance(section, dict) or section.get("gameplay", "cube") not in allowed_modes:
+            raise HTTPException(status_code=502, detail="Uni-1 output contains an invalid section or gameplay mode.")
+        events = section.get("events")
+        if not isinstance(events, list) or not events:
+            raise HTTPException(status_code=502, detail="Every Uni-1 section must contain events.")
+        for event in events:
+            if not isinstance(event, dict) or event.get("type") not in allowed_types:
+                raise HTTPException(status_code=502, detail="Uni-1 output contains an unsupported object type.")
+            if event.get("action", "add") != "add":
+                raise HTTPException(status_code=502, detail="Uni-1 may only create new objects in this workflow.")
+            for axis in ("x", "y"):
+                value = event.get(axis)
+                if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or abs(value) > 10_000_000:
+                    raise HTTPException(status_code=502, detail=f"Uni-1 output contains an invalid {axis} coordinate.")
+            if event["x"] < previous_x:
+                raise HTTPException(status_code=502, detail="Uni-1 event coordinates must be ordered by x.")
+            previous_x = event["x"]
+            total += 1
+            if total > 5000:
+                raise HTTPException(status_code=502, detail="Uni-1 output exceeds the 5,000 object server limit.")
+    answer = json.dumps(draft, ensure_ascii=False, separators=(",", ":"))
+    generated_count = total
     return {
         "id": f"uni1-{int(time.time())}",
         "object": "chat.completion",
@@ -233,4 +275,5 @@ def chat_completions(payload: ChatRequest, request: Request, x_uni1_install_id: 
         "choices": [{"index": 0, "message": {"role": "assistant", "content": answer}, "finish_reason": "stop"}],
         "usage": {"prompt_tokens": int(inputs["input_ids"].shape[1]), "completion_tokens": int(generated.shape[0]), "total_tokens": int(output.shape[1])},
         "uni1_quota": {"used": used, "limit": limit},
+        "uni1_generated_objects": generated_count,
     }
