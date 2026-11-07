@@ -4,7 +4,7 @@
 
 - Add a local-only icon override that does not alter account unlocks or saved icon selection.
 - Add configurable local primary, secondary, and glow colors, plus a local glow toggle.
-- Add an in-game, per-request AI API key field so Android users are not blocked by process environment variables.
+- Connect the in-game AI client to the self-hosted Uni-1 endpoint without player API keys.
 - Align project validation with the online-only AI workflow and remove stale checks for deleted offline/icon enum code.
 - Preserve existing gameplay modifiers, Safe Mode, StartPos tools, visual overlays, replay recorder, icon previews, themes, keybinds, presets, and mobile controls.
 - Bump Geode package version to v1.1.1 and prepare the final planned snapshot release.
@@ -32,6 +32,6 @@
 - Snapshot 26.2 — replay/UI hardening and AI blueprint validation.
 - Snapshot 26.1 — initial Universe 1 release.
 
-- Uni-1 AI branding and local daily quota: 100 requests/day by default; seven UNIV floating-button taps unlock 1,000/day. Counter resets at local midnight and is a client-side limit only.
+- Replace the local Uni-1 request counter with server-enforced per-installation quotas: 100/day, or 1,000/day after seven UNIV taps; resets at 00:00 UTC.
 
 - Add a reproducible synthetic Uni-1 dataset bootstrap generator, container recipe, deployment guide, and server quota tests.
