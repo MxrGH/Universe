@@ -2,7 +2,7 @@
 
 ## Universe 1 — Snapshot 26.5
 
-- Add live editor context to AI generation: object count and up to 120 existing objects and 30 selected objects, including unique IDs, object IDs, positions, and rotations.
+- Add live editor context to AI generation: object count and up to 500 existing objects and 100 selected objects, including unique IDs, object IDs, positions, and rotations.
 - Clarify the AI apply summary so exact-ID edits/deletions are not mislabeled as selection-only operations.
 - Extend AI drafts with selected-object and exact-unique-ID move, rotate, and delete operations, alongside object placement.
 - Include a bounded live summary of existing editor objects so follow-up requests can refer to real object IDs and positions.
