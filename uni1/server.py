@@ -14,11 +14,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
-import torch
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
-from peft import PeftModel
-from transformers import AutoModelForCausalLM, AutoTokenizer
 
 try:
     from .draft_validation import validate_generated_level
@@ -44,6 +41,7 @@ app = FastAPI(title="Uni-1 Inference", version="0.1.0")
 model_lock = threading.Lock()
 model = None
 tokenizer = None
+torch = None
 recent_requests: dict[str, list[float]] = {}
 rate_lock = threading.Lock()
 
@@ -149,7 +147,16 @@ def require_install_id(value: str | None):
 
 @app.on_event("startup")
 def load_model():
-    global model, tokenizer
+    global model, tokenizer, torch
+    # Keep quota and API-contract tests lightweight: model runtimes are only
+    # imported when the service actually starts loading trained weights.
+    try:
+        import torch as torch_runtime
+        from peft import PeftModel
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+    except ImportError as error:
+        raise RuntimeError("Install the Uni-1 inference requirements before loading model weights.") from error
+    torch = torch_runtime
     if not ADAPTER_DIR.is_dir():
         raise RuntimeError(f"Uni-1 adapter not found at {ADAPTER_DIR}. Train it before starting the server.")
     tokenizer = AutoTokenizer.from_pretrained(ADAPTER_DIR, use_fast=True)
