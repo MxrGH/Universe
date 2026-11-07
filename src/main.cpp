@@ -8,6 +8,7 @@
 #include <limits>
 #include <regex>
 #include <random>
+#include <set>
 #include <sstream>
 #include <vector>
 #include <unordered_set>
@@ -1513,22 +1514,77 @@ protected:
             settingsReadable = false;
         }
 
+        size_t editorObjectCount = 0;
+        size_t triggerCount = 0;
+        size_t decorationCount = 0;
+        size_t groupedObjectCount = 0;
+        std::set<int> assignedGroupIDs;
+        std::vector<int> targetGroupIDs;
+        if (editor && editor->m_editorUI) {
+            auto objects = editor->getAllObjects();
+            if (objects) {
+                editorObjectCount = objects->count();
+                for (unsigned int i = 0; i < objects->count(); ++i) {
+                    auto object = static_cast<GameObject*>(objects->objectAtIndex(i));
+                    if (!object) continue;
+                    if (object->m_isTrigger) ++triggerCount;
+                    if (object->m_isDecoration || object->m_isDecoration2) ++decorationCount;
+
+                    auto save = object->getSaveString(editor);
+                    std::stringstream fields(save);
+                    std::string key, value;
+                    bool hasGroups = false;
+                    while (std::getline(fields, key, ',')) {
+                        if (!std::getline(fields, value, ',')) break;
+                        while (!value.empty() && value.back() == ';') value.pop_back();
+                        if (key == "57") {
+                            std::stringstream groupList(value);
+                            std::string groupText;
+                            while (std::getline(groupList, groupText, '.')) {
+                                try {
+                                    int groupID = std::stoi(groupText);
+                                    if (groupID >= 1 && groupID <= 9999) {
+                                        assignedGroupIDs.insert(groupID);
+                                        hasGroups = true;
+                                    }
+                                } catch (...) {}
+                            }
+                        } else if (key == "51") {
+                            try {
+                                int target = std::stoi(value);
+                                if (target >= 1 && target <= 9999)
+                                    targetGroupIDs.push_back(target);
+                            } catch (...) {}
+                        }
+                    }
+                    if (hasGroups) ++groupedObjectCount;
+                }
+            }
+        }
+        size_t unresolvedTargets = 0;
+        for (int target : targetGroupIDs)
+            if (!assignedGroupIDs.contains(target)) ++unresolvedTargets;
+
         auto status = [](bool ok) { return ok ? "PASS" : "FAIL"; };
         auto message = fmt::format(
-            "Universe runtime self-test\n\n"
+            "Universe runtime self-test + editor preflight\n\n"
             "Mod instance: {}\n"
             "Game director and scene: {}\n"
             "GameManager: {}\n"
             "Settings access: {}\n\n"
             "Gameplay context: {}\n"
-            "Editor context: {}\n\n"
-            "Context lines are informational. This smoke test checks runtime access; it does not simulate gameplay or prove every feature works.",
+            "Editor context: {}\n"
+            "Editor objects: {} | triggers: {} | decorations: {}\n"
+            "Objects with group IDs: {} | unresolved target groups: {}\n\n"
+            "This checks runtime access and basic group references. It does NOT simulate physics, "
+            "trigger timing, collisions, or prove a level is completable. Use the editor Play button for that.",
             status(mod != nullptr),
             status(director != nullptr && scene != nullptr),
             status(gameManager != nullptr),
             status(settingsReadable),
             playLayer ? "PlayLayer available" : "No active PlayLayer",
-            editor && editor->m_editorUI ? "Editor and EditorUI available" : "No open editor"
+            editor && editor->m_editorUI ? "Editor and EditorUI available" : "No open editor",
+            editorObjectCount, triggerCount, decorationCount, groupedObjectCount, unresolvedTargets
         );
         FLAlertLayer::create("Universe Self-Test", message.c_str(), "OK")->show();
     }
