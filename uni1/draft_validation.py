@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import math
 
-ALLOWED_OBJECTS = {"block", "spike", "saw", "orb", "pad", "deco"}
-ALLOWED_GAMEPLAY = {"cube", "ship", "ball", "ufo", "wave", "robot", "spider", "swing", "jetpack"}
+ALLOWED_OBJECTS = {"block", "spike", "saw", "orb", "pad"}
+ALLOWED_GAMEPLAY = {"cube"}
 DIFFICULTIES = {"easy", "normal", "hard", "insane", "demon"}
 MAX_SECTIONS = 100
 MAX_OBJECTS = 1000
