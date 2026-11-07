@@ -71,5 +71,5 @@ def relevant_object_catalog(prompt: str, limit: int = 90) -> str:
         if item not in selected:
             selected.append(item)
 
-    selected = selected[: limit + 120]
+    selected = selected[: limit + 150]
     return "\n".join(f"{name} = {object_id}" for _, name, object_id in selected)
