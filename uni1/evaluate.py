@@ -16,11 +16,11 @@ from pathlib import Path
 try:
     from .draft_validation import validate_generated_level
     from .object_catalog import OBJECT_IDS
-    from .server import SYSTEM_PROMPT
+    from .prompts import SYSTEM_PROMPT
 except ImportError:
     from draft_validation import validate_generated_level
     from object_catalog import OBJECT_IDS
-    from server import SYSTEM_PROMPT
+    from prompts import SYSTEM_PROMPT
 
 
 DEFAULT_BASE = "Qwen/Qwen2.5-0.5B-Instruct"

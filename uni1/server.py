@@ -19,12 +19,12 @@ from pydantic import BaseModel, Field
 
 try:
     from .draft_validation import validate_generated_level
-    from .design_knowledge import DESIGN_GUIDANCE
     from .object_catalog import relevant_object_catalog
+    from .prompts import SYSTEM_PROMPT
 except ImportError:  # uvicorn server:app when launched from the uni1 directory
     from draft_validation import validate_generated_level
-    from design_knowledge import DESIGN_GUIDANCE
     from object_catalog import relevant_object_catalog
+    from prompts import SYSTEM_PROMPT
 
 BASE_MODEL = os.getenv("UNI1_BASE_MODEL", "Qwen/Qwen2.5-0.5B-Instruct")
 ADAPTER_DIR = Path(os.getenv("UNI1_ADAPTER_DIR", "artifacts/uni1-adapter"))
@@ -34,21 +34,6 @@ MAX_INPUT_TOKENS = 8192
 MAX_NEW_TOKENS = int(os.getenv("UNI1_MAX_NEW_TOKENS", "4096"))
 DAILY_DEFAULT = 100
 DAILY_BONUS = 1000
-SYSTEM_PROMPT = (
-    "You are Uni-1, Universe's Geometry Dash level-design model. "
-    "Return only valid JSON for the Universe level-draft schema. "
-    "Create 6 to 8 connected sections and 96 to 144 ordered placements. "
-    "Use the design workflow below to plan rhythm, obstacle readability, visual composition, "
-    "and coherent style. The current draft schema supports named primitives or generic editor objects. "
-    "Generic objects use type='object', an exact numeric id from the supplied catalogue, and optional "
-    "properties as comma-separated numeric GD save-string key/value pairs. They may represent decorations, "
-    "portals, triggers, effects, gameplay objects, or editor utilities. Never invent an object ID. "
-    "Use only trigger properties you can identify confidently. Default to cube gameplay, but use mode "
-    "portals when the prompt requests mode changes. Include actual decoration objects when requested. "
-    "Never claim a draft was playtested.\n\n"
-    + DESIGN_GUIDANCE
-)
-
 app = FastAPI(title="Uni-1 Inference", version="0.1.0")
 model_lock = threading.Lock()
 model = None
