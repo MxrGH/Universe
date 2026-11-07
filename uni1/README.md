@@ -44,13 +44,13 @@ The API is OpenAI-chat-completions-shaped for easy client integration, but it do
 
 ## Quotas and costs
 
-The service resets at 00:00 UTC and enforces a server-side daily allowance of 100 requests per installation ID. Seven calls to `POST /v1/bonus/tap` unlock 1,000 requests per day for that installation. The client integration must persist a random installation ID and call the tap endpoint when the UNIV button is tapped.
+The service resets at 00:00 UTC and enforces a server-side daily allowance of 100 requests per installation ID. Seven calls to `POST /v1/bonus/tap` unlock 1,000 requests per day for that installation. The Geode client persists a random installation ID and calls the tap endpoint when the UNIV button is tapped.
 
 This is not account identity: a user who deletes their local installation ID can obtain a new quota. Add authenticated accounts only if Universe later needs cross-device identity. A public hosted service still costs money for GPU time, bandwidth, storage, and operations; removing API keys removes per-user provider credentials, not compute costs.
 
 ## Current status
 
-This folder is the training/inference foundation only. No Uni-1 weights have been trained or checked into this repository, no inference server has been deployed, and the Geode client has not yet been switched from its existing provider request code. Those are separate steps and must be verified before claiming Uni-1 is live.
+The Geode client is wired to this keyless inference endpoint and the server validates model output before returning it. However, no Uni-1 weights have been trained and no inference server has been deployed. The checked-in dataset is only a schema fixture; run the generator, review and expand the corpus, train the adapter, deploy the server, and test live inference before claiming Uni-1 is live.
 
 ## Tests
 
