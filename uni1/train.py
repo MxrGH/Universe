@@ -33,6 +33,11 @@ class BlueprintDataset(Dataset):
             response = json.loads(row["response"])
             if not isinstance(response, dict) or not isinstance(response.get("sections"), list):
                 raise ValueError(f"Line {line_number} response is not a Universe-style draft.")
+            for section in response["sections"]:
+                for event in section.get("events", []):
+                    if event.get("action", "add") != "add":
+                        raise ValueError(f"Line {line_number} contains a non-add event; Uni-1 is trained for safe new-level creation only.")
+                    event["action"] = "add"
             messages = [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": row["prompt"]},
@@ -112,6 +117,7 @@ def main():
     )
     model.config.use_cache = False
     model.gradient_checkpointing_enable()
+    model.enable_input_require_grads()
     model = get_peft_model(
         model,
         LoraConfig(
