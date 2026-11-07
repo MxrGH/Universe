@@ -213,6 +213,18 @@ def bonus_tap(x_uni1_install_id: str | None = Header(default=None)):
     return {"taps": taps, "bonus_unlocked": bool(bonus), "daily_limit": DAILY_BONUS if bonus else DAILY_DEFAULT}
 
 
+def parse_model_draft(answer: str):
+    """Parse and production-validate one model response."""
+    try:
+        candidate = json.loads(answer)
+    except json.JSONDecodeError as error:
+        raise ValueError(f"invalid JSON: {error.msg}") from error
+    try:
+        return validate_generated_level(candidate)
+    except ValueError as error:
+        raise ValueError(f"invalid level draft: {error}") from error
+
+
 @app.post("/v1/chat/completions")
 def chat_completions(payload: ChatRequest, x_uni1_install_id: str | None = Header(default=None)):
     install_id = require_install_id(x_uni1_install_id)
@@ -244,32 +256,54 @@ def chat_completions(payload: ChatRequest, x_uni1_install_id: str | None = Heade
                     + "\nUse these exact IDs; this catalogue does not specify trigger property layouts."
                 )
                 break
-    prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    inputs = tokenizer(prompt, return_tensors="pt")
-    prompt_tokens = int(inputs["input_ids"].shape[1])
-    if prompt_tokens > MAX_INPUT_TOKENS:
-        raise HTTPException(status_code=413, detail=f"Prompt exceeds the {MAX_INPUT_TOKENS}-token Uni-1 input limit.")
-    inputs = inputs.to(model.device)
-    used, limit = consume_request(install_id)
-    with model_lock, torch.inference_mode():
-        output = model.generate(
-            **inputs,
-            max_new_tokens=payload.max_tokens,
-            temperature=max(payload.temperature, 1e-5),
-            do_sample=payload.temperature > 0,
-            pad_token_id=tokenizer.eos_token_id,
-            eos_token_id=tokenizer.eos_token_id,
+    request_messages = messages
+    for attempt in range(2):
+        prompt = tokenizer.apply_chat_template(
+            request_messages, tokenize=False, add_generation_prompt=True
         )
-    generated = output[0][inputs["input_ids"].shape[1]:]
-    answer = tokenizer.decode(generated, skip_special_tokens=True).strip()
-    try:
-        draft = json.loads(answer)
-    except json.JSONDecodeError as error:
-        raise HTTPException(status_code=502, detail=f"Uni-1 produced invalid JSON: {error.msg}") from error
-    try:
-        draft, generated_count = validate_generated_level(draft)
-    except ValueError as error:
-        raise HTTPException(status_code=502, detail=f"Uni-1 returned an invalid level draft: {error}") from error
+        inputs = tokenizer(prompt, return_tensors="pt")
+        prompt_tokens = int(inputs["input_ids"].shape[1])
+        if prompt_tokens > MAX_INPUT_TOKENS:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Prompt exceeds the {MAX_INPUT_TOKENS}-token Uni-1 input limit.",
+            )
+        inputs = inputs.to(model.device)
+        if attempt == 0:
+            used, limit = consume_request(install_id)
+        with model_lock, torch.inference_mode():
+            output = model.generate(
+                **inputs,
+                max_new_tokens=payload.max_tokens,
+                temperature=max(payload.temperature, 1e-5),
+                do_sample=payload.temperature > 0,
+                pad_token_id=tokenizer.eos_token_id,
+                eos_token_id=tokenizer.eos_token_id,
+            )
+        generated = output[0][inputs["input_ids"].shape[1]:]
+        raw_answer = tokenizer.decode(generated, skip_special_tokens=True).strip()
+        try:
+            draft, generated_count = parse_model_draft(raw_answer)
+            break
+        except ValueError as error:
+            if attempt == 1:
+                raise HTTPException(
+                    status_code=502,
+                    detail=f"Uni-1 could not produce a valid level draft after one repair attempt: {error}",
+                ) from error
+            request_messages = messages + [
+                {"role": "assistant", "content": raw_answer[:16000]},
+                {
+                    "role": "user",
+                    "content": (
+                        "Your previous response was rejected by the production level validator: "
+                        + str(error)[:1000]
+                        + ". Correct the draft while preserving its design. Return ONLY one complete "
+                        "valid JSON object matching the Universe level-draft schema. Keep 6 to 8 sections "
+                        "and 96 to 144 ordered placements. Do not invent object IDs or unsupported properties."
+                    ),
+                },
+            ]
     answer = json.dumps(draft, ensure_ascii=False, separators=(",", ":"))
     return {
         "id": f"uni1-{int(time.time())}",
@@ -278,5 +312,5 @@ def chat_completions(payload: ChatRequest, x_uni1_install_id: str | None = Heade
         "choices": [{"index": 0, "message": {"role": "assistant", "content": answer}, "finish_reason": "stop"}],
         "usage": {"prompt_tokens": int(inputs["input_ids"].shape[1]), "completion_tokens": int(generated.shape[0]), "total_tokens": int(output.shape[1])},
         "uni1_quota": {"used": used, "limit": limit},
-        "uni1_generated_objects": generated_count,
+        "uni1_generated_objects": generated_count,\n        "uni1_repair_attempts": attempt,
     }
