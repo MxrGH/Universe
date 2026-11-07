@@ -324,5 +324,6 @@ def chat_completions(payload: ChatRequest, x_uni1_install_id: str | None = Heade
         "choices": [{"index": 0, "message": {"role": "assistant", "content": answer}, "finish_reason": "stop"}],
         "usage": {"prompt_tokens": int(inputs["input_ids"].shape[1]), "completion_tokens": int(generated.shape[0]), "total_tokens": int(output.shape[1])},
         "uni1_quota": {"used": used, "limit": limit},
-        "uni1_generated_objects": generated_count,\n        "uni1_repair_attempts": attempt,
+        "uni1_generated_objects": generated_count,
+        "uni1_repair_attempts": attempt,
     }
