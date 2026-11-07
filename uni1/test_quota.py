@@ -27,7 +27,7 @@ def test_seven_taps_unlock_bonus_allowance(tmp_path, monkeypatch):
     for expected in range(1, 8):
         result = server.bonus_tap(install_id)
         assert result["taps"] == expected
-        assert result["bonus_unlocked"] is (expected == 7)
+        assert result["bonus_unlocked"] == (expected == 7)
 
     assert result["daily_limit"] == 1000
     used, limit = server.consume_request(install_id)
