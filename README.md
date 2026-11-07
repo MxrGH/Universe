@@ -37,17 +37,19 @@ Safe Mode is a local safeguard. Universe does not claim to guarantee server-side
 - Equip an icon only when Geometry Dash reports it as unlocked on the current account.
 - Local previews do not grant account unlocks or achievements.
 
-## AI level editor
+## AI full-level creator
 
-The AI tab is designed to modify the level currently open in Geometry Dash's editor—not to produce a downloadable `.gmd` file.
+The AI tab is a **full-level generator**, not just an existing-object editor.
 
-1. Enter a level idea in the Universe AI tab.
-2. Choose **GENERATE ONLINE** to ask the configured AI model for a level section.
-3. Open the target level in the Geometry Dash editor.
-4. Choose **APPLY DRAFT TO OPEN EDITOR**. Universe converts supported block, spike, saw, orb, and pad events into editor objects and pastes them into the current level.
-5. Use the editor's Undo control to revert the placement if needed.
+1. Open a **new, empty level** in the Geometry Dash editor.
+2. Enter a complete concept in the Universe AI tab. Include the theme, difficulty, gameplay feel, and any section ideas.
+3. Choose **GENERATE ONLINE**. The configured AI model is instructed to design one complete level from its opening to its ending, using 6–12 connected sections and approximately 150–500 object placements.
+4. Choose **CREATE FULL LEVEL IN EDITOR**. Universe pastes the generated layout directly into the currently open editor.
+5. Review the result and use the editor's Undo control if you want to revert the placement.
 
-The 26.5 editor integration reads the live editor object count, up to 500 existing objects with their unique IDs/object IDs/positions/rotations, and up to 100 selected objects with their unique IDs before generation. It can add supported objects, move or rotate selected objects, delete the selection, and move/rotate/delete a specific existing object by its exact unique ID from the live context. The live context is intentionally bounded; objects outside the first 500 are not targetable by ID in that request. Follow-up prompts receive a fresh editor summary. Transforms are rebuilt through the editor's object serialization/paste path so the editor Undo control can revert them. The AI must use IDs from the supplied context rather than guessing. No GDShare or `.gmd` export is required.
+The in-editor generator currently places blocks, spikes, saws, orbs, pads, and decoration objects. It does not yet create gameplay portals, triggers, song timing, or a native `.gmd` export. It adds the layout to the open editor; it does not automatically erase existing objects, so start with an empty level for a clean full-level build.
+
+The 26.5 live editor context can still inspect up to 500 existing objects and 100 selected objects for future editing workflows. The full-level creation prompt deliberately does not depend on that context or on selected objects. No GDShare or `.gmd` export is required.
 
 Online AI uses the Anthropic-compatible Messages API over HTTPS and reads `ANTHROPIC_API_KEY` from the Geometry Dash process environment. The key is not stored in mod settings or source. API calls may incur charges; use a paid API account only with a parent or guardian's permission. Never put keys in chat, source files, commits, or screenshots.
 
