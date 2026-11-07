@@ -68,7 +68,7 @@ class DatasetQualityTests(unittest.TestCase):
                             if event["type"] == "object":
                                 generic_ids.add(event["id"])
                     row["synthetic"] = True
-                    stream.write(json.dumps(row, ensure_ascii=False) + "\\n")
+                    stream.write(json.dumps(row, ensure_ascii=False) + "\n")
             self.assertGreaterEqual(len(modes), 4)
             self.assertGreaterEqual(len(generic_ids), 4)
             self.assertTrue(generic_ids.issubset(set(OBJECT_IDS.values())))
