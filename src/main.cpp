@@ -72,19 +72,6 @@ namespace {
                  << usage.buttonTaps << ' ' << (usage.bonusUnlocked ? 1 : 0) << '\n';
     }
 
-    int uniAIDailyLimit() {
-        return loadUniAIUsage().bonusUnlocked ? 1000 : 100;
-    }
-
-    bool consumeUniAIRequest() {
-        auto usage = loadUniAIUsage();
-        int limit = usage.bonusUnlocked ? 1000 : 100;
-        if (usage.requests >= limit) return false;
-        ++usage.requests;
-        saveUniAIUsage(usage);
-        return true;
-    }
-
     void registerUniButtonTap() {
         auto usage = loadUniAIUsage();
         if (usage.bonusUnlocked) return;
@@ -398,7 +385,6 @@ protected:
     CCTextInputNode* m_aiPrompt = nullptr;
     CCTextInputNode* m_aiModelInput = nullptr;
     CCTextInputNode* m_aiBaseUrlInput = nullptr;
-    CCTextInputNode* m_aiApiKeyInput = nullptr;
     async::TaskHolder<web::WebResponse> m_aiTask;
     CCMenu* m_menu = nullptr;
     CCMenu* m_actionMenu = nullptr;
@@ -524,7 +510,6 @@ protected:
         m_aiPrompt = nullptr;
         m_aiModelInput = nullptr;
         m_aiBaseUrlInput = nullptr;
-        m_aiApiKeyInput = nullptr;
         if (m_content) {
             m_content->removeFromParentAndCleanup(true);
             m_content = nullptr;
