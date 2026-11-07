@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <ctime>
 #include <fstream>
 #include <limits>
 #include <regex>
@@ -19,6 +20,87 @@ using namespace geode::prelude;
 
 namespace {
     double g_originalFrameInterval = 0.0;
+
+    struct UniAIUsage {
+        std::string day;
+        int requests = 0;
+        int buttonTaps = 0;
+        bool bonusUnlocked = false;
+    };
+
+    std::string uniAIToday() {
+        std::time_t now = std::time(nullptr);
+        std::tm* local = std::localtime(&now);
+        if (!local) return "unknown-day";
+        char buffer[16] = {};
+        std::strftime(buffer, sizeof(buffer), "%Y%m%d", local);
+        return buffer;
+    }
+
+    std::filesystem::path uniAIUsagePath() {
+        auto mod = Mod::get();
+        return mod ? mod->getSaveDir() / "universe-ai-usage.txt" : std::filesystem::path{};
+    }
+
+    UniAIUsage loadUniAIUsage() {
+        UniAIUsage usage;
+        auto path = uniAIUsagePath();
+        if (path.empty()) return usage;
+        std::ifstream file(path);
+        if (file.is_open()) {
+            int bonus = 0;
+            file >> usage.day >> usage.requests >> usage.buttonTaps >> bonus;
+            usage.bonusUnlocked = bonus != 0;
+        }
+        auto today = uniAIToday();
+        if (usage.day != today) {
+            usage.day = today;
+            usage.requests = 0;
+        }
+        usage.requests = std::clamp(usage.requests, 0, 1000);
+        usage.buttonTaps = std::clamp(usage.buttonTaps, 0, 7);
+        return usage;
+    }
+
+    void saveUniAIUsage(UniAIUsage const& usage) {
+        auto path = uniAIUsagePath();
+        if (path.empty()) return;
+        std::ofstream file(path, std::ios::out | std::ios::trunc);
+        if (file.is_open())
+            file << usage.day << ' ' << usage.requests << ' '
+                 << usage.buttonTaps << ' ' << (usage.bonusUnlocked ? 1 : 0) << '\\n';
+    }
+
+    int uniAIDailyLimit() {
+        return loadUniAIUsage().bonusUnlocked ? 1000 : 100;
+    }
+
+    bool consumeUniAIRequest() {
+        auto usage = loadUniAIUsage();
+        int limit = usage.bonusUnlocked ? 1000 : 100;
+        if (usage.requests >= limit) return false;
+        ++usage.requests;
+        saveUniAIUsage(usage);
+        return true;
+    }
+
+    void registerUniButtonTap() {
+        auto usage = loadUniAIUsage();
+        if (usage.bonusUnlocked) return;
+        usage.buttonTaps = std::min(7, usage.buttonTaps + 1);
+        if (usage.buttonTaps >= 7) {
+            usage.bonusUnlocked = true;
+            log::info("Uni-1 bonus daily allowance unlocked: 1,000 requests.");
+        }
+        saveUniAIUsage(usage);
+    }
+
+    std::string uniAIQuotaLabel() {
+        auto usage = loadUniAIUsage();
+        int limit = usage.bonusUnlocked ? 1000 : 100;
+        return fmt::format("Uni-1 daily requests: {}/{}{}", usage.requests, limit,
+            usage.bonusUnlocked ? "  /  BONUS UNLOCKED" : "");
+    }
 
     struct MacroEvent {
         float time = 0.f;
@@ -588,7 +670,9 @@ protected:
                 addText("J  Toggle path trail     K  Toggle movement projection", {-245.f, -300.f}, 0.31f);
                 break;
             case Page::AI: {
-                addText("AI FULL LEVEL CREATOR", {-245.f, 105.f});
+                addText("UNI-1  /  AI LEVEL CREATOR", {-245.f, 105.f});
+                auto quotaText = uniAIQuotaLabel();
+                addText(quotaText.c_str(), {-245.f, 82.f}, 0.29f);
                 addText("Level idea", {-245.f, 72.f}, 0.31f);
                 m_aiPrompt = CCTextInputNode::create(430.f, 42.f, "Paste or type your full level prompt here...", "bigFont.fnt");
                 if (m_aiPrompt) {
@@ -760,6 +844,15 @@ protected:
             return;
         }
         payload["model"] = model;
+
+        if (!consumeUniAIRequest()) {
+            auto quota = fmt::format(
+                "Uni-1 daily limit reached ({} requests). It resets at local midnight.",
+                uniAIDailyLimit()
+            );
+            FLAlertLayer::create("Uni-1", quota.c_str(), "OK")->show();
+            return;
+        }
 
         auto request = web::WebRequest()
             .header("x-api-key", apiKey)
@@ -1708,6 +1801,7 @@ public:
 
     void ccTouchEnded(CCTouch*, CCEvent*) override {
         if (!m_moved) {
+            registerUniButtonTap();
             togglePanel();
             return;
         }
