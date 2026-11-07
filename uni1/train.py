@@ -31,12 +31,18 @@ class BlueprintDataset(Dataset):
             if not isinstance(row, dict) or not isinstance(row.get("prompt"), str) or not isinstance(row.get("response"), str):
                 raise ValueError(f"Line {line_number} must contain string prompt and response fields.")
             response = json.loads(row["response"])
-            if not isinstance(response, dict) or not isinstance(response.get("sections"), list):
-                raise ValueError(f"Line {line_number} response is not a Universe-style draft.")
+            try:
+                from .draft_validation import validate_draft_payload
+            except ImportError:  # direct execution: python train.py
+                from draft_validation import validate_draft_payload
+            try:
+                response, object_count = validate_draft_payload(response)
+            except ValueError as error:
+                raise ValueError(f"Line {line_number} has an invalid Universe draft: {error}") from error
+            if object_count == 0:
+                raise ValueError(f"Line {line_number} contains no trainable object placements.")
             for section in response["sections"]:
-                for event in section.get("events", []):
-                    if event.get("action", "add") != "add":
-                        raise ValueError(f"Line {line_number} contains a non-add event; Uni-1 is trained for safe new-level creation only.")
+                for event in section["events"]:
                     event["action"] = "add"
             messages = [
                 {"role": "system", "content": SYSTEM_PROMPT},
