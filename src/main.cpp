@@ -621,6 +621,7 @@ protected:
                 addAction("CLEAN RUN", 132, {155.f, -205.f});
                 addText("Choose a setup to change several options at once.", {-245.f, -245.f}, 0.27f);
                 addAction("RESET PANEL POSITION", 146, {0.f, -285.f});
+                addAction("RUN IN-GAME SELF TEST", 150, {0.f, -325.f});
                 break;
         }
     }
@@ -1024,6 +1025,52 @@ protected:
         FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
     }
 
+    void runInGameSelfTest() {
+        auto mod = Mod::get();
+        if (!mod) {
+            FLAlertLayer::create("Universe Self-Test", "FAIL: Geode did not provide the Universe mod instance.", "OK")->show();
+            return;
+        }
+
+        auto director = CCDirector::sharedDirector();
+        auto scene = director ? director->getRunningScene() : nullptr;
+        auto gameManager = GameManager::get();
+        auto playLayer = PlayLayer::get();
+        auto editor = LevelEditorLayer::get();
+        bool settingsReadable = true;
+        try {
+            (void)mod->getSettingValue<bool>("safe-mode");
+            (void)mod->getSettingValue<bool>("noclip");
+            (void)mod->getSettingValue<bool>("speedhack-enabled");
+            (void)mod->getSettingValue<bool>("show-hitboxes");
+            (void)mod->getSettingValue<bool>("show-trajectory");
+            (void)mod->getSettingValue<bool>("show-projection");
+            (void)mod->getSettingValue<bool>("click-sound");
+            (void)mod->getSettingValue<bool>("floating-button");
+        } catch (...) {
+            settingsReadable = false;
+        }
+
+        auto status = [](bool ok) { return ok ? "PASS" : "FAIL"; };
+        auto message = fmt::format(
+            "Universe runtime self-test\\n\\n"
+            "Mod instance: {}\\n"
+            "Game director and scene: {}\\n"
+            "GameManager: {}\\n"
+            "Settings access: {}\\n\\n"
+            "Gameplay context: {}\\n"
+            "Editor context: {}\\n\\n"
+            "Context lines are informational. This smoke test checks runtime access; it does not simulate gameplay or prove every feature works.",
+            status(mod != nullptr),
+            status(director != nullptr && scene != nullptr),
+            status(gameManager != nullptr),
+            status(settingsReadable),
+            playLayer ? "PlayLayer available" : "No active PlayLayer",
+            editor && editor->m_editorUI ? "Editor and EditorUI available" : "No open editor"
+        );
+        FLAlertLayer::create("Universe Self-Test", message.c_str(), "OK")->show();
+    }
+
     void onAction(CCObject* sender) {
         auto node = static_cast<CCNode*>(sender);
         node->stopAllActions();
@@ -1036,6 +1083,10 @@ protected:
         auto mod = Mod::get();
         if (!mod) return;
 
+        if (tag == 150) {
+            runInGameSelfTest();
+            return;
+        }
         if (tag == 126) {
             generateAIDraft();
             return;
