@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
@@ -1674,7 +1675,8 @@ class $modify(UniversePlayerObject, PlayerObject) {
 class UniverseFloatingButton : public CCLayer {
     CCPoint m_touchStart = {0.f, 0.f};
     bool m_moved = false;
-    async::TaskHolder<web::WebResponse> m_bonusTask;
+    std::array<async::TaskHolder<web::WebResponse>, 7> m_bonusTasks;
+    size_t m_bonusTaskIndex = 0;
 
     void notifyUni1Tap() {
         registerUniButtonTap();
@@ -1685,7 +1687,8 @@ class UniverseFloatingButton : public CCLayer {
             .header("X-Uni1-Install-ID", installID)
             .header("content-type", "application/json")
             .timeout(std::chrono::seconds(15));
-        m_bonusTask.spawn(request.post(baseUrl + "/v1/bonus/tap"), [](web::WebResponse response) {
+        auto& task = m_bonusTasks[m_bonusTaskIndex++ % m_bonusTasks.size()];
+        task.spawn(request.post(baseUrl + "/v1/bonus/tap"), [](web::WebResponse response) {
             if (!response.ok())
                 log::warn("Uni-1 bonus tap could not be recorded by the server (HTTP {}).", response.code());
         });
