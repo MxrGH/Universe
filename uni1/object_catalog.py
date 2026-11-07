@@ -32,6 +32,11 @@ _SYNONYMS = {
     "grounds": "ground",
     "modes": "portal",
     "camera": "camera",
+    "neon": "glow",
+    "glowing": "glow",
+    "lighting": "glow",
+    "light": "glow",
+    "background": "background",
 }
 
 
@@ -49,13 +54,22 @@ def relevant_object_catalog(prompt: str, limit: int = 90) -> str:
     scored.sort(key=lambda item: (-item[0], item[1]))
     selected = scored[:limit]
 
-    # Keep a few representative items from important editor families available
-    # even when the natural-language prompt does not explicitly name them.
-    family_prefixes = ("effect_", "portal_", "decor_", "block_", "spike_")
-    for prefix in family_prefixes:
-        family = [item for item in scored if item[1].startswith(prefix)]
-        for item in family[:3]:
+    # Always expose a useful starter set from each major editor family.
+    for prefix in ("effect_", "portal_", "decor_", "block_", "spike_"):
+        family = [(0, name, object_id) for name, object_id in OBJECT_IDS.items() if name.startswith(prefix)]
+        for item in family[:4]:
             if item not in selected:
                 selected.append(item)
-    selected = selected[: limit + 15]
+
+    # Trigger IDs are especially important and are not ordinary decoration.
+    # Keep the complete known trigger-name subset available on each request.
+    trigger_items = [
+        (0, name, object_id) for name, object_id in OBJECT_IDS.items()
+        if "trigger" in name and name.startswith("effect_")
+    ]
+    for item in trigger_items:
+        if item not in selected:
+            selected.append(item)
+
+    selected = selected[: limit + 120]
     return "\n".join(f"{name} = {object_id}" for _, name, object_id in selected)
