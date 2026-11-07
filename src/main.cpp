@@ -386,6 +386,7 @@ protected:
     CCTextInputNode* m_aiPrompt = nullptr;
     CCTextInputNode* m_aiModelInput = nullptr;
     CCTextInputNode* m_aiBaseUrlInput = nullptr;
+    CCLabelBMFont* m_aiStatus = nullptr;
     async::TaskHolder<web::WebResponse> m_aiTask;
     CCMenu* m_menu = nullptr;
     CCMenu* m_actionMenu = nullptr;
@@ -511,6 +512,7 @@ protected:
         m_aiPrompt = nullptr;
         m_aiModelInput = nullptr;
         m_aiBaseUrlInput = nullptr;
+        m_aiStatus = nullptr;
         if (m_content) {
             m_content->removeFromParentAndCleanup(true);
             m_content = nullptr;
@@ -704,6 +706,14 @@ protected:
                 addAction("LOAD SAVED", 143, {0.f, -150.f});
                 addAction("CLEAR", 142, {175.f, -150.f});
                 addAction("GENERATE ONLINE", 126, {-115.f, -200.f});
+                addAction("CANCEL REQUEST", 152, {125.f, -200.f});
+                m_aiStatus = CCLabelBMFont::create("STATUS: IDLE", "bigFont.fnt");
+                if (m_aiStatus) {
+                    m_aiStatus->setScale(0.28f);
+                    m_aiStatus->setColor({190, 145, 255});
+                    m_aiStatus->setPosition({0.f, -175.f});
+                    m_content->addChild(m_aiStatus, 4);
+                }
                 addText("Describe the entire level: layout, gameplay flow, and difficulty.", {-245.f, -238.f}, 0.26f);
                 addText("Online AI creates a complete object layout.", {-245.f, -268.f}, 0.25f);
                 addAction("CREATE FULL LEVEL IN EDITOR", 149, {0.f, -285.f});
@@ -788,6 +798,10 @@ protected:
     }
 
     void generateAIDraft() {
+        if (m_aiTask.isPending()) {
+            FLAlertLayer::create("Uni-1", "A generation request is already running. Cancel it before starting another.", "OK")->show();
+            return;
+        }
         if (!m_aiPrompt) {
             FLAlertLayer::create("Universe AI", "The prompt field could not be created. Reopen the AI tab and try again.", "OK")->show();
             return;
@@ -842,6 +856,7 @@ protected:
             request.post(baseUrl + "/v1/chat/completions"),
             [this](web::WebResponse response) {
                 if (!response.ok()) {
+                    if (m_aiStatus) m_aiStatus->setString("STATUS: SERVER ERROR");
                     auto details = response.string().unwrapOr("No response details were provided.");
                     if (details.size() > 500) details.resize(500);
                     auto message = fmt::format("Uni-1 server error (HTTP {}). {}", response.code(), details);
@@ -851,6 +866,7 @@ protected:
 
                 auto parsed = response.json();
                 if (!parsed) {
+                    if (m_aiStatus) m_aiStatus->setString("STATUS: INVALID RESPONSE");
                     FLAlertLayer::create("Uni-1", "The Uni-1 server returned invalid JSON.", "OK")->show();
                     return;
                 }
@@ -862,6 +878,7 @@ protected:
                     if (content) draft = content.unwrap();
                 }
                 if (draft.empty()) {
+                    if (m_aiStatus) m_aiStatus->setString("STATUS: EMPTY DRAFT");
                     FLAlertLayer::create("Uni-1", "The model response did not contain a level draft.", "OK")->show();
                     return;
                 }
@@ -876,6 +893,7 @@ protected:
                 }
                 file << draft;
                 file.close();
+                if (m_aiStatus) m_aiStatus->setString("STATUS: DRAFT SAVED");
 
                 auto message = fmt::format(
                     "AI draft generated. Open the level editor and click CREATE FULL LEVEL IN EDITOR.\n\nDraft: {}",
@@ -884,6 +902,7 @@ protected:
                 FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
             }
         );
+        if (m_aiStatus) m_aiStatus->setString("STATUS: GENERATING");
     }
 
     void applySavedDraftToEditor() {
@@ -1172,6 +1191,16 @@ protected:
         }
         if (tag == 126) {
             generateAIDraft();
+            return;
+        }
+        if (tag == 152) {
+            if (m_aiTask.isPending()) {
+                m_aiTask.cancel();
+                if (m_aiStatus) m_aiStatus->setString("STATUS: CANCELLED");
+                FLAlertLayer::create("Uni-1", "The generation request was cancelled. No new draft was saved.", "OK")->show();
+            } else {
+                FLAlertLayer::create("Uni-1", "There is no generation request to cancel.", "OK")->show();
+            }
             return;
         }
         if (tag == 149) {
