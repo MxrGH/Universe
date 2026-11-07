@@ -18,8 +18,12 @@ STYLES = [
     "volcanic", "crystal", "monochrome", "sunset", "digital", "mechanical",
 ]
 DIFFICULTIES = ["easy", "normal", "hard", "insane"]
-MODES = ["cube"]
-OBJECTS = ["block", "spike", "saw", "orb", "pad"]
+MODES = ["cube", "ship", "ball", "ufo", "wave", "robot", "spider", "swing"]
+MODE_PORTALS = {
+    "ship": 13, "ball": 47, "ufo": 111, "wave": 660,
+    "robot": 745, "spider": 1331, "swing": 1933,
+}
+DECORATION_IDS = [15, 16, 17, 85, 86, 87]
 SECTION_NAMES = [
     "Opening", "Warm-up", "Main Theme", "Variation", "Challenge", "Finale",
     "Transition", "Climax", "Outro",
@@ -27,6 +31,11 @@ SECTION_NAMES = [
 
 
 def make_example(index: int, rng: random.Random) -> dict:
+    """Create a labelled synthetic curriculum example across modes and object families.
+
+    These layouts teach schema patterns and mode/decoration vocabulary only.
+    They are not collision-tested or suitable as reviewed production examples.
+    """
     style = STYLES[index % len(STYLES)]
     difficulty = DIFFICULTIES[(index // 3) % len(DIFFICULTIES)]
     section_count = rng.randint(6, 8)
@@ -35,17 +44,29 @@ def make_example(index: int, rng: random.Random) -> dict:
     sections = []
     x = 0
     event_count = 0
+    previous_mode = "cube"
 
     for section_index in range(section_count):
-        # The editor currently places geometry only; it does not add mode portals.
-        mode = "cube"
+        mode = MODES[(index + section_index * (1 + index % 3)) % len(MODES)]
         event_slots = base_count + (1 if section_index < remainder else 0)
         section_events = []
         spacing = rng.randint(36, 48)
         base_y = rng.choice([-30, 0, 30])
-        for slot in range(event_slots):
+
+        # A real editor portal object marks every section mode transition.
+        if mode != previous_mode:
             x += spacing
-            phase = slot % 12
+            section_events.append({
+                "action": "add", "x": x, "y": 90, "type": "object",
+                "id": MODE_PORTALS[mode],
+                "note": f"verified {mode} mode portal transition",
+            })
+            event_count += 1
+
+        remaining = event_slots - len(section_events)
+        for slot in range(remaining):
+            x += spacing
+            phase = slot % 14
             if phase in (0, 1, 4, 5, 9, 10):
                 object_type = "block"
             elif phase in (2, 7):
@@ -56,31 +77,38 @@ def make_example(index: int, rng: random.Random) -> dict:
                 object_type = "pad"
             elif phase == 11 and difficulty in ("hard", "insane"):
                 object_type = "saw"
+            elif phase in (6, 13):
+                object_type = "object"
             else:
                 object_type = rng.choice(["block", "spike"])
+
             y = base_y + rng.choice([-30, 0, 0, 30])
             if object_type in ("orb", "saw"):
                 y += 45
-            section_events.append({
-                "action": "add",
-                "x": x,
-                "y": y,
-                "type": object_type,
+            event = {
+                "action": "add", "x": x, "y": y, "type": object_type,
                 "note": f"{mode} {object_type} pattern, section {section_index + 1}",
-            })
+            }
+            if object_type == "object":
+                event["id"] = rng.choice(DECORATION_IDS)
+                event["note"] = f"{style} decoration accent"
+            section_events.append(event)
             event_count += 1
+
         sections.append({
             "name": SECTION_NAMES[(index + section_index) % len(SECTION_NAMES)],
             "gameplay": mode,
             "events": section_events,
         })
+        previous_mode = mode
         x += rng.randint(90, 140)
 
     prompt = (
-        f"Design a {difficulty} Geometry Dash cube-mode level with a {style} theme. "
+        f"Design a {difficulty} Geometry Dash level with a {style} theme. "
         f"Use {section_count} connected sections and exactly {event_count} ordered placements. "
-        "Use readable routes, varied but fair obstacle patterns, and clear transitions. "
-        "Do not add portals or change the player mode; all sections remain cube gameplay."
+        "Use the section gameplay modes and verified mode portals for transitions. "
+        "Mix readable obstacle routes with decorative object accents, varied fair patterns, "
+        "and clear visual transitions. Do not claim the layout was playtested."
     )
     response = {
         "format": "universe-level-draft-v1",
@@ -92,7 +120,8 @@ def make_example(index: int, rng: random.Random) -> dict:
         "notes": [
             "Synthetic bootstrap example; validate and playtest before publishing.",
             f"Contains {event_count} ordered object placements.",
-            "Cube mode only; no mode portals or triggers are generated.",
+            "Mode portal and decoration IDs come from the verified editor catalogue.",
+            "Synthetic layout is not physics-simulated or playtested.",
         ],
     }
     return {"prompt": prompt, "response": json.dumps(response, ensure_ascii=False, separators=(",", ":"))}

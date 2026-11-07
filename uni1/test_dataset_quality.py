@@ -50,6 +50,32 @@ class DatasetQualityTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "reviewed=true"):
                 validate_dataset(path)
 
+    def test_bootstrap_corpus_covers_multiple_modes_and_verified_editor_objects(self):
+        import random
+        from object_catalog import OBJECT_IDS
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "train.jsonl"
+            rng = random.Random(20261107)
+            modes = set()
+            generic_ids = set()
+            with path.open("w", encoding="utf-8") as stream:
+                for index in range(64):
+                    row = make_example(index, rng)
+                    draft = json.loads(row["response"])
+                    modes.update(section["gameplay"] for section in draft["sections"])
+                    for section in draft["sections"]:
+                        for event in section["events"]:
+                            if event["type"] == "object":
+                                generic_ids.add(event["id"])
+                    row["synthetic"] = True
+                    stream.write(json.dumps(row, ensure_ascii=False) + "\\n")
+            self.assertGreaterEqual(len(modes), 4)
+            self.assertGreaterEqual(len(generic_ids), 4)
+            self.assertTrue(generic_ids.issubset(set(OBJECT_IDS.values())))
+            report = validate_dataset(path, allow_synthetic=True)
+            self.assertEqual(report["synthetic_examples"], 64)
+
+
 
 if __name__ == "__main__":
     unittest.main()
