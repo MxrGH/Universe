@@ -112,6 +112,10 @@ jobs:
               assert metadata["gd"]["win"] == "2.2091"
               assert metadata["gd"]["android"] == "2.2091"
               assert archive.read("resources/mxrmc.universe/logo.png")[:8] == b"\x89PNG\r\n\x1a\n"
+              object_ids = [int(line) for line in archive.read("resources/mxrmc.universe/object_ids.txt").decode("ascii").splitlines() if line.strip()]
+              assert len(object_ids) >= 3000, f"Object ID catalogue is unexpectedly small: {len(object_ids)}"
+              assert len(object_ids) == len(set(object_ids)), "Object ID catalogue contains duplicates"
+              assert all(1 <= object_id <= 5000 for object_id in object_ids), "Object ID catalogue contains out-of-range IDs"
           print(f"Validated {package.name}: Windows x64 + Android ARM64 + Android ARMv7 + logo")
           PY
 

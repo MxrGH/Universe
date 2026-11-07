@@ -2089,8 +2089,13 @@ class $modify(UniversePlayerObject, PlayerObject) {
     bool pushButton(PlayerButton button) {
         auto layer = PlayLayer::get();
         if (g_macroRecording && !g_macroPlayingBack && layer && layer->m_isPracticeMode
-            && layer->m_player1 == this && g_macroEvents.size() < 100000) {
-            g_macroEvents.push_back({g_macroTime, static_cast<int>(button), true});
+            && layer->m_player1 == this) {
+            if (g_macroEvents.size() < 100000)
+                g_macroEvents.push_back({g_macroTime, static_cast<int>(button), true});
+            if (g_macroEvents.size() >= 100000) {
+                stopMacroRecording();
+                log::warn("Universe practice replay reached its 100,000-event limit and was saved.");
+            }
         }
         return PlayerObject::pushButton(button);
     }
@@ -2098,8 +2103,13 @@ class $modify(UniversePlayerObject, PlayerObject) {
     bool releaseButton(PlayerButton button) {
         auto layer = PlayLayer::get();
         if (g_macroRecording && !g_macroPlayingBack && layer && layer->m_isPracticeMode
-            && layer->m_player1 == this && g_macroEvents.size() < 100000) {
-            g_macroEvents.push_back({g_macroTime, static_cast<int>(button), false});
+            && layer->m_player1 == this) {
+            if (g_macroEvents.size() < 100000)
+                g_macroEvents.push_back({g_macroTime, static_cast<int>(button), false});
+            if (g_macroEvents.size() >= 100000) {
+                stopMacroRecording();
+                log::warn("Universe practice replay reached its 100,000-event limit and was saved.");
+            }
         }
         return PlayerObject::releaseButton(button);
     }
