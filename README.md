@@ -48,23 +48,22 @@ Open Universe, go to **Settings**, and choose **RUN IN-GAME SELF TEST**. It chec
 
 ## Uni-1 AI
 
-The in-game AI assistant is branded **Uni-1**. It currently sends requests through the configured Anthropic-compatible API model; Uni-1 is the Universe product name, not a separately trained or hosted foundation model. The default allowance is **100 requests per local calendar day**. Tapping the in-game **UNIV** floating button seven times unlocks a **1,000-request daily allowance**. The count resets at local midnight. This is a client-side convenience limit stored in the mod's local save folder, not an account-wide or tamper-proof server quota; deleting or editing local data can reset it. A hosted backend would be required for enforceable shared limits. Each request can incur provider charges.
+Universe now has a dedicated self-hosted Uni-1 inference client. The in-game client does not call Anthropic or OpenAI and does not ask players for provider API keys. Configure the HTTPS base URL of a deployed Uni-1 server in Geode > Universe settings.
+
+The server enforces 100 requests/day per installation. Seven UNIV floating-button taps unlock 1,000 requests/day. Quotas reset at 00:00 UTC. The installation ID is stored locally, so deleting local data can create a new quota; this is not account-level identity. The server validates generated JSON, supported gameplay/object types, add-only operations, ordered coordinates, and a 1,000-object ceiling before returning a draft.
+
+The training and inference project is in `uni1/`. Generate a synthetic bootstrap corpus with `python generate_dataset.py --count 256` from that directory, review it, add human-authored/playtested examples, and train the adapter. The current repository does **not** contain trained Uni-1 weights or a deployed inference server, so generation will remain unavailable until those steps are completed.
 
 ## AI full-level creator
 
-The AI tab generates a new level layout and places supported objects directly into the open editor.
-
 1. Open a new, empty level in the Geometry Dash editor.
 2. Enter the complete concept in the Universe AI tab.
-3. Enter an API key in the AI tab for this request. On desktop, `ANTHROPIC_API_KEY` from the process environment is also accepted.
-4. Choose **GENERATE ONLINE**, wait for the result message, then return to the editor.
-5. Choose **CREATE FULL LEVEL IN EDITOR** and review the result. Use the editor Undo control to revert it.
+3. Choose **GENERATE ONLINE**, wait for the Uni-1 server response, then return to the editor.
+4. Choose **CREATE FULL LEVEL IN EDITOR** and review the result. Use the editor Undo control to revert it.
 
-The in-game API key field is designed for Android as well as desktop. The key is used for the current request only and is not saved by Universe. It is visible while typing, so avoid screen recording. Configure the model and HTTPS API base URL in Geode → Universe settings. The current in-game request uses the Anthropic Messages API format. API calls may incur charges; use a paid account only with a parent or guardian's permission.
+The current in-editor generator supports blocks, spikes, saws, orbs, pads, and decoration objects. It does not create portals, triggers, or song timing. The draft is limited to 2 MB, and the practical apply loop processes at most 1,000 operations in one pass. Chunked placement, progress reporting, and cancellation are not implemented. Start with an empty level; the creator adds objects and does not clear existing contents.
 
-The current in-editor generator supports blocks, spikes, saws, orbs, pads, and decoration objects. It does not yet create gameplay portals, triggers, or song timing. The saved JSON draft is limited to 2 MB. A preflight ceiling of 1,000,000 placements is a validation guard, **not** the practical apply capacity: the current apply loop processes at most 1,000 operations per pass. Chunked placement, progress reporting, and cancellation are not implemented. The parser currently extracts events with regular expressions rather than a complete JSON schema parser. Start with an empty level; the creator adds objects and does not clear existing contents.
-
-The standalone `scripts/level_maker.py` helper validates and exports planning blueprints as JSON, CSV, or Markdown. Those files are not native Geometry Dash level saves and are not required for the in-game editor workflow. Its current blueprint limit is 5,000 events.
+The standalone `scripts/level_maker.py` helper validates and exports planning blueprints as JSON, CSV, or Markdown. Those files are not native Geometry Dash level saves.
 
 ## Default controls
 
