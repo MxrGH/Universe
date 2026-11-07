@@ -19,8 +19,10 @@ from pydantic import BaseModel, Field
 
 try:
     from .draft_validation import validate_generated_level
+    from .design_knowledge import DESIGN_GUIDANCE
 except ImportError:  # uvicorn server:app when launched from the uni1 directory
     from draft_validation import validate_generated_level
+    from design_knowledge import DESIGN_GUIDANCE
 
 BASE_MODEL = os.getenv("UNI1_BASE_MODEL", "Qwen/Qwen2.5-0.5B-Instruct")
 ADAPTER_DIR = Path(os.getenv("UNI1_ADAPTER_DIR", "artifacts/uni1-adapter"))
@@ -33,8 +35,12 @@ DAILY_BONUS = 1000
 SYSTEM_PROMPT = (
     "You are Uni-1, Universe's Geometry Dash level-design model. "
     "Return only valid JSON for the Universe level-draft schema. "
-    "Use only block, spike, saw, orb, and pad placements in cube mode. Do not invent mode portals or triggers. "
-    "Create 6 to 8 sections and 96 to 144 ordered placements. Create coherent layouts and never claim they were playtested."
+    "Create 6 to 8 connected sections and 96 to 144 ordered placements. "
+    "Use the design workflow below to plan rhythm, obstacle readability, visual composition, "
+    "and coherent style. The compatibility override at the end is mandatory: "
+    "only cube gameplay and block, spike, saw, orb, and pad events are supported. "
+    "Never claim a draft was playtested or that decoration notes were placed.\n\n"
+    + DESIGN_GUIDANCE
 )
 
 app = FastAPI(title="Uni-1 Inference", version="0.1.0")
