@@ -488,8 +488,9 @@ protected:
                     addAction("-", 124, {125.f, -235.f});
                     addAction("+", 125, {205.f, -235.f});
                 }
-                addAction("EQUIP IF OWNED", 127, {0.f, -280.f});
-                addText("Locked icons can be previewed; unlock data is never modified.", {-245.f, -310.f}, 0.27f);
+                bool overrideEnabled = mod->getSettingValue<bool>("local-icon-override");
+                addAction(overrideEnabled ? "DISABLE LOCAL OVERRIDE" : "EQUIP LOCAL ICON", 127, {0.f, -280.f});
+                addText("LOCAL ONLY: account unlocks and saved icon set are unchanged.", {-245.f, -310.f}, 0.27f);
                 break;
             case Page::Practice: {
                 auto mod = Mod::get();
@@ -1203,40 +1204,12 @@ protected:
             return;
         }
         if (tag == 127) {
-            auto gm = GameManager::get();
-            if (!gm) return;
-            auto typeID = static_cast<int>(std::clamp<int64_t>(
-                mod->getSettingValue<int64_t>("preview-icon-type"), 0, 8
-            ));
-            auto iconType = static_cast<IconType>(typeID);
-            auto iconID = static_cast<int>(std::clamp<int64_t>(
-                mod->getSettingValue<int64_t>("preview-icon-id"), 1, 500
-            ));
-            if (!gm->isIconUnlocked(iconID, iconType)) {
-                FLAlertLayer::create(
-                    "Universe",
-                    "That icon is locked on this account. You can preview it locally, but Universe will not equip it or change unlock flags.",
-                    "OK"
-                )->show();
-                return;
-            }
-            switch (iconType) {
-                case IconType::Cube: gm->setPlayerFrame(iconID); break;
-                case IconType::Ship: gm->setPlayerShip(iconID); break;
-                case IconType::Ball: gm->setPlayerBall(iconID); break;
-                case IconType::Ufo: gm->setPlayerBird(iconID); break;
-                case IconType::Wave: gm->setPlayerDart(iconID); break;
-                case IconType::Robot: gm->setPlayerRobot(iconID); break;
-                case IconType::Spider: gm->setPlayerSpider(iconID); break;
-                case IconType::Swing: gm->setPlayerSwing(iconID); break;
-                case IconType::Jetpack: gm->setPlayerJetpack(iconID); break;
-                default: return;
-            }
-            FLAlertLayer::create(
-                "Universe",
-                "Your owned icon was selected. Use Geometry Dash's normal save option if you want to save the selection.",
-                "OK"
-            )->show();
+            bool enabled = mod->getSettingValue<bool>("local-icon-override");
+            mod->setSettingValue<bool>("local-icon-override", !enabled);
+            auto message = enabled
+                ? "Local icon override disabled. Your official Geometry Dash icon selection was not changed."
+                : "Local icon override enabled. The selected icon is rendered locally only; account unlocks and saved icon data are untouched.";
+            FLAlertLayer::create("Universe Icon Lab", message, "OK")->show();
             showPage(m_page);
             return;
         }
@@ -1520,6 +1493,52 @@ public:
 // attempt to Practice Mode before a requested modifier is applied; with Safe
 // Mode disabled, the modifiers remain local client-side gameplay changes.
 class $modify(UniversePlayerObject, PlayerObject) {
+    bool isUniverseLocalPlayer() {
+        auto layer = PlayLayer::get();
+        return layer && layer->m_player1 == this;
+    }
+
+    int universeIconFrame(int frame, int type) {
+        auto mod = Mod::get();
+        if (!mod || !mod->getSettingValue<bool>("local-icon-override") || !isUniverseLocalPlayer())
+            return frame;
+        auto selectedType = static_cast<int>(std::clamp<int64_t>(
+            mod->getSettingValue<int64_t>("preview-icon-type"), 0, 8
+        ));
+        if (selectedType != type) return frame;
+        return static_cast<int>(std::clamp<int64_t>(
+            mod->getSettingValue<int64_t>("preview-icon-id"), 1, 500
+        ));
+    }
+
+    void updatePlayerFrame(int frame) {
+        PlayerObject::updatePlayerFrame(universeIconFrame(frame, 0));
+    }
+    void updatePlayerShipFrame(int frame) {
+        PlayerObject::updatePlayerShipFrame(universeIconFrame(frame, 1));
+    }
+    void updatePlayerRollFrame(int frame) {
+        PlayerObject::updatePlayerRollFrame(universeIconFrame(frame, 2));
+    }
+    void updatePlayerBirdFrame(int frame) {
+        PlayerObject::updatePlayerBirdFrame(universeIconFrame(frame, 3));
+    }
+    void updatePlayerDartFrame(int frame) {
+        PlayerObject::updatePlayerDartFrame(universeIconFrame(frame, 4));
+    }
+    void createRobot(int frame) {
+        PlayerObject::createRobot(universeIconFrame(frame, 5));
+    }
+    void createSpider(int frame) {
+        PlayerObject::createSpider(universeIconFrame(frame, 6));
+    }
+    void updatePlayerSwingFrame(int frame) {
+        PlayerObject::updatePlayerSwingFrame(universeIconFrame(frame, 7));
+    }
+    void updatePlayerJetpackFrame(int frame) {
+        PlayerObject::updatePlayerJetpackFrame(universeIconFrame(frame, 8));
+    }
+
     bool pushButton(PlayerButton button) {
         auto layer = PlayLayer::get();
         if (g_macroRecording && !g_macroPlayingBack && layer && layer->m_isPracticeMode
