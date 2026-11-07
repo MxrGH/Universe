@@ -289,6 +289,45 @@
       "description": "Draw a local outline around the player's current sprite bounds. This is a visual reference, not the game's exact collision shape.",
       "type": "bool",
       "default": false
+    },
+    "icon-primary-color": {
+      "name": "Local icon primary color",
+      "description": "Primary tint used by the local-only icon override.",
+      "type": "rgba",
+      "default": [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    "icon-secondary-color": {
+      "name": "Local icon secondary color",
+      "description": "Secondary tint used by the local-only icon override.",
+      "type": "rgba",
+      "default": [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    "icon-glow-color": {
+      "name": "Local icon glow color",
+      "description": "Glow tint used by the local-only icon override.",
+      "type": "rgba",
+      "default": [
+        190,
+        145,
+        255,
+        255
+      ]
+    },
+    "local-icon-glow": {
+      "name": "Local icon glow",
+      "description": "Show a local glow on the overridden icon without changing account settings.",
+      "type": "bool",
+      "default": true
     }
   },
   "repository": "https://github.com/MxrGH/Universe"
