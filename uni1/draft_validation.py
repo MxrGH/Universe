@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import math
 
-ALLOWED_OBJECTS = {"block", "spike", "saw", "orb", "pad"}
+ALLOWED_OBJECTS = {"block", "spike", "saw", "orb", "pad", "object"}
 ALLOWED_GAMEPLAY = {"cube"}
 DIFFICULTIES = {"easy", "normal", "hard", "insane", "demon"}
 MAX_SECTIONS = 100
@@ -61,6 +61,24 @@ def validate_draft_payload(data: object) -> tuple[dict, int]:
                 raise ValueError(f"Unsupported object type: {event.get('type')!r}")
             if event.get("action", "add") != "add":
                 raise ValueError("Uni-1 generation may only add new objects.")
+            if event["type"] == "object":
+                object_id = event.get("id")
+                if isinstance(object_id, bool) or not isinstance(object_id, int) or not 1 <= object_id <= 5000:
+                    raise ValueError("Generic editor objects need an integer id between 1 and 5000.")
+                properties = event.get("properties", "")
+                if not isinstance(properties, str) or len(properties) > 2000:
+                    raise ValueError("Object properties must be a comma-separated string of at most 2,000 characters.")
+                if properties:
+                    parts = properties.split(",")
+                    if len(parts) % 2 or len(parts) > 128:
+                        raise ValueError("Object properties must contain up to 64 key/value pairs.")
+                    for key, value in zip(parts[::2], parts[1::2]):
+                        if not key.isdigit() or key in {"1", "2", "3"}:
+                            raise ValueError("Object property keys must be numeric and cannot override object id or coordinates.")
+                        if not value or any(ch in value for ch in ";,\\n\\r\\\""):
+                            raise ValueError("Object property values must be non-empty and cannot contain save-string delimiters.")
+            elif "id" in event or "properties" in event:
+                raise ValueError("Use type='object' when specifying a raw Geometry Dash object id or properties.")
             for axis in ("x", "y"):
                 value = event.get(axis)
                 if isinstance(value, bool) or not isinstance(value, (int, float)):
