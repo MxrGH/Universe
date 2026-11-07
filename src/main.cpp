@@ -697,7 +697,7 @@ protected:
                 }
                 addText("No player API key required.", {-245.f, -5.f}, 0.34f);
                 addText("Uni-1 server URL: Geode > Universe settings.", {-245.f, -38.f}, 0.29f);
-                addText("Daily quota: 100 requests; 1,000 after 7 UNIV taps.", {-245.f, -70.f}, 0.27f);
+                addText("The server is authoritative for quota and usage.", {-245.f, -70.f}, 0.27f);
                 addText("The server must be online for generation.", {-245.f, -102.f}, 0.26f);
                 addAction("SAVE PROMPT", 141, {-175.f, -150.f});
                 addAction("LOAD SAVED", 143, {0.f, -150.f});
