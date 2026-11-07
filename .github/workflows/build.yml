@@ -156,7 +156,7 @@ jobs:
               }
               for name, machine in expected.items():
                   data = archive.read(name)
-                  assert data[:4] == b"\\x7fELF", f"{name} is not ELF"
+                  assert data[:4] == bytes.fromhex("7f454c46"), f"{name} is not ELF"
                   actual = struct.unpack_from("<H", data, 18)[0]
                   assert actual == machine, f"{name}: expected ELF machine {machine}, got {actual}"
                   print(f"{name}: ELF machine {actual} verified")
