@@ -518,9 +518,9 @@ protected:
                 addText("Changing a StartPos restarts the current attempt.", {-245.f, -75.f}, 0.30f);
                 if (layer) addAction("RESTART ATTEMPT", 133, {0.f, -135.f});
                 addText("These tools do not fake coins, records, or leaderboard results.", {-245.f, -175.f}, 0.29f);
-                addText("Draft generator: scripts/level_maker.py", {-245.f, -165.f}, 0.29f);
-                addText("Use --offline for templates or configure an AI API key.", {-245.f, -200.f}, 0.27f);
-                addText("Output is a JSON blueprint, not an import-ready level.", {-245.f, -235.f}, 0.27f);
+                addText("Online level-design helper: scripts/level_maker.py", {-245.f, -165.f}, 0.29f);
+                addText("Configure an AI API key to generate a design blueprint.", {-245.f, -200.f}, 0.27f);
+                addText("Blueprint output is not a playable level save.", {-245.f, -235.f}, 0.27f);
                 break;
             }
             case Page::Visuals: {
@@ -601,7 +601,6 @@ protected:
                 addAction("LOAD SAVED", 143, {0.f, -155.f});
                 addAction("CLEAR", 142, {175.f, -155.f});
                 addAction("GENERATE ONLINE", 126, {-115.f, -205.f});
-                addAction("OFFLINE DRAFT", 145, {125.f, -205.f});
                 addText("Describe the entire level: layout, gameplay flow, and difficulty.", {-245.f, -250.f}, 0.27f);
                 addText("Online AI generates a complete object layout, not an edit plan.", {-245.f, -280.f}, 0.25f);
                 addAction("CREATE FULL LEVEL IN EDITOR", 149, {0.f, -250.f});
@@ -633,85 +632,6 @@ protected:
             mod->setSettingValue<std::string>("ai-model", input->getString());
         else if (input == m_aiBaseUrlInput)
             mod->setSettingValue<std::string>("ai-base-url", input->getString());
-    }
-
-    void generateOfflineDraft() {
-        if (!m_aiPrompt) {
-            FLAlertLayer::create("Universe Offline Draft", "The prompt field could not be created. Reopen the AI tab and try again.", "OK")->show();
-            return;
-        }
-        std::string prompt = m_aiPrompt->getString();
-        if (prompt.empty()) {
-            FLAlertLayer::create("Universe Offline Draft", "Enter a level idea first.", "OK")->show();
-            return;
-        }
-        if (prompt.size() > 4000) {
-            FLAlertLayer::create("Universe Offline Draft", "Please keep the prompt under 4000 characters.", "OK")->show();
-            return;
-        }
-
-        auto escapeJSON = [](std::string const& value) {
-            std::string out;
-            out.reserve(value.size() + 16);
-            for (unsigned char ch : value) {
-                switch (ch) {
-                    case '\\': out += "\\\\"; break;
-                    case '"': out += "\\\""; break;
-                    case '\n': out += "\\n"; break;
-                    case '\r': out += "\\r"; break;
-                    case '\t': out += "\\t"; break;
-                    default:
-                        if (ch >= 0x20) out += static_cast<char>(ch);
-                        break;
-                }
-            }
-            return out;
-        };
-
-        static const char* gameplay[] = {"cube", "ship", "ball", "ufo", "wave", "robot"};
-        static const char* objects[] = {"block", "spike", "orb", "saw", "pad", "deco"};
-        auto mod = Mod::get();
-        if (!mod) return;
-        auto path = mod->getSaveDir() / "universe-ai-draft.json";
-        std::ofstream file(path.string(), std::ios::out | std::ios::trunc);
-        if (!file.is_open()) {
-            FLAlertLayer::create("Universe Offline Draft", "Universe could not create the draft file.", "OK")->show();
-            return;
-        }
-
-        file << "{\n"
-             << "  \"format\": \"universe-level-draft-v1\",\n"
-             << "  \"generator\": \"offline-procedural\",\n"
-             << "  \"title\": \"" << escapeJSON(prompt.substr(0, 64)) << "\",\n"
-             << "  \"prompt\": \"" << escapeJSON(prompt) << "\",\n"
-             << "  \"difficulty\": \"hard\",\n"
-             << "  \"style\": \"mixed\",\n"
-             << "  \"sections\": [\n";
-        for (int section = 0; section < 6; ++section) {
-            file << "    {\n"
-                 << "      \"name\": \"Section " << (section + 1) << "\",\n"
-                 << "      \"gameplay\": \"" << gameplay[section] << "\",\n"
-                 << "      \"events\": [\n";
-            for (int event = 0; event < 6; ++event) {
-                int index = (section * 3 + event) % 6;
-                int x = section * 900 + event * 130;
-                int y = ((section + event) % 5) * 30;
-                file << "        {\"x\": " << x
-                     << ", \"y\": " << y
-                     << ", \"type\": \"" << objects[index]
-                     << "\", \"note\": \"Generated offline from your level concept\"}"
-                     << (event == 5 ? "\n" : ",\n");
-            }
-            file << "      ]\n    }" << (section == 5 ? "\n" : ",\n");
-        }
-        file << "  ],\n"
-             << "  \"notes\": [\"Procedural offline draft; no network or neural model was used.\", "
-             << "\"This is a design blueprint, not an import-ready Geometry Dash level.\"]\n"
-             << "}\n";
-        file.close();
-
-        auto message = fmt::format("Offline draft saved to:\\n{}\\n\\nThis is a procedural blueprint, not neural AI or a playable level.", path.string());
-        FLAlertLayer::create("Universe Offline Draft", message.c_str(), "OK")->show();
     }
 
     std::string buildEditorContext() {
@@ -894,7 +814,7 @@ protected:
         auto path = mod->getSaveDir() / "universe-ai-draft.json";
         std::ifstream file(path.string(), std::ios::in);
         if (!file.is_open()) {
-            FLAlertLayer::create("Universe AI", "No generated draft was found. Generate an online AI or offline draft first.", "OK")->show();
+            FLAlertLayer::create("Universe AI", "No generated draft was found. Generate an online AI draft first.", "OK")->show();
             return;
         }
         std::string draft((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
@@ -1168,10 +1088,6 @@ protected:
             if (prompt.size() > 4000) prompt.resize(4000);
             m_aiPrompt->setString(prompt.c_str());
             FLAlertLayer::create("Universe AI", "Saved prompt loaded.", "OK")->show();
-            return;
-        }
-        if (tag == 145) {
-            generateOfflineDraft();
             return;
         }
         if (tag == 146) {
