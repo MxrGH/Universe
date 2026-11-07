@@ -727,9 +727,9 @@ protected:
             "Editor state: {} objects in the open level; {} currently selected. ",
             objects ? objects->count() : 0, selectedCount
         );
-        context += "Existing objects in editor order (maximum 120; uid is the exact uniqueID target): ";
+        context += "Existing objects in editor order (maximum 500; uid is the exact uniqueID target): ";
         if (objects) {
-            for (unsigned int i = 0; i < objects->count() && i < 120; ++i) {
+            for (unsigned int i = 0; i < objects->count() && i < 500; ++i) {
                 auto object = static_cast<GameObject*>(objects->objectAtIndex(i));
                 if (!object) continue;
                 auto p = object->getPosition();
@@ -737,10 +737,10 @@ protected:
                     object->m_uniqueID, object->m_objectID, p.x, p.y, object->getRotation());
             }
         }
-        context += " Selected object details (maximum 30): ";
+        context += " Selected object details (maximum 100): ";
         size_t shown = 0;
         if (selected && selected->count() > 0) {
-            for (unsigned int i = 0; i < selected->count() && shown < 30; ++i) {
+            for (unsigned int i = 0; i < selected->count() && shown < 100; ++i) {
                 auto object = static_cast<GameObject*>(selected->objectAtIndex(i));
                 if (!object) continue;
                 auto p = object->getPosition();
