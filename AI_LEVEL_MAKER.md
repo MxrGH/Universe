@@ -2,7 +2,7 @@
 
 The Uni-1 AI level creator is **not included as an enabled feature** in the Universe 1 Snapshot 26.5 user interface.
 
-The files in `uni1/` are an experimental development foundation only. They include a synthetic dataset generator, a LoRA training script, a FastAPI inference service, and deployment notes. They do not include trained adapter weights or a deployed inference endpoint. The synthetic examples are not human-reviewed or playtested.
+The files in `uni1/` are an experimental development foundation only. They include a synthetic dataset generator, a LoRA training script, a FastAPI inference service, and deployment notes. They do not include trained adapter weights or a deployed inference endpoint. The synthetic examples are not human-reviewed or playtested. The editor currently applies cube-mode block, spike, saw, orb, and pad geometry only; it does not create mode portals, triggers, song objects, or generic decoration objects.
 
 Do not enable or advertise the in-game AI workflow until all of the following have been completed and verified:
 
