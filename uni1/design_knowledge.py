@@ -93,3 +93,4 @@ unless its configuration is supported and tested.
 The current client creates new objects only. It does not yet support every editor
 operation, keyframe sequence, group linking workflow, or trigger configuration. Never
 claim unsupported operations were applied. Never claim a level was playtested.
+"""
