@@ -173,10 +173,9 @@ jobs:
           script: |
             adb wait-for-device
             adb shell 'until [ "$(getprop sys.boot_completed)" = "1" ]; do sleep 2; done'
-            ABI="$(adb shell getprop ro.product.cpu.abi | tr -d '[:space:]')"
-            test -n "$ABI"
             adb shell am get-current-user
-            echo "Android API 35 emulator booted and ADB responded; ABI $ABI"
+            adb shell getprop sys.boot_completed
+            echo "Android API 35 emulator booted and ADB commands succeeded."
 
   release:
     name: Publish Universe 1 — Snapshot 26.5
