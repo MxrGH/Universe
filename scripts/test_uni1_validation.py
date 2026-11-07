@@ -48,7 +48,20 @@ class Uni1DraftValidationTests(unittest.TestCase):
                                 for section in draft["sections"] for event in section["events"]))
 
     def test_generated_level_gate_rejects_short_drafts(self):
+        draft = make_draft()
+        draft["sections"] = [
+            {
+                "name": f"Section {index + 1}",
+                "gameplay": "cube",
+                "events": [{"x": index * 50, "y": 0, "type": "block"}],
+            }
+            for index in range(6)
+        ]
         with self.assertRaisesRegex(ValueError, "96 to 144"):
+            validate_generated_level(draft)
+
+    def test_generated_level_gate_rejects_wrong_section_count(self):
+        with self.assertRaisesRegex(ValueError, "6 to 8 sections"):
             validate_generated_level(make_draft())
 
     def test_generated_level_gate_accepts_generated_examples(self):
