@@ -2,7 +2,9 @@
 
 ## Uni-1 identity and daily allowance
 
-The assistant is presented in Universe as **Uni-1**. This is the mod's assistant/product name; the actual model ID sent to the configured Anthropic-compatible endpoint remains the provider model configured in Geode settings. Uni-1 currently allows 100 requests per local calendar day. Tapping the in-game UNIV floating button seven times unlocks a 1,000-request daily allowance. Usage resets at local midnight. The counter is stored locally and is not tamper-proof or shared between devices; only a hosted service can enforce a reliable account-wide quota. Provider usage may incur charges.
+The in-game client connects to a configurable self-hosted Uni-1 inference server. It does not call Anthropic or OpenAI and does not ask players for provider API keys. Configure the server's HTTPS base URL in Geode > Universe settings. The server enforces 100 requests/day per installation; seven UNIV floating-button taps unlock 1,000/day. Quotas reset at 00:00 UTC. The installation ID is stored locally, so deleting it can create a fresh quota; this is basic per-installation abuse control, not account identity.
+
+The training and inference foundation is in `uni1/`. Generate a synthetic bootstrap corpus with `python generate_dataset.py --count 256` from that folder, review and supplement it with human-authored, playtested examples, and then train. The client is wired to the server, but trained weights and a deployed server are still required before generation can work.
 
 The in-game AI creator generates a JSON level layout and places supported objects directly into the currently open Geometry Dash editor. It does not export a .gmd file and does not require GDShare.
 
@@ -11,18 +13,15 @@ The in-game AI creator generates a JSON level layout and places supported object
 1. Open an empty level in the Geometry Dash editor.
 2. Open Universe and select the AI tab.
 3. Enter a complete level concept in the prompt field.
-4. Enter an API key in the AI tab for this request. On desktop, the `ANTHROPIC_API_KEY` process environment variable is also accepted.
-5. Choose **GENERATE ONLINE** and wait for the result message.
-6. Return to the editor and choose **CREATE FULL LEVEL IN EDITOR**.
-7. Inspect the layout and use the editor Undo control if you want to revert it.
+4. Choose **GENERATE ONLINE** and wait for the result message.
+5. Return to the editor and choose **CREATE FULL LEVEL IN EDITOR**.
+6. Inspect the layout and use the editor Undo control if you want to revert it.
 
 The in-game prompt requests a complete level made from connected sections. The model cannot guarantee a fun, balanced, or completable level; review and test the generated result.
 
-## Android and key handling
+## Server setup
 
-Android apps normally do not inherit a key from a shell environment, so the AI tab has a per-request API-key field. The key entered there is held only for the current request and is not written to Geode settings or a file by Universe. It is cleared when the AI page is rebuilt. The key is visible while typing; avoid screen recording or screenshots during entry.
-
-The model name and HTTPS API base URL are configured in **Geode → Universe settings**. The current in-game request uses the Anthropic Messages API format. API use may cost money; use a provider account only with the account owner's permission. Never send API keys in chat, commit them, or include them in screenshots.
+Deploy the Python service in `uni1/` with a trained adapter, configure the Geode setting with its HTTPS base URL, and keep its SQLite quota database on persistent storage. The service does not use third-party provider keys, but hosting still costs compute and bandwidth. Use HTTPS, a reverse proxy, firewalling, monitoring, and abuse controls. Do not expose the development server directly to the public internet.
 
 ## Supported object placements and limits
 
