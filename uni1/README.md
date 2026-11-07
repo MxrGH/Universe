@@ -104,6 +104,10 @@ the original block/spike/saw/orb/pad shortcuts:
   Geometry Dash object-save format; advanced keyframe, camera and 2.2 trigger data
   still need dedicated serializers and in-game testing. See
   https://github.com/gd-programming/gd.docs/blob/main/docs/resources/client/level-components/level-object.md.
+- Typed save-key coverage now includes documented 2.1/2.2 follow, item,
+  collision, animation, time-warp, scale/warp, camera-mode and object flags.
+  Enum-like fields are range-checked but their exact meaning remains trigger-specific;
+  unknown or undocumented save keys are not guessed.
 - Keyframe Point (3032) and Keyframe Animation Trigger (3033) now have a
   linked serializer: points require a shared group ID, unique order values and
   at least two points; the activation trigger must reference that animation group

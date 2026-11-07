@@ -85,6 +85,44 @@ def test_unknown_object_id_is_rejected():
 
 
 
+
+def test_documented_2_2_trigger_properties_are_typed_and_serialized():
+    event = {
+        "x": 0, "y": 0, "type": "object", "id": OBJECT_IDS["effect_move_trigger"],
+        "target_group": 8, "secondary_group": 9, "x_mod": 0.5, "y_mod": -0.25,
+        "animation_id": 2, "count": 3, "subtract_count": True, "pickup_mode": 1,
+        "item_id": 77, "hold_mode": True, "toggle_mode": 2, "easing_rate": 1.5,
+        "comparison": 1, "dual_mode": True, "follow_speed": 2,
+        "follow_delay": 0.1, "y_offset": -20, "trigger_on_exit": True,
+        "dynamic_block": True, "block_b_id": 44, "custom_rotation_speed": 90,
+        "disable_rotation": True, "multi_activate_orbs": True,
+        "enable_use_target": True, "target_pos_coordinates": 1,
+        "editor_disable": True, "multi_activate_triggers": True,
+        "max_speed": 20, "randomize_start": True, "animation_speed": 1.25,
+        "linked_group_id": 11, "no_effects": True, "reverse": True,
+        "time_mod": 0.75, "no_touch": True,
+    }
+    normalized, _ = validate_draft_payload(draft(event))
+    props = normalized["sections"][0]["events"][0]["properties"]
+    for pair in (
+        "71,9", "72,0.5", "73,-0.25", "76,2", "77,3", "78,1",
+        "79,1", "80,77", "81,1", "82,2", "85,1.5", "88,1",
+        "89,1", "90,2", "91,0.1", "92,-20", "93,1", "94,1",
+        "95,44", "97,90", "98,1", "99,1", "100,1", "101,1",
+        "102,1", "104,1", "105,20", "106,1", "107,1.25",
+        "108,11", "116,1", "117,1", "120,0.75", "121,1",
+    ):
+        assert pair in props
+
+
+def test_duplicate_aliases_for_same_save_key_are_rejected():
+    with pytest.raises(ValueError, match="specified more than once"):
+        validate_draft_payload(draft({
+            "x": 0, "y": 0, "type": "object",
+            "id": OBJECT_IDS["effect_move_trigger"],
+            "parent_group": 10, "secondary_group": 11,
+        }))
+
 def test_keyframe_point_and_animation_trigger_are_serialized_and_linked():
     events = [
         {"x": 0, "y": 0, "type": "object", "id": 3032,
