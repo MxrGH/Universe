@@ -81,7 +81,7 @@ def validate_draft_payload(data: object) -> tuple[dict, int]:
     if not isinstance(notes, list) or len(notes) > 100:
         raise ValueError("Draft notes must be a list containing at most 100 items.")
     if any(not isinstance(note, str) or len(note) > 500 for note in notes):
-        raise ValueError("Each draft note must be text of at most 500 characters.")
+        raise ValueError("Draft notes must contain text items of at most 500 characters.")
 
     data["format"] = "universe-level-draft-v1"
     return data, total
