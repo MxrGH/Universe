@@ -4,7 +4,7 @@
 
 - Add a local-only icon override that does not alter account unlocks or saved icon selection.
 - Add configurable local primary, secondary, and glow colors, plus a local glow toggle.
-- Connect the in-game AI client to the self-hosted Uni-1 endpoint without player API keys.
+- Keep the untrained Uni-1 AI creator out of the shipped interface until model training and deployment are complete.
 - Align project validation with the online-only AI workflow and remove stale checks for deleted offline/icon enum code.
 - Preserve existing gameplay modifiers, Safe Mode, StartPos tools, visual overlays, replay recorder, icon previews, themes, keybinds, presets, and mobile controls.
 - Bump Geode package version to v1.1.1 and prepare the final planned snapshot release.
