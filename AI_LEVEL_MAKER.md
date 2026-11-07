@@ -1,5 +1,9 @@
 # Universe AI Level Creator
 
+## Uni-1 identity and daily allowance
+
+The assistant is presented in Universe as **Uni-1**. This is the mod's assistant/product name; the actual model ID sent to the configured Anthropic-compatible endpoint remains the provider model configured in Geode settings. Uni-1 currently allows 100 requests per local calendar day. Tapping the in-game UNIV floating button seven times unlocks a 1,000-request daily allowance. Usage resets at local midnight. The counter is stored locally and is not tamper-proof or shared between devices; only a hosted service can enforce a reliable account-wide quota. Provider usage may incur charges.
+
 The in-game AI creator generates a JSON level layout and places supported objects directly into the currently open Geometry Dash editor. It does not export a .gmd file and does not require GDShare.
 
 ## In-game workflow
