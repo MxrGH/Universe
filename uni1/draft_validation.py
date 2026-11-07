@@ -133,7 +133,7 @@ def normalize_editor_properties(event: dict) -> str:
                 raise ValueError(f"Raw property key {key} is not supported.")
             if key in seen:
                 raise ValueError(f"Property key {key} was specified more than once.")
-            if not value or not re.fullmatch(r"-?\\d+(?:\\.\\d+)?(?:\\.-?\\d+(?:\\.\\d+)?)*", value):
+            if not value or not re.fullmatch(r"-?\d+(?:\.\d+)?(?:\.-?\d+(?:\.\d+)?)*", value):
                 raise ValueError(f"Raw property {key} must contain a numeric value or dot-separated numeric list.")
             pairs.append((key, value))
             seen.add(key)
@@ -194,10 +194,13 @@ def validate_draft_payload(data: object) -> tuple[dict, int]:
                 if isinstance(object_id, bool) or not isinstance(object_id, int) or object_id not in KNOWN_OBJECT_IDS:
                     raise ValueError("Generic editor objects need an exact integer id from the verified editor catalogue.")
                 event["properties"] = normalize_editor_properties(event)
-                if "groups" in event or any(field in event for field in STRUCTURED_PROPERTIES):
-                    event["type"] = "object"
             elif "id" in event or "properties" in event or "groups" in event or any(field in event for field in STRUCTURED_PROPERTIES):
-                raise ValueError("Use type='object' when specifying a raw Geometry Dash object id or properties.")
+                primitive_ids = {"block": 1, "spike": 8, "saw": 39, "orb": 36, "pad": 35}
+                if event["type"] not in primitive_ids or "id" in event or "properties" in event:
+                    raise ValueError("Only named primitives may be converted to grouped editor objects.")
+                event["id"] = primitive_ids[event["type"]]
+                event["properties"] = normalize_editor_properties(event)
+                event["type"] = "object"
             for axis in ("x", "y"):
                 value = event.get(axis)
                 if isinstance(value, bool) or not isinstance(value, (int, float)):
