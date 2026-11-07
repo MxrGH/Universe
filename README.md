@@ -43,11 +43,11 @@ The AI tab is a **full-level generator**, not just an existing-object editor.
 
 1. Open a **new, empty level** in the Geometry Dash editor.
 2. Enter a complete concept in the Universe AI tab. Include the theme, difficulty, gameplay feel, and any section ideas.
-3. Choose **GENERATE ONLINE**. The configured AI model is instructed to design one complete level from its opening to its ending, using 6–12 connected sections and approximately 150–500 object placements.
+3. Choose **GENERATE ONLINE**. The configured AI model is instructed to design one complete level from its opening to its ending, using 6–12 connected sections and normally approximately 150–500 object placements. The absolute per-draft ceiling is **1,000,000 generated object placements**; oversized drafts are rejected before any editor changes.
 4. Choose **CREATE FULL LEVEL IN EDITOR**. Universe pastes the generated layout directly into the currently open editor.
 5. Review the result and use the editor's Undo control if you want to revert the placement.
 
-The in-editor generator currently places blocks, spikes, saws, orbs, pads, and decoration objects. It does not yet create gameplay portals, triggers, song timing, or a native `.gmd` export. It adds the layout to the open editor; it does not automatically erase existing objects, so start with an empty level for a clean full-level build.
+The in-editor generator currently places blocks, spikes, saws, orbs, pads, and decoration objects. Important: the one-million figure is a hard validation ceiling, not a claim that the current paste engine can practically place one million objects. The current apply path still has a 1,000-operation processing guard and a 2 MB draft-file limit; large-scale chunked placement, progress reporting, and cancellation are not implemented yet. It does not yet create gameplay portals, triggers, song timing, or a native `.gmd` export. It adds the layout to the open editor; it does not automatically erase existing objects, so start with an empty level for a clean full-level build.
 
 The 26.5 live editor context can still inspect up to 500 existing objects and 100 selected objects for future editing workflows. The full-level creation prompt deliberately does not depend on that context or on selected objects. No GDShare or `.gmd` export is required.
 
