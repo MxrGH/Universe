@@ -912,52 +912,139 @@ protected:
             mod->setSettingValue<std::string>("ai-base-url", input->getString());
     }
 
+    // Adapted from GD-AI-bridge's compact ASCII map/object-priority implementation.
+    // Upstream: https://github.com/RibomX/GD-AI-bridge (MIT; see uni1/vendor/gd-ai-bridge/LICENSE).
+    char uni1MapChar(GameObject* obj) {
+        if (!obj || obj->m_isTrigger || obj->m_isDecoration || obj->m_isNoTouch) return 0;
+        switch (obj->m_objectType) {
+            case GameObjectType::Solid: return '#';
+            case GameObjectType::Slope: return '/';
+            case GameObjectType::Breakable: return '%';
+            case GameObjectType::Hazard:
+            case GameObjectType::AnimatedHazard: return '^';
+            case GameObjectType::YellowJumpPad:
+            case GameObjectType::PinkJumpPad:
+            case GameObjectType::GravityPad:
+            case GameObjectType::RedJumpPad:
+            case GameObjectType::SpiderPad: return '_';
+            case GameObjectType::YellowJumpRing:
+            case GameObjectType::PinkJumpRing:
+            case GameObjectType::GravityRing:
+            case GameObjectType::GreenRing:
+            case GameObjectType::DropRing:
+            case GameObjectType::RedJumpRing:
+            case GameObjectType::CustomRing:
+            case GameObjectType::DashRing:
+            case GameObjectType::GravityDashRing:
+            case GameObjectType::SpiderOrb:
+            case GameObjectType::TeleportOrb: return 'o';
+            case GameObjectType::Modifier: return '>';
+            case GameObjectType::SecretCoin:
+            case GameObjectType::UserCoin:
+            case GameObjectType::Collectible: return '$';
+            case GameObjectType::Decoration: return 0;
+            default: return 'P';
+        }
+    }
+
+    int uni1MapPriority(char symbol) {
+        switch (symbol) {
+            case '^': return 6;
+            case 'P': return 5;
+            case 'o': return 4;
+            case '_': return 3;
+            case '>': return 2;
+            case '$': return 1;
+            default: return 0;
+        }
+    }
+
     std::string buildEditorContext() {
         auto editor = LevelEditorLayer::get();
         if (!editor || !editor->m_editorUI)
             return "Editor state: no level is currently open in the editor.";
+
         auto objects = editor->getAllObjects();
         auto ui = editor->m_editorUI;
         auto selected = ui->m_selectedObjects;
         size_t selectedCount = selected ? selected->count() : 0;
         if (selectedCount == 0 && ui->m_selectedObject) selectedCount = 1;
+
         std::string context = fmt::format(
-            "Editor state: {} objects in the open level; {} currently selected. ",
+            "Editor state: {} objects in the open level; {} currently selected. "
+            "This context is read-only; generation must not claim it changed existing objects. ",
             objects ? objects->count() : 0, selectedCount
         );
-        context += "Existing objects in editor order (maximum 500; uid is the exact uniqueID target): ";
+        context += "Compact object sample (uid,id,x,y; coordinates are editor coordinates; maximum 60): ";
         if (objects) {
-            for (unsigned int i = 0; i < objects->count() && i < 500; ++i) {
+            for (unsigned int i = 0; i < objects->count() && i < 60; ++i) {
                 auto object = static_cast<GameObject*>(objects->objectAtIndex(i));
                 if (!object) continue;
                 auto p = object->getPosition();
-                context += fmt::format("[uid={}, id={}, x={:.1f}, y={:.1f}, rotation={:.1f}] ",
-                    object->m_uniqueID, object->m_objectID, p.x, p.y, object->getRotation());
+                context += fmt::format("{},{},{:.0f},{:.0f};",
+                    object->m_uniqueID, object->m_objectID, p.x, p.y);
             }
         }
-        context += " Selected object details (maximum 100): ";
+
+        context += " Selected object sample (maximum 20): ";
         size_t shown = 0;
         if (selected && selected->count() > 0) {
-            for (unsigned int i = 0; i < selected->count() && shown < 100; ++i) {
+            for (unsigned int i = 0; i < selected->count() && shown < 20; ++i) {
                 auto object = static_cast<GameObject*>(selected->objectAtIndex(i));
                 if (!object) continue;
                 auto p = object->getPosition();
-                context += fmt::format(
-                    "[uid={}, id={}, x={:.1f}, y={:.1f}, rotation={:.1f}] ",
-                    object->m_uniqueID, object->m_objectID, p.x, p.y, object->getRotation()
-                );
+                context += fmt::format("[uid={},id={},x={:.0f},y={:.0f},rot={:.0f}] ",
+                    object->m_uniqueID, object->m_objectID, p.x, p.y, object->getRotation());
                 ++shown;
             }
         } else if (ui->m_selectedObject) {
             auto object = ui->m_selectedObject;
             auto p = object->getPosition();
-            context += fmt::format(
-                "[uid={}, id={}, x={:.1f}, y={:.1f}, rotation={:.1f}]",
-                object->m_uniqueID, object->m_objectID, p.x, p.y, object->getRotation()
-            );
+            context += fmt::format("[uid={},id={},x={:.0f},y={:.0f},rot={:.0f}]",
+                object->m_uniqueID, object->m_objectID, p.x, p.y, object->getRotation());
         } else {
             context += "none.";
         }
+
+        // GD-AI-bridge map convention: y=0 is the ground/data baseline
+        // (editor-space y=90). One character represents a 30x30 editor cell.
+        constexpr int kCell = 30;
+        constexpr int kRows = 10;
+        constexpr int kMaxColumns = 40;
+        int columns = 1;
+        if (objects) {
+            float maxX = 0.f;
+            for (unsigned int i = 0; i < objects->count(); ++i) {
+                auto object = static_cast<GameObject*>(objects->objectAtIndex(i));
+                if (object) maxX = std::max(maxX, object->getPositionX());
+            }
+            columns = std::clamp(static_cast<int>(std::ceil((maxX + kCell) / kCell)), 1, kMaxColumns);
+        }
+
+        std::vector<std::string> grid(kRows, std::string(columns, '.'));
+        if (objects) {
+            for (unsigned int i = 0; i < objects->count(); ++i) {
+                auto object = static_cast<GameObject*>(objects->objectAtIndex(i));
+                char symbol = uni1MapChar(object);
+                if (!symbol) continue;
+                auto p = object->getPosition();
+                int column = static_cast<int>(std::floor(p.x / kCell));
+                int row = static_cast<int>(std::floor((p.y - 90.f + 90.f) / kCell));
+                if (column < 0 || column >= columns || row < 0 || row >= kRows) continue;
+                auto& cell = grid[row][column];
+                if (cell == '.' || uni1MapPriority(symbol) > uni1MapPriority(cell))
+                    cell = symbol;
+            }
+        }
+
+        context += fmt::format(
+            " ASCII gameplay map ({} columns x {} rows, 30px cells; # solid, / slope, % breakable, "
+            "^ hazard, _ pad, o orb, P portal, > modifier, $ coin, . empty; top row first):\n",
+            columns, kRows
+        );
+        for (int row = kRows - 1; row >= 0; --row)
+            context += fmt::format("{:>3}|{}\n", row, grid[row]);
+        context += "Map is a coarse overview only; object sample is authoritative. ";
         return context;
     }
 
@@ -1007,7 +1094,9 @@ protected:
             "routes, varied fair obstacle patterns, and clear transitions. Keep coordinates finite and "
             "within +/-10000000. Do not invent portals, mode changes, decoration placeholders, triggers, "
             "or song objects. The layout is geometry-only and must be playtested by the user. The user "
-            "will apply this to an empty editor; do not claim it clears existing contents. Concept: " + prompt;
+            "will apply this to an empty editor; do not claim it clears existing contents. "
+            "The following editor context is read-only background information; do not output edit/delete "
+            "operations or claim existing objects were changed: " + buildEditorContext() + "\nConcept: " + prompt;
         messages.push(userMessage);
         payload["messages"] = messages;
 
