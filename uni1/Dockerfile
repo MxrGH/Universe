@@ -8,6 +8,11 @@ RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu 
 
 COPY server.py /app/server.py
 COPY draft_validation.py /app/draft_validation.py
+COPY object_catalog.py /app/object_catalog.py
+COPY design_knowledge.py /app/design_knowledge.py
+COPY prompts.py /app/prompts.py
+COPY model_manifest.py /app/model_manifest.py
+COPY vendor/editorai/object_ids.json /app/vendor/editorai/object_ids.json
 
 ENV UNI1_ADAPTER_DIR=/models/uni1-adapter
 ENV UNI1_QUOTA_DB=/data/uni1-quota.sqlite3

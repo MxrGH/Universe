@@ -8,7 +8,9 @@ ROOT = Path(__file__).resolve().parents[1]
 class Uni1RuntimeContractTests(unittest.TestCase):
     def test_completion_reports_validator_object_count(self):
         source = (ROOT / "uni1" / "server.py").read_text(encoding="utf-8")
-        self.assertIn("draft, generated_count = validate_generated_level(draft)", source)
+        self.assertIn("return validate_generated_level(candidate)", source)
+        self.assertIn("draft, generated_count = parse_model_draft(raw_answer)", source)
+        self.assertIn('"uni1_repair_attempts": attempt', source)
         self.assertIn('"uni1_generated_objects": generated_count', source)
         self.assertNotIn("generated_count = total", source)
 
@@ -19,6 +21,8 @@ class Uni1RuntimeContractTests(unittest.TestCase):
         self.assertIn("eval_dataset=eval_dataset", source)
         self.assertIn("load_best_model_at_end=True", source)
         self.assertIn("inspect.signature(TrainingArguments)", source)
+        self.assertIn("build_model_manifest(", source)
+        self.assertIn("uni1-manifest.json", source)
 
     def test_request_input_is_bounded_and_model_id_is_fixed(self):
         source = (ROOT / "uni1" / "server.py").read_text(encoding="utf-8")
@@ -31,6 +35,11 @@ class Uni1RuntimeContractTests(unittest.TestCase):
         dockerfile = (ROOT / "uni1" / "Dockerfile").read_text(encoding="utf-8")
         self.assertIn("COPY server.py /app/server.py", dockerfile)
         self.assertIn("COPY draft_validation.py /app/draft_validation.py", dockerfile)
+        self.assertIn("COPY prompts.py /app/prompts.py", dockerfile)
+        self.assertIn("COPY design_knowledge.py /app/design_knowledge.py", dockerfile)
+        self.assertIn("COPY model_manifest.py /app/model_manifest.py", dockerfile)
+        self.assertIn("COPY object_catalog.py /app/object_catalog.py", dockerfile)
+        self.assertIn("COPY vendor/editorai/object_ids.json", dockerfile)
 
     def test_health_endpoint_requires_loaded_model(self):
         source = (ROOT / "uni1" / "server.py").read_text(encoding="utf-8")

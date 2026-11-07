@@ -43,9 +43,8 @@ class Uni1DraftValidationTests(unittest.TestCase):
             self.assertEqual(draft["format"], "universe-level-draft-v1")
             self.assertEqual(count, sum(len(section["events"]) for section in draft["sections"]))
             self.assertTrue(96 <= count <= 144)
-            self.assertTrue(all(section["gameplay"] == "cube" for section in draft["sections"]))
-            self.assertTrue(all(event["type"] in {"block", "spike", "saw", "orb", "pad"}
-                                for section in draft["sections"] for event in section["events"]))
+            self.assertGreaterEqual(len({section["gameplay"] for section in draft["sections"]}), 4)
+            self.assertTrue(any(event["type"] == "object" for section in draft["sections"] for event in section["events"]))
 
     def test_generated_level_gate_rejects_short_drafts(self):
         draft = make_draft()
