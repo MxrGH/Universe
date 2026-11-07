@@ -68,7 +68,7 @@ namespace {
         std::ofstream file(path, std::ios::out | std::ios::trunc);
         if (file.is_open())
             file << usage.day << ' ' << usage.requests << ' '
-                 << usage.buttonTaps << ' ' << (usage.bonusUnlocked ? 1 : 0) << '\\n';
+                 << usage.buttonTaps << ' ' << (usage.bonusUnlocked ? 1 : 0) << '\n';
     }
 
     int uniAIDailyLimit() {
