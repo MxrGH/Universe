@@ -7,7 +7,7 @@
 - Keep the untrained Uni-1 AI creator out of the shipped interface until model training and deployment are complete.
 - Align project validation with the online-only AI workflow and remove stale checks for deleted offline/icon enum code.
 - Preserve existing gameplay modifiers, Safe Mode, StartPos tools, visual overlays, replay recorder, icon previews, themes, keybinds, presets, and mobile controls.
-- Bump Geode package version to v1.1.1 and prepare the final planned snapshot release.
+- Bump Geode package version to v1.1.1; keep publication gated on successful CI and physical-device QA.
 
 ## Universe 1 — Snapshot 26.4
 
