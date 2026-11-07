@@ -1072,7 +1072,7 @@ protected:
             return;
         }
         auto message = fmt::format(
-            "Universe applied {} new objects, {} selected-object edits, and {} selected-object deletions. Use the editor Undo button to revert.",
+            "Universe applied {} new objects, {} existing-object edits, and {} object deletions. Use the editor Undo button to revert.",
             added, changed, deleted
         );
         FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
