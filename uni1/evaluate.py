@@ -17,12 +17,13 @@ try:
     from .draft_validation import validate_generated_level
     from .object_catalog import OBJECT_IDS
     from .server import SYSTEM_PROMPT
-    from .train import DEFAULT_BASE
 except ImportError:
     from draft_validation import validate_generated_level
     from object_catalog import OBJECT_IDS
     from server import SYSTEM_PROMPT
-    from train import DEFAULT_BASE
+
+
+DEFAULT_BASE = "Qwen/Qwen2.5-0.5B-Instruct"
 
 
 def load_eval_prompts(path: Path, *, limit: int | None = None) -> list[str]:
