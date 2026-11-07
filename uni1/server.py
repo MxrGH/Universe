@@ -156,6 +156,18 @@ def load_model():
     torch = torch_runtime
     if not ADAPTER_DIR.is_dir():
         raise RuntimeError(f"Uni-1 adapter not found at {ADAPTER_DIR}. Train it before starting the server.")
+    manifest_path = ADAPTER_DIR / "uni1-manifest.json"
+    if not manifest_path.is_file():
+        raise RuntimeError("Uni-1 adapter is missing uni1-manifest.json; unverified weights cannot be served.")
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        from .model_manifest import validate_model_manifest
+    except ImportError:
+        from model_manifest import validate_model_manifest
+    try:
+        validate_model_manifest(manifest, expected_base_model=BASE_MODEL)
+    except ValueError as error:
+        raise RuntimeError(f"Uni-1 adapter manifest rejected: {error}") from error
     tokenizer = AutoTokenizer.from_pretrained(ADAPTER_DIR, use_fast=True)
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token

@@ -7,6 +7,7 @@ import argparse
 import json
 import inspect
 import random
+import hashlib
 from pathlib import Path
 
 import torch
@@ -22,10 +23,12 @@ from transformers import (
 try:
     from .draft_validation import validate_generated_level
     from .prompts import SYSTEM_PROMPT
+    from .model_manifest import build_model_manifest
     from .validate_dataset import validate_dataset
 except ImportError:  # direct execution: python train.py
     from draft_validation import validate_generated_level
     from prompts import SYSTEM_PROMPT
+    from model_manifest import build_model_manifest
     from validate_dataset import validate_dataset
 
 DEFAULT_BASE = "Qwen/Qwen2.5-0.5B-Instruct"
@@ -267,7 +270,24 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
     model.save_pretrained(args.output)
     tokenizer.save_pretrained(args.output)
-    print(f"Saved Uni-1 LoRA adapter to {args.output}")
+    manifest = build_model_manifest(
+        base_model=args.base_model,
+        dataset_path=args.dataset,
+        dataset_report=corpus_report,
+        training_examples=len(train_dataset),
+        validation_examples=len(eval_dataset),
+        validation_metrics=metrics,
+        seed=args.seed,
+        epochs=args.epochs,
+        learning_rate=args.learning_rate,
+        max_length=args.max_length,
+        synthetic_bootstrap=args.allow_synthetic_bootstrap,
+    )
+    (args.output / "uni1-manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\\n",
+        encoding="utf-8",
+    )
+    print(f"Saved Uni-1 LoRA adapter and manifest to {args.output}")
     print(f"Held-out evaluation metrics: {json.dumps(metrics, sort_keys=True)}")
     print("This is a trained adapter checkpoint, not a standalone merged model.")
     print("Evaluate generated drafts and playtest them before calling this a usable release.")
