@@ -1390,7 +1390,7 @@ protected:
                 std::smatch idMatch, propertiesMatch;
                 if (!std::regex_search(event, idMatch, objectIDPattern)) continue;
                 try { objectID = std::stoi(idMatch[1].str()); } catch (...) { continue; }
-                if (objectID < 1 || objectID > 5000 || !knownEditorObjectIDs().find(objectID) == knownEditorObjectIDs().end()) continue;
+                if (objectID < 1 || objectID > 5000 || knownEditorObjectIDs().find(objectID) == knownEditorObjectIDs().end()) continue;
 
                 if (std::regex_search(event, propertiesMatch, propertiesPattern)) {
                     extraProperties = propertiesMatch[1].str();
@@ -1563,7 +1563,7 @@ protected:
         }
         size_t unresolvedTargets = 0;
         for (int target : targetGroupIDs)
-            if (!assignedGroupIDs.contains(target)) ++unresolvedTargets;
+            if (assignedGroupIDs.find(target) == assignedGroupIDs.end()) ++unresolvedTargets;
 
         auto status = [](bool ok) { return ok ? "PASS" : "FAIL"; };
         auto message = fmt::format(
