@@ -100,7 +100,6 @@ for feature_marker in (
     '.header("x-api-key", apiKey)',
     "local-icon-override",
     "preview-icon-type",
-    "IconType::Jetpack",
     "isIconUnlocked",
     "applySavedDraftToEditor",
     "pasteObjects(serialized, false, false)",
