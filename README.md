@@ -42,6 +42,7 @@ Open Universe, go to **Settings**, and choose **RUN IN-GAME SELF TEST**. It chec
 ## Icon tools
 
 - Preview Cube, Ship, Ball, UFO, Wave, Robot, Spider, Swing, and Jetpack IDs.
+- Apply a local-only icon override with configurable primary, secondary, and glow colors plus a local glow toggle in Geode settings.
 - Equip an icon only when Geometry Dash reports it as unlocked on the current account.
 - Local previews do not grant account unlocks or achievements.
 
