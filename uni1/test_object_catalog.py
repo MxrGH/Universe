@@ -240,3 +240,31 @@ def test_invalid_structured_properties_are_rejected(field, value):
             "x": 0, "y": 0, "type": "object",
             "id": OBJECT_IDS["effect_color_trigger"], field: value,
         }))
+
+
+@pytest.mark.parametrize("field", [
+    "ref_only", "keyframe_ref_only", "curve", "keyframe_curve",
+    "close_loop", "keyframe_close_loop", "auto_layer", "preview_art",
+])
+def test_unverified_keyframe_point_options_are_rejected(field):
+    with pytest.raises(ValueError, match="no verified save-key mapping"):
+        validate_draft_payload({
+            "title": "Unsupported keyframe option", "difficulty": "normal",
+            "sections": [{"name": "Animation", "gameplay": "cube", "events": [
+                {"x": 0, "y": 0, "type": "object", "id": 3032,
+                 "group_id": 7, "keyframe_order": 0, field: True}
+            ]}],
+        })
+
+
+@pytest.mark.parametrize("field", [
+    "zoom", "camera_zoom", "zoom_amount", "camera_zoom_amount",
+])
+def test_unverified_camera_zoom_fields_are_rejected(field):
+    with pytest.raises(ValueError, match="no verified save-key mapping"):
+        validate_draft_payload({
+            "title": "Unsupported camera zoom", "difficulty": "normal",
+            "sections": [{"name": "Camera", "gameplay": "cube", "events": [
+                {"x": 0, "y": 0, "type": "object", "id": 1913, field: 1.25}
+            ]}],
+        })

@@ -22,6 +22,17 @@ MAX_SECTIONS = 100
 MAX_OBJECTS = 1000
 MAX_COORDINATE = 10_000_000
 
+# These editor controls are visible in Geometry Dash, but their serialized
+# save keys are not verified by the checked-in format references. Reject them
+# rather than silently dropping user/model intent or guessing a key.
+UNSUPPORTED_KEYFRAME_POINT_FIELDS = {
+    "ref_only", "keyframe_ref_only", "curve", "keyframe_curve",
+    "close_loop", "keyframe_close_loop", "auto_layer", "preview_art",
+}
+UNSUPPORTED_CAMERA_ZOOM_FIELDS = {
+    "zoom", "camera_zoom", "zoom_amount", "camera_zoom_amount",
+}
+
 # Documented Geometry Dash object-save keys. Structured fields below are
 # translated into this format before the client serializes the object.
 # Source: gd-programming/gd.docs level-object resource (see README citations).
@@ -250,6 +261,20 @@ def validate_draft_payload(data: object) -> tuple[dict, int]:
                 raise ValueError("Uni-1 generation may only add new objects.")
             if event["type"] == "object":
                 object_id = event.get("id")
+                if object_id == 3032:
+                    unsupported = sorted(UNSUPPORTED_KEYFRAME_POINT_FIELDS.intersection(event))
+                    if unsupported:
+                        raise ValueError(
+                            "Keyframe Point options have no verified save-key mapping yet: "
+                            + ", ".join(unsupported)
+                        )
+                if object_id == 1913:
+                    unsupported = sorted(UNSUPPORTED_CAMERA_ZOOM_FIELDS.intersection(event))
+                    if unsupported:
+                        raise ValueError(
+                            "Camera Zoom value has no verified save-key mapping yet: "
+                            + ", ".join(unsupported)
+                        )
                 if isinstance(object_id, bool) or not isinstance(object_id, int) or object_id not in KNOWN_OBJECT_IDS:
                     raise ValueError("Generic editor objects need an exact integer id from the verified editor catalogue.")
                 event["properties"] = normalize_editor_properties(event)

@@ -136,3 +136,18 @@ These are source-level adaptations, not bundled upstream binaries. Their MIT not
 
 The draft schema supports verified generic object IDs, decoration, portals, documented trigger properties, group assignments, and all current section gameplay labels. Complex 2.2 trigger systems and true automated physics playtesting remain outside the implemented scope.
 
+
+
+## Verification boundary and unsupported controls
+
+The Snapshot 26.5 CI pipeline builds Windows x64, Android ARM64 and Android
+ARMv7 packages, inspects the universal package, and boots an Android emulator
+with ADB. That emulator job is a boot/package smoke test only: it does not
+install or launch Geometry Dash or Geode. Gameplay timing, collision behavior,
+camera effects and audio playback still require testing in the actual game.
+
+Keyframe Point controls Ref Only, Curve, Close Loop, Auto Layer and Preview Art,
+and the Camera Zoom amount, have documented editor behavior but no verified
+serialized property mapping in the available object-save references. The
+validator now rejects those explicitly when supplied instead of silently
+discarding them or guessing save keys.
