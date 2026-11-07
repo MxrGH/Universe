@@ -852,7 +852,7 @@ protected:
                 addText("Online AI creates a complete object layout.", {-245.f, -268.f}, 0.25f);
                 addAction("CREATE FULL LEVEL IN EDITOR", 149, {0.f, -285.f});
                 addText("Open an empty level first; creation adds the generated layout.", {-245.f, -315.f}, 0.24f);
-                addText("Blocks, spikes, saws, orbs, pads and deco are supported.", {-245.f, -345.f}, 0.23f);
+                addText("Cube-mode blocks, spikes, saws, orbs and pads are supported.", {-245.f, -345.f}, 0.23f);
                 break;
             }
             case Page::Settings:
@@ -971,11 +971,12 @@ protected:
         userMessage["content"] =
             "Create a COMPLETE NEW GEOMETRY DASH LEVEL FROM SCRATCH. Return ONLY one valid JSON object "
             "matching the Universe Level Draft schema: title, prompt, difficulty, style, sections, notes. "
-            "Create 6 to 12 connected sections, with events containing action add, numeric x/y, and type "
-            "block, spike, saw, orb, pad, or deco. Normally generate 150 to 500 placements, never exceed "
-            "the server's output limit. Use non-decreasing x coordinates, sensible spacing, traversable "
+            "Create 6 to 8 connected sections in CUBE mode only, with events containing action add, numeric x/y, "
+            "and type block, spike, saw, orb, or pad. Generate 96 to 144 placements, never exceed the "
+            "server's 1,000-object limit. Use non-decreasing x coordinates, sensible spacing, traversable "
             "routes, varied fair obstacle patterns, and clear transitions. Keep coordinates finite and "
-            "within +/-10000000. Do not invent unsupported portals, triggers, or song objects. The user "
+            "within +/-10000000. Do not invent portals, mode changes, decoration placeholders, triggers, "
+            "or song objects. The layout is geometry-only and must be playtested by the user. The user "
             "will apply this to an empty editor; do not claim it clears existing contents. Concept: " + prompt;
         messages.push(userMessage);
         payload["messages"] = messages;
@@ -1240,7 +1241,7 @@ protected:
             else if (type == "saw") objectID = 39;
             else if (type == "orb") objectID = 36;
             else if (type == "pad") objectID = 35;
-            else if (type != "block" && type != "deco") continue;
+            else if (type != "block") continue;
 
             serialized += fmt::format("1,{},2,{:.0f},3,{:.0f};", objectID, x, y);
             ++added;
