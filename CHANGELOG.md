@@ -1,13 +1,10 @@
 # Changelog
 
-## Universe 1 — Snapshot 26.6
-
-- Align the client-side Uni-1 daily quota date with the server's 00:00 UTC reset.
-- Add a regression test that prevents local-time and server-time quota rollover from drifting apart.
-- Bump the Geode package to v1.1.2 and update the Windows, Android ARM64, Android ARMv7, and universal artifact labels.
-- Keep the release gate manual; a successful CI build is not represented as an in-game test.
-
 ## Universe 1 — Snapshot 26.5
+
+- Align the Uni-1 client quota date with the server's 00:00 UTC reset.
+- Add regression coverage for UTC quota rollover.
+- Keep the Geode package version at v1.1.1; this is a maintenance update within Snapshot 26.5.
 
 - Add a player-bounds overlay alongside object hitboxes, movement trail, and movement projection.
 - Refresh the Universe panel with theme accents, selected-tab state, local-client status, and touch-friendly controls.
