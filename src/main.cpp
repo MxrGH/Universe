@@ -1053,13 +1053,13 @@ protected:
 
         auto status = [](bool ok) { return ok ? "PASS" : "FAIL"; };
         auto message = fmt::format(
-            "Universe runtime self-test\\n\\n"
-            "Mod instance: {}\\n"
-            "Game director and scene: {}\\n"
-            "GameManager: {}\\n"
-            "Settings access: {}\\n\\n"
-            "Gameplay context: {}\\n"
-            "Editor context: {}\\n\\n"
+            "Universe runtime self-test\n\n"
+            "Mod instance: {}\n"
+            "Game director and scene: {}\n"
+            "GameManager: {}\n"
+            "Settings access: {}\n\n"
+            "Gameplay context: {}\n"
+            "Editor context: {}\n\n"
             "Context lines are informational. This smoke test checks runtime access; it does not simulate gameplay or prove every feature works.",
             status(mod != nullptr),
             status(director != nullptr && scene != nullptr),
