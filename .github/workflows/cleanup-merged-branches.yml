@@ -1,0 +1,49 @@
+name: Clean up merged development branches
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/cleanup-merged-branches.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  cleanup:
+    name: Delete verified merged branches
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete only the audited merged branch heads
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # These are the exact branch heads audited before this cleanup:
+          # feature/local-icon-override -> merged through PR #2 into main
+          # snapshot-26.4-dev          -> merged through PR #1 into main
+          # Refuse to delete either branch if it has moved since the audit.
+          while IFS=' ' read -r branch expected_sha; do
+            [[ -n "$branch" ]] || continue
+            if ! ref_json="$(gh api "repos/$REPOSITORY/git/ref/heads/$branch" 2>/dev/null)"; then
+              echo "Already absent: $branch"
+              continue
+            fi
+            actual_sha="$(jq -r '.object.sha' <<< "$ref_json")"
+            if [[ "$actual_sha" != "$expected_sha" ]]; then
+              echo "::warning::Skipping $branch: its head changed from the audited SHA."
+              continue
+            fi
+            gh api --method DELETE "repos/$REPOSITORY/git/refs/heads/$branch"
+            echo "Deleted merged branch $branch ($actual_sha)"
+          done <<'BRANCHES'
+          feature/local-icon-override 0ac463c188d5bb655079d697d15eded81d2b66a4
+          snapshot-26.4-dev 2006841abd78744fa5f22668a675fcf04a72e9da
+          BRANCHES
+
+          echo "Branch cleanup finished; main was not modified by this job."
