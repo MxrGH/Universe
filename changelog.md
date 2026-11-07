@@ -3,6 +3,7 @@
 ## Universe 1 — Snapshot 26.5
 
 - Add a local-only icon override that does not alter account unlocks or saved icon selection.
+- Add configurable local primary, secondary, and glow colors, plus a local glow toggle.
 - Add an in-game, per-request AI API key field so Android users are not blocked by process environment variables.
 - Align project validation with the online-only AI workflow and remove stale checks for deleted offline/icon enum code.
 - Preserve existing gameplay modifiers, Safe Mode, StartPos tools, visual overlays, replay recorder, icon previews, themes, keybinds, presets, and mobile controls.
