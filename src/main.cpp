@@ -538,7 +538,7 @@ protected:
         }
 
         switch (page) {
-            case Page::Player:
+            case Page::Player: {
                 addText("Your current run", {-245.f, 105.f});
                 if (auto layer = PlayLayer::get(); layer && layer->m_player1) {
                     auto mode = layer->m_isPracticeMode ? "Practice Mode" : "Normal Mode";
@@ -593,6 +593,7 @@ protected:
                 addText("LOCAL ONLY: account unlocks and saved icon set are unchanged.", {-245.f, -310.f}, 0.27f);
                 addText("Primary, secondary and glow colors: Geode > Universe settings.", {-245.f, -340.f}, 0.24f);
                 break;
+            }
             case Page::Practice: {
                 auto mod = Mod::get();
                 addText("Gameplay hacks", {-245.f, 105.f});
