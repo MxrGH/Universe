@@ -1209,7 +1209,7 @@ protected:
         static const std::regex typePattern(R"rx("type"\s*:\s*"([A-Za-z]+)")rx");
         static const std::regex objectIDPattern(R"("id"\s*:\s*([0-9]+))");
         static const std::regex propertiesPattern(R"rx("properties"\s*:\s*"([^"]*)")rx");
-        static const std::regex propertyValuePattern(R"(-?\d+(?:\.\d+)?(?:\.-?\d+(?:\.\d+)?)* )");
+        static const std::regex propertyValuePattern(R"(-?\d+(?:\.\d+)?(?:\.-?\d+(?:\.\d+)?)*)");
         static const std::regex actionPattern(R"rx("action"\s*:\s*"([A-Za-z_]+)")rx");
         static const std::regex dxPattern(R"("dx"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
         static const std::regex dyPattern(R"("dy"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?))");
