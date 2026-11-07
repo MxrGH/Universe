@@ -30,7 +30,7 @@ def validate_draft_payload(data: object) -> tuple[dict, int]:
         if not isinstance(value, str) or len(value) > limit:
             raise ValueError(f"Draft field {field!r} must be text of at most {limit} characters.")
         data[field] = value
-    if data["difficulty"] not in DIFFICULTIES:
+    if not isinstance(data["difficulty"], str) or data["difficulty"] not in DIFFICULTIES:
         raise ValueError("Difficulty must be easy, normal, hard, insane, or demon.")
 
     sections = data.get("sections")
@@ -47,7 +47,7 @@ def validate_draft_payload(data: object) -> tuple[dict, int]:
         events = section.get("events")
         if not isinstance(name, str) or len(name) > 120:
             raise ValueError("Section names must be text of at most 120 characters.")
-        if gameplay not in ALLOWED_GAMEPLAY:
+        if not isinstance(gameplay, str) or gameplay not in ALLOWED_GAMEPLAY:
             raise ValueError(f"Unsupported gameplay mode: {gameplay!r}")
         if not isinstance(events, list) or not events:
             raise ValueError("Every section must contain at least one event.")
@@ -57,7 +57,7 @@ def validate_draft_payload(data: object) -> tuple[dict, int]:
         for event in events:
             if not isinstance(event, dict):
                 raise ValueError("Every event must be an object.")
-            if event.get("type") not in ALLOWED_OBJECTS:
+            if not isinstance(event.get("type"), str) or event.get("type") not in ALLOWED_OBJECTS:
                 raise ValueError(f"Unsupported object type: {event.get('type')!r}")
             if event.get("action", "add") != "add":
                 raise ValueError("Uni-1 generation may only add new objects.")
