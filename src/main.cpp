@@ -32,10 +32,11 @@ namespace {
 
     std::string uniAIToday() {
         std::time_t now = std::time(nullptr);
-        std::tm* local = std::localtime(&now);
-        if (!local) return "unknown-day";
+        // The server resets quotas at 00:00 UTC; keep the local display counter in sync.
+        std::tm* utc = std::gmtime(&now);
+        if (!utc) return "unknown-day";
         char buffer[16] = {};
-        std::strftime(buffer, sizeof(buffer), "%Y%m%d", local);
+        std::strftime(buffer, sizeof(buffer), "%Y%m%d", utc);
         return buffer;
     }
 
