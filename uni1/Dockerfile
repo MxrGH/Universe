@@ -7,6 +7,7 @@ WORKDIR /app
 RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch==2.5.1     && pip install --no-cache-dir        "transformers>=4.45,<5" "peft>=0.13" "accelerate>=1.0"        "fastapi>=0.115" "uvicorn[standard]>=0.30" "pydantic>=2.8"
 
 COPY server.py /app/server.py
+COPY draft_validation.py /app/draft_validation.py
 
 ENV UNI1_ADAPTER_DIR=/models/uni1-adapter
 ENV UNI1_QUOTA_DB=/data/uni1-quota.sqlite3
