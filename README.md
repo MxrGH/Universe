@@ -124,4 +124,5 @@ A successful CI build confirms compilation and packaging. It does not replace ga
 - **MxrGH** — Universe
 - **Geode SDK** — mod framework
 - **RobTop Games** — Geometry Dash
-\nUni-1 bootstrap corpus generation: from `uni1/`, run `python generate_dataset.py --count 256`, review the output, then follow `uni1/README.md` to train. The generated examples are synthetic and do not certify gameplay quality.\n
+
+Uni-1 bootstrap corpus generation: from `uni1/`, run `python generate_dataset.py --count 256`, review the output, then follow `uni1/README.md` to train. The generated examples are synthetic and do not certify gameplay quality.
