@@ -215,7 +215,7 @@ jobs:
 
             Snapshot 26.5 completes the planned Universe 1 snapshot series for Geometry Dash 2.2091.
 
-            Uni-1's AI panel is experimental and is not a working hosted feature in this snapshot: no trained adapter weights or deployed inference service are included. The editor-side draft importer currently supports cube-mode block, spike, saw, orb, and pad geometry only. The existing StartPos switcher, Noclip and Speedhack toggles, Safe Mode, hitboxes, movement trail and projection, FPS controls, Practice Mode recorder/replay, icon previews, themes, presets, keybinds, global touch sound, and circular draggable UNIV button are retained.
+            Uni-1's AI panel is experimental and is not a working hosted feature in this snapshot: no trained adapter weights or deployed inference service are included. The editor-side draft importer supports verified object IDs, decoration, portals, group membership, documented trigger properties, object transforms, and multi-mode section metadata. Complex 2.2 keyframe/camera trigger serializers and automated physics playtesting are not claimed. The existing StartPos switcher, Noclip and Speedhack toggles, Safe Mode, hitboxes, movement trail and projection, FPS controls, Practice Mode recorder/replay, icon previews, themes, presets, keybinds, global touch sound, and circular draggable UNIV button are retained.
 
             One universal Geode package includes:
             - Windows x64
