@@ -800,10 +800,10 @@ protected:
             "Return ONLY one valid JSON object matching the Universe Level Draft schema: title, prompt, difficulty, style, sections, notes. "
             "Create 6 to 12 connected sections that together form one coherent, complete level from its opening to its ending. "
             "Each section has name, gameplay, and events. Every event must be an object placement with action add, numeric x/y, and type block, spike, saw, orb, pad, or deco. "
-            "Generate a substantial complete layout (roughly 150 to 500 objects), with non-decreasing x coordinates, sensible spacing, a traversable player route, varied but fair obstacle patterns, and clear section transitions. "
+            "Generate a substantial complete layout (normally roughly 150 to 500 objects). The absolute hard ceiling is 1,000,000 object placements; never exceed it. " "            "Use non-decreasing x coordinates, sensible spacing, a traversable player route, varied but fair obstacle patterns, and clear section transitions. "
             "Use the requested difficulty and style consistently. Place the opening near x=0 and extend the level continuously through its ending. "
             "Do not use move_selected, rotate_selected, delete_selected, move_object, rotate_object, or delete_object. Do not depend on existing objects or editor selection. "
-            "Keep coordinates finite and within +/-10000000, total events between 150 and 500, and output valid JSON without Markdown. "
+            "Keep coordinates finite and within +/-10000000, keep generated placements at or below 1,000,000 (normal requests should remain compact), and output valid JSON without Markdown. "
             "The game will paste every generated object into the currently open editor. The user should open an empty level first; do not claim to clear or replace existing level contents. "
             "Only these object types are supported by the in-editor creator: block, spike, saw, orb, pad, deco. Do not claim to create unsupported portal, trigger, or song objects. "
             "User's complete level concept: " + prompt;
