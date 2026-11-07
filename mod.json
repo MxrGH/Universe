@@ -22,7 +22,8 @@
   "resources": {
     "files": [
       "resources/click.mp3",
-      "logo.png"
+      "logo.png",
+      "resources/object_ids.txt"
     ]
   },
   "settings": {
