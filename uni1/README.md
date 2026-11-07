@@ -22,7 +22,8 @@ python -m venv .venv
 # Linux/macOS:
 source .venv/bin/activate
 pip install -r requirements.txt
-python generate_dataset.py --count 256 --output dataset/train.jsonl\npython train.py --dataset dataset/train.jsonl --output artifacts/uni1-adapter
+python generate_dataset.py --count 256 --output dataset/train.jsonl
+python train.py --dataset dataset/train.jsonl --output artifacts/uni1-adapter
 ```
 
 Each JSONL line must contain `prompt` and `response` strings. The response must be a valid Universe level-draft JSON object. Generate a synthetic bootstrap corpus with `python generate_dataset.py --count 256`, then review it and expand it with diverse, licensed, human-authored examples. Synthetic examples teach schema and simple spacing patterns; they do not replace playtested design data. Do not train on copied copyrighted level data unless you have permission.
@@ -50,4 +51,7 @@ This is not account identity: a user who deletes their local installation ID can
 ## Current status
 
 This folder is the training/inference foundation only. No Uni-1 weights have been trained or checked into this repository, no inference server has been deployed, and the Geode client has not yet been switched from its existing provider request code. Those are separate steps and must be verified before claiming Uni-1 is live.
-\n## Tests\n\nRun quota tests from this folder with `pip install -r requirements-dev.txt` and `pytest -q`.\n
+
+## Tests
+
+Run quota tests from this folder with `pip install -r requirements-dev.txt` and `pytest -q`.
