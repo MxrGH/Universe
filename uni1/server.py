@@ -6,6 +6,7 @@ from __future__ import annotations
 import os
 import sqlite3
 import threading
+from contextlib import contextmanager
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -50,19 +51,27 @@ class ChatRequest(BaseModel):
     temperature: float = Field(default=0.4, ge=0.0, le=1.5)
 
 
+@contextmanager
 def db():
     DATABASE.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(DATABASE, timeout=15)
-    connection.execute("""
-        CREATE TABLE IF NOT EXISTS usage (
-            install_id TEXT PRIMARY KEY,
-            day TEXT NOT NULL,
-            requests INTEGER NOT NULL DEFAULT 0,
-            taps INTEGER NOT NULL DEFAULT 0,
-            bonus INTEGER NOT NULL DEFAULT 0
-        )
-    """)
-    return connection
+    try:
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS usage (
+                install_id TEXT PRIMARY KEY,
+                day TEXT NOT NULL,
+                requests INTEGER NOT NULL DEFAULT 0,
+                taps INTEGER NOT NULL DEFAULT 0,
+                bonus INTEGER NOT NULL DEFAULT 0
+            )
+        """)
+        yield connection
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
 
 
 def today():
@@ -112,9 +121,10 @@ def consume_request(install_id: str):
             connection.rollback()
             raise HTTPException(status_code=429, detail=f"Uni-1 daily limit reached ({limit}).")
         connection.execute(
-            "INSERT INTO usage(install_id, day, requests, taps, bonus) VALUES (?, ?, 1, 0, 0) "
-            "ON CONFLICT(install_id) DO UPDATE SET day=excluded.day, requests=?, bonus=excluded.bonus",
-            (install_id, current_day, requests + 1, requests + 1, bonus),
+            "INSERT INTO usage(install_id, day, requests, taps, bonus) VALUES (?, ?, ?, 0, ?) "
+            "ON CONFLICT(install_id) DO UPDATE SET "
+            "day=excluded.day, requests=excluded.requests, bonus=excluded.bonus",
+            (install_id, current_day, requests + 1, bonus),
         )
         connection.commit()
         return requests + 1, limit
@@ -171,7 +181,12 @@ def bonus_tap(x_uni1_install_id: str | None = Header(default=None)):
             connection.execute("INSERT INTO usage VALUES (?, ?, 0, 0, 0)", (install_id, today()))
             taps, bonus = 0, 0
         else:
-            _, taps, bonus = row
+            old_day, taps, bonus = row
+            if old_day != today():
+                connection.execute(
+                    "UPDATE usage SET day=?, requests=0 WHERE install_id=?",
+                    (today(), install_id),
+                )
         if not bonus:
             taps = min(7, taps + 1)
             bonus = int(taps >= 7)
