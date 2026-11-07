@@ -9,7 +9,7 @@ concurrency:
 
 on:
   push:
-    branches: [main]
+    branches: [main, "feature/**"]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -130,7 +130,7 @@ jobs:
     name: Publish Universe 1 — Snapshot 26.5
     runs-on: ubuntu-latest
     needs: package
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[release]'))
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[release]')))
     steps:
       - name: Checkout release metadata and logo
         uses: actions/checkout@v4
