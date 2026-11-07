@@ -286,6 +286,7 @@ protected:
     CCTextInputNode* m_aiPrompt = nullptr;
     CCTextInputNode* m_aiModelInput = nullptr;
     CCTextInputNode* m_aiBaseUrlInput = nullptr;
+    CCTextInputNode* m_aiApiKeyInput = nullptr;
     async::TaskHolder<web::WebResponse> m_aiTask;
     CCMenu* m_menu = nullptr;
     CCMenu* m_actionMenu = nullptr;
@@ -411,6 +412,7 @@ protected:
         m_aiPrompt = nullptr;
         m_aiModelInput = nullptr;
         m_aiBaseUrlInput = nullptr;
+        m_aiApiKeyInput = nullptr;
         if (m_content) {
             m_content->removeFromParentAndCleanup(true);
             m_content = nullptr;
@@ -593,31 +595,24 @@ protected:
                     m_aiPrompt->setPosition({55.f, 42.f});
                     m_content->addChild(m_aiPrompt, 4);
                 }
-                addText("Model", {-245.f, -5.f}, 0.31f);
-                m_aiModelInput = CCTextInputNode::create(340.f, 30.f, "claude-sonnet-4-6", "bigFont.fnt");
-                if (m_aiModelInput) {
-                    m_aiModelInput->setDelegate(this);
-                    m_aiModelInput->setString(Mod::get()->getSettingValue<std::string>("ai-model").c_str());
-                    m_aiModelInput->setPosition({55.f, -35.f});
-                    m_content->addChild(m_aiModelInput, 4);
+                addText("API key (this session only)", {-245.f, -5.f}, 0.31f);
+                m_aiApiKeyInput = CCTextInputNode::create(430.f, 38.f, "Paste your provider API key here...", "bigFont.fnt");
+                if (m_aiApiKeyInput) {
+                    m_aiApiKeyInput->setDelegate(this);
+                    m_aiApiKeyInput->setPosition({55.f, -38.f});
+                    m_content->addChild(m_aiApiKeyInput, 4);
                 }
-                addText("API base URL", {-245.f, -75.f}, 0.31f);
-                m_aiBaseUrlInput = CCTextInputNode::create(340.f, 30.f, "https://api.anthropic.com", "bigFont.fnt");
-                if (m_aiBaseUrlInput) {
-                    m_aiBaseUrlInput->setDelegate(this);
-                    m_aiBaseUrlInput->setString(Mod::get()->getSettingValue<std::string>("ai-base-url").c_str());
-                    m_aiBaseUrlInput->setPosition({55.f, -105.f});
-                    m_content->addChild(m_aiBaseUrlInput, 4);
-                }
-                addAction("SAVE PROMPT", 141, {-175.f, -155.f});
-                addAction("LOAD SAVED", 143, {0.f, -155.f});
-                addAction("CLEAR", 142, {175.f, -155.f});
-                addAction("GENERATE ONLINE", 126, {-115.f, -205.f});
-                addText("Describe the entire level: layout, gameplay flow, and difficulty.", {-245.f, -250.f}, 0.27f);
-                addText("Online AI generates a complete object layout, not an edit plan.", {-245.f, -280.f}, 0.25f);
-                addAction("CREATE FULL LEVEL IN EDITOR", 149, {0.f, -250.f});
-                addText("Open an empty level first; creation adds the generated layout.", {-245.f, -290.f}, 0.25f);
-                addText("Supported objects: blocks, spikes, saws, orbs, pads, deco.", {-245.f, -320.f}, 0.24f);
+                addText("Key is not saved by Universe. Avoid screen recording while entering it.", {-245.f, -75.f}, 0.25f);
+                addText("Model and HTTPS API URL: Geode > Universe settings.", {-245.f, -108.f}, 0.26f);
+                addAction("SAVE PROMPT", 141, {-175.f, -150.f});
+                addAction("LOAD SAVED", 143, {0.f, -150.f});
+                addAction("CLEAR", 142, {175.f, -150.f});
+                addAction("GENERATE ONLINE", 126, {-115.f, -200.f});
+                addText("Describe the entire level: layout, gameplay flow, and difficulty.", {-245.f, -238.f}, 0.26f);
+                addText("Online AI creates a complete object layout.", {-245.f, -268.f}, 0.25f);
+                addAction("CREATE FULL LEVEL IN EDITOR", 149, {0.f, -285.f});
+                addText("Open an empty level first; creation adds the generated layout.", {-245.f, -315.f}, 0.24f);
+                addText("Blocks, spikes, saws, orbs, pads and deco are supported.", {-245.f, -345.f}, 0.23f);
                 break;
             }
             case Page::Settings:
@@ -712,11 +707,17 @@ protected:
             return;
         }
 
-        auto key = std::getenv("ANTHROPIC_API_KEY");
-        if (!key || std::string_view(key).empty()) {
+        // Android apps normally do not inherit a user-configurable shell environment.
+        // Accept a per-request key in the in-game field; never persist it in Geode settings.
+        std::string apiKey = m_aiApiKeyInput ? m_aiApiKeyInput->getString() : "";
+        if (apiKey.empty()) {
+            auto environmentKey = std::getenv("ANTHROPIC_API_KEY");
+            if (environmentKey) apiKey = environmentKey;
+        }
+        if (apiKey.empty()) {
             FLAlertLayer::create(
                 "Universe AI",
-                "ANTHROPIC_API_KEY was not found. Set it in your operating system environment, then restart Geometry Dash. Do not paste your API key into chat or the mod source.",
+                "Enter your API key in the AI tab. On desktop, ANTHROPIC_API_KEY from the process environment is also accepted. The in-game key is used for this request only and is not saved.",
                 "OK"
             )->show();
             return;
@@ -760,7 +761,7 @@ protected:
         payload["model"] = model;
 
         auto request = web::WebRequest()
-            .header("x-api-key", key)
+            .header("x-api-key", apiKey)
             .header("anthropic-version", "2023-06-01")
             .header("content-type", "application/json")
             .timeout(std::chrono::seconds(90))
@@ -808,7 +809,7 @@ protected:
                 file.close();
 
                 auto message = fmt::format(
-                    "AI draft generated. Open the level editor and click APPLY DRAFT TO OPEN EDITOR.\n\nDraft: {}",
+                    "AI draft generated. Open the level editor and click CREATE FULL LEVEL IN EDITOR.\n\nDraft: {}",
                     path.string()
                 );
                 FLAlertLayer::create("Universe AI", message.c_str(), "OK")->show();
