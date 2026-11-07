@@ -4,12 +4,12 @@ Universe includes local Noclip and Speedhack modifiers, Safe Mode practice marki
 
 # Universe 1
 
-**Snapshot 26.5** · Geometry Dash **2.2091** · Geode · by **MxrGH**
+**Snapshot 26.6** · Geometry Dash **2.2091** · Geode · by **MxrGH**
 
 Universe is a Geometry Dash hack client with gameplay modifiers, editor tools, visual overlays, replay features, and an animated in-game interface.
 
-- **Release:** Universe 1 — Snapshot 26.5
-- **Geode package version:** `v1.1.1`
+- **Release:** Universe 1 — Snapshot 26.6
+- **Geode package version:** `v1.1.2`
 - **Mod ID:** `mxrmc.universe`
 - **Supported game version:** Geometry Dash `2.2091`
 - **Targets:** Windows x64, Android ARM64, Android ARMv7
@@ -48,7 +48,7 @@ Open Universe, go to **Settings**, and choose **RUN IN-GAME SELF TEST**. It chec
 
 ## Features not included in this snapshot
 
-The Uni-1 AI panel is present in the client, but generation is **not operational yet**. The client needs an HTTPS server URL in Geode settings, a trained LoRA adapter, and a deployed inference server. No trained adapter or live server is included. The checked-in synthetic dataset is only a bootstrap fixture and does not establish playable level quality. Do not treat the panel as a working AI feature until the model is trained, deployed, and live-tested.
+The Uni-1 AI panel is present in the client, but generation is **not operational yet**. Its daily quota rollover uses UTC to match the server. The client needs an HTTPS server URL in Geode settings, a trained LoRA adapter, and a deployed inference server. No trained adapter or live server is included. The checked-in synthetic dataset is only a bootstrap fixture and does not establish playable level quality. Do not treat the panel as a working AI feature until the model is trained, deployed, and live-tested.
 
 ## Default controls
 
