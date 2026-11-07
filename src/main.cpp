@@ -573,7 +573,7 @@ protected:
                 addText("J  Toggle path trail     K  Toggle movement projection", {-245.f, -300.f}, 0.31f);
                 break;
             case Page::AI: {
-                addText("Optional level idea helper", {-245.f, 105.f});
+                addText("AI FULL LEVEL CREATOR", {-245.f, 105.f});
                 addText("Level idea", {-245.f, 72.f}, 0.31f);
                 m_aiPrompt = CCTextInputNode::create(430.f, 42.f, "Paste or type your full level prompt here...", "bigFont.fnt");
                 if (m_aiPrompt) {
@@ -602,11 +602,11 @@ protected:
                 addAction("CLEAR", 142, {175.f, -155.f});
                 addAction("GENERATE ONLINE", 126, {-115.f, -205.f});
                 addAction("OFFLINE DRAFT", 145, {125.f, -205.f});
-                addText("Paste a prompt, then choose online or offline generation.", {-245.f, -250.f}, 0.27f);
-                addText("Offline mode is procedural; it does not run a neural model.", {-245.f, -280.f}, 0.27f);
-                addAction("APPLY DRAFT TO OPEN EDITOR", 149, {0.f, -250.f});
-                addText("Online AI designs the section; Apply places objects in your open editor.", {-245.f, -290.f}, 0.25f);
-                addText("No .gmd export or GDShare required.", {-245.f, -320.f}, 0.27f);
+                addText("Describe the entire level: layout, gameplay flow, and difficulty.", {-245.f, -250.f}, 0.27f);
+                addText("Online AI generates a complete object layout, not an edit plan.", {-245.f, -280.f}, 0.25f);
+                addAction("CREATE FULL LEVEL IN EDITOR", 149, {0.f, -250.f});
+                addText("Open an empty level first; creation adds the generated layout.", {-245.f, -290.f}, 0.25f);
+                addText("Supported objects: blocks, spikes, saws, orbs, pads, deco.", {-245.f, -320.f}, 0.24f);
                 break;
             }
             case Page::Settings:
@@ -791,22 +791,22 @@ protected:
 
         matjson::Value payload = matjson::Value::object();
         payload["model"] = "claude-sonnet-4-6";
-        payload["max_tokens"] = 4096;
+        payload["max_tokens"] = 8192;
         matjson::Value messages = matjson::Value::array();
         matjson::Value userMessage = matjson::Value::object();
         userMessage["role"] = "user";
         userMessage["content"] =
-            "You are a Geometry Dash editor assistant. Return ONLY one valid JSON object matching the "
-            "Universe Level Draft schema: title, prompt, difficulty, style, sections, notes. "
-            "Each section has name, gameplay, and events. Events may use action add, move_selected, rotate_selected, "
-            "delete_selected, move_object, rotate_object, or delete_object. For add, include numeric x/y and type block, spike, saw, orb, pad, or deco. "
-            "For move_selected include finite dx/dy; for rotate_selected include finite degrees. For move_object, rotate_object, and delete_object, "
-            "include target equal to an exact uid listed in the live editor context; move_object also needs dx/dy and rotate_object needs degrees. "
-            "Only use selected-object actions when the selection exists. Never invent a uid or target an object absent from the supplied context. "
-            "Keep coordinates and offsets within +/-10000000, total events below 5000, and output valid JSON without Markdown. "
-            "New objects are pasted into the currently open editor; object transforms/deletions use editor history so they can be undone. "
-            "If the user asks a follow-up edit, use the supplied live editor context. User idea: " + prompt +
-            "\n\nLive editor context: " + buildEditorContext();
+            "You are a Geometry Dash level creator. Create a COMPLETE NEW LEVEL FROM SCRATCH, not an edit plan for an existing level. "
+            "Return ONLY one valid JSON object matching the Universe Level Draft schema: title, prompt, difficulty, style, sections, notes. "
+            "Create 6 to 12 connected sections that together form one coherent, complete level from its opening to its ending. "
+            "Each section has name, gameplay, and events. Every event must be an object placement with action add, numeric x/y, and type block, spike, saw, orb, pad, or deco. "
+            "Generate a substantial complete layout (roughly 150 to 500 objects), with non-decreasing x coordinates, sensible spacing, a traversable player route, varied but fair obstacle patterns, and clear section transitions. "
+            "Use the requested difficulty and style consistently. Place the opening near x=0 and extend the level continuously through its ending. "
+            "Do not use move_selected, rotate_selected, delete_selected, move_object, rotate_object, or delete_object. Do not depend on existing objects or editor selection. "
+            "Keep coordinates finite and within +/-10000000, total events between 150 and 500, and output valid JSON without Markdown. "
+            "The game will paste every generated object into the currently open editor. The user should open an empty level first; do not claim to clear or replace existing level contents. "
+            "Only these object types are supported by the in-editor creator: block, spike, saw, orb, pad, deco. Do not claim to create unsupported portal, trigger, or song objects. "
+            "User's complete level concept: " + prompt;
         messages.push(userMessage);
         payload["messages"] = messages;
 
