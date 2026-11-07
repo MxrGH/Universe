@@ -47,7 +47,7 @@ docker compose -f compose.yaml ps
 docker compose -f compose.yaml logs -f uni1
 ```
 
-The compose file binds port 8000 to loopback only and persists quota state in a named volume. It mounts the adapter read-only. The first startup downloads the base checkpoint and may take several minutes; CPU inference can be slow. The health endpoint returns HTTP 503 until model and tokenizer are loaded. Stop it with `docker compose -f compose.yaml down`; the named quota volume is retained unless explicitly removed.
+The compose file binds port 8000 to loopback only and persists quota state in a named volume. It mounts the adapter read-only. The first startup downloads the base checkpoint and may take several minutes; CPU inference can be slow. The health endpoint returns HTTP 503 until model and tokenizer are loaded. Stop it with `docker compose -f compose.yaml down`; the named quota volume is retained unless explicitly removed. On the same desktop running Geometry Dash, set Geode's Uni-1 server URL to `http://127.0.0.1:8000`. This loopback HTTP exception is accepted only for localhost addresses. Android devices and other computers cannot reach a loopback-bound desktop service; they need a reachable HTTPS deployment.
 
 For a remote server, use a proper HTTPS reverse proxy, firewall, monitoring, backups, and a persistent database volume. Do not expose the development server directly to the public internet. The included Compose setup is a local deployment template, not a hosted public service.
 
