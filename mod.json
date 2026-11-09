@@ -6,10 +6,9 @@
   },
   "id": "mxrmc.universe",
   "name": "Universe 1",
-  "version": "v1.1.2",
+  "version": "v1.1.3",
   "developer": "MxrGH",
-  "description": "Geometry Dash mod menu with local gameplay modifiers, visual tools, icon preview, practice replays, and an animated interface.",
-  "dependencies": {},
+  "description": "An all-in-one Geometry Dash toolkit with local gameplay controls, editor utilities, visual overlays, and practice replay tools.",
   "tags": [
     "gameplay",
     "customization",
