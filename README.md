@@ -11,7 +11,7 @@ Universe includes local Noclip and Speedhack modifiers, Safe Mode practice marki
 Universe is a Geometry Dash hack client with gameplay modifiers, editor tools, visual overlays, replay features, and an animated in-game interface.
 
 - **Release:** Universe 1 — Final
-- **Geode package version:** `v1.1.2`
+- **Geode package version:** `v1.1.3`
 - **Mod ID:** `mxrmc.universe`
 - **Supported game version:** Geometry Dash `2.2091`
 - **Targets:** Windows x64, Android ARM64, Android ARMv7
@@ -48,7 +48,7 @@ Open Universe, go to **Settings**, and choose **RUN IN-GAME SELF TEST**. It chec
 - Equip an icon only when Geometry Dash reports it as unlocked on the current account.
 - Local previews do not grant account unlocks or achievements.
 
-## Features not included in this snapshot
+## Experimental features
 
 The Uni-1 AI panel is present in the client, but generation is **not operational yet**. Its daily quota rollover uses UTC to match the server. The client needs an HTTPS server URL in Geode settings, a trained LoRA adapter, and a deployed inference server. No trained adapter or live server is included. The checked-in synthetic dataset is only a bootstrap fixture and does not establish playable level quality. Do not treat the panel as a working AI feature until the model is trained, deployed, and live-tested.
 
@@ -71,7 +71,7 @@ Keybinds can be changed in Geode settings. On Android, use the circular **UNIV**
 
 ## Dependencies
 
-Universe declares no additional Geode mod dependencies. The numeric Geometry Dash object IDs used by editor tools are bundled in `resources/object_ids.txt`; they are ordinary in-game object identifiers, not a required Node.js package or Geode Node IDs mod. Geode itself is still required to load any Geode mod.
+Universe has no additional Geode mod dependencies. The Geometry Dash object-ID catalogue used by editor tools is bundled in `resources/object_ids.txt`. Geode itself is required to load the mod.
 
 ## Install
 
