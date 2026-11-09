@@ -108,7 +108,7 @@ jobs:
               metadata = json.loads(archive.read("mod.json"))
               assert metadata["id"] == "mxrmc.universe"
               assert metadata["name"] == "Universe 1"
-              assert metadata["version"] == "v1.1.2"
+              assert metadata["version"] == "v1.1.3"
               assert not metadata.get("dependencies"), "Universe must not require additional Geode mods"
               assert metadata["gd"]["win"] == "2.2091"
               assert metadata["gd"]["android"] == "2.2091"
@@ -222,16 +222,16 @@ jobs:
           body: |
             # Universe 1 — Final
 
-            Final is a dependency-clean maintenance release for Geometry Dash 2.2091. The mod no longer declares geode.node-ids; all required Geometry Dash object IDs are bundled as a resource.
+            Universe 1 v1.1.3 is the final release for Geometry Dash 2.2091. It has no additional Geode mod dependencies; its Geometry Dash object-ID catalogue is bundled in the package.
 
-            Uni-1's AI panel is experimental and is not a working hosted feature in this snapshot: no trained adapter weights or deployed inference service are included. The editor-side draft importer supports verified object IDs, decoration, portals, group membership, documented trigger properties, object transforms, and multi-mode section metadata. Complex 2.2 keyframe/camera trigger serializers and automated physics playtesting are not claimed. The existing StartPos switcher, Noclip and Speedhack toggles, Safe Mode, hitboxes, movement trail and projection, FPS controls, Practice Mode recorder/replay, icon previews, themes, presets, keybinds, global touch sound, and circular draggable UNIV button are retained.
+            Uni-1's AI panel is experimental and is not a working hosted feature in this release: no trained adapter weights or deployed inference service are included. The editor-side draft importer supports verified object IDs, decoration, portals, group membership, documented trigger properties, object transforms, and multi-mode section metadata. Complex 2.2 keyframe/camera trigger serializers and automated physics playtesting are not claimed. The existing StartPos switcher, Noclip and Speedhack toggles, Safe Mode, hitboxes, movement trail and projection, FPS controls, Practice Mode recorder/replay, icon previews, themes, presets, keybinds, global touch sound, and circular draggable UNIV button are retained.
 
             One universal Geode package includes:
             - Windows x64
             - Android ARM64
             - Android ARMv7
 
-            The package is published only after all three platform builds pass, project validation and regression tests pass, the combined archive is inspected, and the Android emulator boot smoke test succeeds. Geode itself is still required; no additional Geode mod dependency is declared. CI compilation and package checks do not replace real in-game testing on physical devices.
+            The package is published after all three platform builds pass, project validation and regression tests pass, and the combined archive is inspected. Geode itself is required. CI compilation and package checks do not replace real in-game testing on physical devices.
 
           files: |
             release-assets/*.geode
