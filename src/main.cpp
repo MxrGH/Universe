@@ -566,9 +566,13 @@ protected:
     bool m_isDragging = false;
     CCPoint m_dragTouchStart = {0.f, 0.f};
     CCPoint m_dragPanelStart = {0.f, 0.f};
+    CCPoint m_contentOrigin = {0.f, 0.f};
+    float m_contentScale = 0.78f;
 
     void addText(const char* text, CCPoint pos, float scale = 0.42f) {
+        if (!m_content || !text) return;
         auto label = CCLabelBMFont::create(text, "bigFont.fnt");
+        if (!label) return;
         label->setAnchorPoint({0.f, 0.5f});
         label->setScale(scale);
         label->setColor({205, 216, 245});
@@ -577,7 +581,9 @@ protected:
     }
 
     void addAction(const char* text, int tag, CCPoint pos) {
+        if (!m_actionMenu || !text) return;
         auto label = CCLabelBMFont::create(text, "goldFont.fnt");
+        if (!label) return;
         label->setScale(0.38f);
         label->setColor({153, 207, 255});
         auto item = CCMenuItemLabel::create(label, this, menu_selector(UniversePanel::onAction));
@@ -685,15 +691,17 @@ protected:
             m_content = nullptr;
         }
         m_content = CCLayer::create();
-        m_content->setPosition({12.f, 0.f});
-        m_content->setScale(0.98f);
+        if (!m_content) return;
+        m_content->setPosition({m_contentOrigin.x + 12.f, m_contentOrigin.y});
+        m_content->setScale(m_contentScale * 0.98f);
         this->addChild(m_content, 3);
         m_content->runAction(CCSpawn::create(
-            CCEaseBackOut::create(CCScaleTo::create(0.18f, 1.f)),
-            CCMoveTo::create(0.16f, {0.f, 0.f}),
+            CCEaseBackOut::create(CCScaleTo::create(0.18f, m_contentScale)),
+            CCMoveTo::create(0.16f, m_contentOrigin),
             nullptr
         ));
 
+        if (!m_pageTitle) return;
         m_pageTitle->setString(pageName(page));
         m_pageTitle->stopAllActions();
         m_pageTitle->setScale(0.48f);
@@ -1897,6 +1905,22 @@ public:
         if (!mod) return false;
         auto win = CCDirector::sharedDirector()->getWinSize();
         setContentSize(win);
+
+        // Page labels and action buttons are authored around (0, 0).
+        // Anchor both layers inside the panel so controls are visible and tappable.
+        const float panelBottom = win.height * 0.11f;
+        const float tabY = win.height * 0.64f;
+        const float availableWidth = win.width * 0.82f - 36.f;
+        const float availableHeight = tabY - panelBottom - 34.f;
+        m_contentScale = std::clamp(
+            std::min({0.78f, availableWidth / 450.f, availableHeight / 450.f}),
+            0.32f, 0.78f
+        );
+        m_contentOrigin = {
+            win.width * 0.5f,
+            tabY - 18.f - 105.f * m_contentScale
+        };
+
         setPosition({
             mod->getSettingValue<float>("panel-offset-x") * win.width,
             mod->getSettingValue<float>("panel-offset-y") * win.height
@@ -1958,7 +1982,9 @@ public:
         m_tabLabels.clear();
 
         m_actionMenu = CCMenu::create();
-        m_actionMenu->setPosition({0.f, 0.f});
+        if (!m_actionMenu) return false;
+        m_actionMenu->setPosition(m_contentOrigin);
+        m_actionMenu->setScale(m_contentScale);
         this->addChild(m_actionMenu, 6);
 
         float left = win.width * 0.12f;
