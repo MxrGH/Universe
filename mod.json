@@ -9,6 +9,7 @@
   "version": "v1.1.2",
   "developer": "MxrGH",
   "description": "Geometry Dash mod menu with local gameplay modifiers, visual tools, icon preview, practice replays, and an animated interface.",
+  "dependencies": {},
   "tags": [
     "gameplay",
     "customization",
