@@ -66,6 +66,13 @@ class UIContractTests(unittest.TestCase):
         )
         self.assertEqual(missing, [], f"Visible controls have no action handler: {missing}")
 
+    def test_page_content_and_action_menu_are_anchored_inside_panel(self):
+        self.assertIn("m_content->setPosition({m_contentOrigin.x + 12.f, m_contentOrigin.y})", SOURCE)
+        self.assertIn("m_actionMenu->setPosition(m_contentOrigin)", SOURCE)
+        self.assertIn("win.width * 0.5f", SOURCE)
+        self.assertNotIn("m_content->setPosition({12.f, 0.f})", SOURCE)
+        self.assertNotIn("m_actionMenu->setPosition({0.f, 0.f})", SOURCE)
+
 
 if __name__ == "__main__":
     unittest.main()
