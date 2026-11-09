@@ -1916,10 +1916,10 @@ public:
             std::min({0.78f, availableWidth / 450.f, availableHeight / 450.f}),
             0.32f, 0.78f
         );
-        m_contentOrigin = {
+        m_contentOrigin = ccp(
             win.width * 0.5f,
             tabY - 18.f - 105.f * m_contentScale
-        };
+        );
 
         setPosition({
             mod->getSettingValue<float>("panel-offset-x") * win.width,
@@ -1988,7 +1988,6 @@ public:
         this->addChild(m_actionMenu, 6);
 
         float left = win.width * 0.12f;
-        float tabY = win.height * 0.64f;
         Page pages[] = {Page::Player, Page::Practice, Page::Level, Page::Visuals,
                         Page::Recorder, Page::Keybinds, Page::Settings, Page::AI};
         int pageCount = 8;
