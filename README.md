@@ -4,11 +4,11 @@ Universe includes local Noclip and Speedhack modifiers, Safe Mode practice marki
 
 # Universe 1
 
-**Snapshot 26.6** · Geometry Dash **2.2091** · Geode · by **MxrGH**
+**Final Release** · Geometry Dash **2.2091** · Geode · by **MxrGH**
 
 Universe is a Geometry Dash hack client with gameplay modifiers, editor tools, visual overlays, replay features, and an animated in-game interface.
 
-- **Release:** Universe 1 — Snapshot 26.6
+- **Release:** Universe 1 — Final
 - **Geode package version:** `v1.1.2`
 - **Mod ID:** `mxrmc.universe`
 - **Supported game version:** Geometry Dash `2.2091`
