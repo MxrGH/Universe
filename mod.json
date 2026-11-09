@@ -6,7 +6,7 @@
   },
   "id": "mxrmc.universe",
   "name": "Universe 1",
-  "version": "v1.1.1",
+  "version": "v1.1.2",
   "developer": "MxrGH",
   "description": "Geometry Dash mod menu with local gameplay modifiers, visual tools, icon preview, practice replays, and an animated interface.",
   "tags": [
@@ -16,9 +16,6 @@
     "utility",
     "interface"
   ],
-  "dependencies": {
-    "geode.node-ids": ">=v1.23.3"
-  },
   "resources": {
     "files": [
       "resources/click.mp3",

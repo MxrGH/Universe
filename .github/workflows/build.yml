@@ -108,7 +108,8 @@ jobs:
               metadata = json.loads(archive.read("mod.json"))
               assert metadata["id"] == "mxrmc.universe"
               assert metadata["name"] == "Universe 1"
-              assert metadata["version"] == "v1.1.1"
+              assert metadata["version"] == "v1.1.2"
+              assert not metadata.get("dependencies"), "Universe must not require additional Geode mods"
               assert metadata["gd"]["win"] == "2.2091"
               assert metadata["gd"]["android"] == "2.2091"
               assert archive.read("resources/mxrmc.universe/logo.png")[:8] == b"\x89PNG\r\n\x1a\n"
@@ -129,13 +130,13 @@ jobs:
           folder = Path(os.environ["PACKAGE_DIR"])
           packages = list(folder.glob("*.geode"))
           assert len(packages) == 1, f"Expected one .geode, found {len(packages)}"
-          packages[0].rename(folder / "Universe-1-Snapshot-26.5.geode")
+          packages[0].rename(folder / "Universe-1-Snapshot-26.6.geode")
           PY
 
       - name: Upload verified universal package
         uses: actions/upload-artifact@v4
         with:
-          name: Universe-1-Snapshot-26.5
+          name: Universe-1-Snapshot-26.6
           path: ${{ steps.combine.outputs.build-output }}/*.geode
           if-no-files-found: error
           retention-days: 30
@@ -148,7 +149,7 @@ jobs:
       - name: Download verified universal package
         uses: actions/download-artifact@v4
         with:
-          name: Universe-1-Snapshot-26.5
+          name: Universe-1-Snapshot-26.6
           path: package
 
       - name: Verify Android native library ELF architectures
@@ -193,9 +194,9 @@ jobs:
             echo "Android API 35 emulator booted and ADB commands succeeded."
 
   release:
-    name: Publish Universe 1 — Snapshot 26.5
+    name: Publish Universe 1 — Snapshot 26.6
     runs-on: ubuntu-latest
-    needs: package
+    needs: [package, emulator-smoke]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[release]')))
     steps:
       - name: Checkout release metadata and logo
@@ -204,24 +205,24 @@ jobs:
       - name: Download verified universal package
         uses: actions/download-artifact@v4
         with:
-          name: Universe-1-Snapshot-26.5
+          name: Universe-1-Snapshot-26.6
           path: release-assets
 
-      - name: Publish Snapshot 26.5 prerelease
+      - name: Publish Snapshot 26.6 prerelease
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: snapshot-26.5
+          tag_name: snapshot-26.6
           target_commitish: ${{ github.sha }}
-          name: Universe 1 — Snapshot 26.5
+          name: Universe 1 — Snapshot 26.6
           prerelease: true
           draft: false
           make_latest: false
           overwrite_files: true
           generate_release_notes: true
           body: |
-            # Universe 1 — Snapshot 26.5 (Final Planned Snapshot)
+            # Universe 1 — Snapshot 26.6
 
-            Snapshot 26.5 completes the planned Universe 1 snapshot series for Geometry Dash 2.2091.
+            Snapshot 26.6 is a dependency-clean maintenance release for Geometry Dash 2.2091. The mod no longer declares geode.node-ids; all required Geometry Dash object IDs are bundled as a resource.
 
             Uni-1's AI panel is experimental and is not a working hosted feature in this snapshot: no trained adapter weights or deployed inference service are included. The editor-side draft importer supports verified object IDs, decoration, portals, group membership, documented trigger properties, object transforms, and multi-mode section metadata. Complex 2.2 keyframe/camera trigger serializers and automated physics playtesting are not claimed. The existing StartPos switcher, Noclip and Speedhack toggles, Safe Mode, hitboxes, movement trail and projection, FPS controls, Practice Mode recorder/replay, icon previews, themes, presets, keybinds, global touch sound, and circular draggable UNIV button are retained.
 
@@ -230,7 +231,7 @@ jobs:
             - Android ARM64
             - Android ARMv7
 
-            The package is published only after all three platform builds pass, project validation and regression tests pass, and the combined archive is inspected. CI compilation and package checks do not replace real in-game testing on physical devices.
+            The package is published only after all three platform builds pass, project validation and regression tests pass, the combined archive is inspected, and the Android emulator boot smoke test succeeds. Geode itself is still required; no additional Geode mod dependency is declared. CI compilation and package checks do not replace real in-game testing on physical devices.
 
           files: |
             release-assets/*.geode

@@ -4,12 +4,12 @@ Universe includes local Noclip and Speedhack modifiers, Safe Mode practice marki
 
 # Universe 1
 
-**Snapshot 26.5** · Geometry Dash **2.2091** · Geode · by **MxrGH**
+**Snapshot 26.6** · Geometry Dash **2.2091** · Geode · by **MxrGH**
 
 Universe is a Geometry Dash hack client with gameplay modifiers, editor tools, visual overlays, replay features, and an animated in-game interface.
 
-- **Release:** Universe 1 — Snapshot 26.5
-- **Geode package version:** `v1.1.1`
+- **Release:** Universe 1 — Snapshot 26.6
+- **Geode package version:** `v1.1.2`
 - **Mod ID:** `mxrmc.universe`
 - **Supported game version:** Geometry Dash `2.2091`
 - **Targets:** Windows x64, Android ARM64, Android ARMv7
@@ -66,6 +66,10 @@ The Uni-1 AI panel is present in the client, but generation is **not operational
 | Play saved replay | `F7` |
 
 Keybinds can be changed in Geode settings. On Android, use the circular **UNIV** button.
+
+## Dependencies
+
+Universe declares no additional Geode mod dependencies. The numeric Geometry Dash object IDs used by editor tools are bundled in `resources/object_ids.txt`; they are ordinary in-game object identifiers, not a required Node.js package or Geode Node IDs mod. Geode itself is still required to load any Geode mod.
 
 ## Install
 
