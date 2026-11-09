@@ -208,7 +208,7 @@ jobs:
           name: Universe-1-Final
           path: release-assets
 
-      - name: Publish Final prerelease
+      - name: Publish Universe 1 Final release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: universe-1-final
