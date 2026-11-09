@@ -41,8 +41,13 @@ if "**Release:** Universe 1 — Final" not in readme_text:
     fail("README must document Universe 1 — Final")
 if mod.get("dependencies"):
     fail("Universe must not declare additional Geode mod dependencies")
-if mod.get("name") != "Universe 1" or mod.get("version") != "v1.1.2":
-    fail("release metadata must identify Universe 1 v1.1.2")
+if mod.get("name") != "Universe 1" or mod.get("version") != "v1.1.3":
+    fail("release metadata must identify Universe 1 v1.1.3")
+if "Snapshot" in mod.get("description", ""):
+    fail("mod description must not use snapshot branding")
+about_text = (ROOT / "about.md").read_text(encoding="utf-8")
+if not about_text.startswith("# Universe 1 — Final") or "Snapshot 26.4" in about_text:
+    fail("in-game about page must use the final release identity")
 
 settings = mod.get("settings")
 if not isinstance(settings, dict):
