@@ -214,9 +214,9 @@ jobs:
           tag_name: snapshot-26.6
           target_commitish: ${{ github.sha }}
           name: Universe 1 — Snapshot 26.6
-          prerelease: true
+          prerelease: false
           draft: false
-          make_latest: false
+          make_latest: true
           overwrite_files: true
           generate_release_notes: true
           body: |
